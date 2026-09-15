@@ -1,0 +1,25 @@
+{
+  "canvas": {
+    "width": 3840,
+    "height": 2160
+  },
+  "leftEye": {
+    "x": 2080,
+    "y": 625,
+    "width": 190,
+    "height": 125
+  },
+  "rightEye": {
+    "x": 2310,
+    "y": 620,
+    "width": 190,
+    "height": 125
+  },
+  "debugCrop": {
+    "x": 1980,
+    "y": 540,
+    "width": 570,
+    "height": 290
+  },
+  "method": "manual candidate placement; eye masks are intentionally conservative"
+}

@@ -13,6 +13,24 @@ test.beforeEach(async ({ page }) => {
   await page.locator('#reduced').check();
 });
 
+for (const [name, minutes] of [['dusk', 1050], ['night', 1380]] as const) {
+  test(`bloom comparison: ${name}`, async ({ page }) => {
+    await page.locator('#time').fill(String(minutes));
+    await page.locator('#time').dispatchEvent('change');
+    await page.locator('input[type="checkbox"]#bloom').uncheck();
+    await page.screenshot({ path: `docs/screenshots/phase4/${name}-bloom-off.png`, fullPage: true });
+    await page.locator('input[type="checkbox"]#bloom').check();
+    await page.screenshot({ path: `docs/screenshots/phase4/${name}-bloom-on.png`, fullPage: true });
+  });
+}
+
+for (const view of ['bright', 'bloom'] as const) {
+  test(`bloom debug: ${view}`, async ({ page }) => {
+    await page.locator('#view').selectOption(view);
+    await page.screenshot({ path: `docs/screenshots/phase4/${view}.png`, fullPage: true });
+  });
+}
+
 test('coffee steam enabled state', async ({ page }) => {
   await page.locator('#animation').check();
   await page.locator('#steam').check();

@@ -1,0 +1,35 @@
+# Phase Next Notes
+
+Date: 2026-09-15
+
+## Blink status
+
+Blink renderer implementation: blocked by missing registered closed-eye asset.
+
+The Pillow/NumPy/OpenCV experiment remains documented in `docs/logs/blink-tool-only-evaluation.md`. Its candidate was rejected visually and was not promoted to a runtime asset or renderer path.
+
+## Bloom architecture
+
+Bloom is implemented as a minimal WebGL2 post-processing path. The existing relit scene is rendered through a bright-pass into quarter-resolution targets, followed by two separable Gaussian blur passes and a final composite. The scene remains framework-independent and does not use Three.js or Babylon.js. The bloom buffers are resized only when the viewport changes and are destroyed with the renderer.
+
+Bloom eligibility is intentionally conservative: the bright pass uses the current relit luminance, a high threshold, and protection terms for face and broad clothing. Hair, exterior/window highlights, lamp emitter contribution and a small scene contribution are allowed to receive the effect. Debug views expose Bright Pass and Bloom Only without replacing the existing views.
+
+## Default parameters
+
+- Bloom enabled: yes
+- Intensity: `0.22`
+- Threshold: `0.82`
+- Radius: `1.0`
+- Buffer scale: quarter resolution, capped by the current canvas render size
+
+## Visual review
+
+Playwright captured matched Dusk and Night Bloom OFF/ON screenshots. Dusk ON adds a restrained soft response around the brightest window/hair/lamp areas. Night ON adds only a small amount of lamp and local highlight separation; the cool exterior remains clean. Face structure, skin and white clothing do not become broad glowing regions. Noon remains effectively unchanged at the default settings.
+
+## Performance notes
+
+The bloom target is quarter-resolution and uses two lightweight fullscreen blur passes. The main relighting pass remains one draw, and bloom adds three draws only when enabled or when a bloom debug view is selected. DPR 1.0 and 1.5 use the same scaled quarter-resolution target strategy; a cross-GPU benchmark is still future work.
+
+## Next candidate
+
+The next low-risk task should be texture/GPU memory optimization or browser performance measurement. Breathing and hair motion remain higher visual-risk because they require registered geometry or carefully bounded local deformation. Blink must remain blocked until an official registered asset exists.

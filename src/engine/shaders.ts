@@ -11,6 +11,8 @@ precision highp float;
 in vec2 uv;
 out vec4 color;
 uniform sampler2D uBase, uNormal, uMask, uSceneMask;
+uniform sampler2D uBloomMap;
+uniform float uBloom, uBloomThreshold, uBloomMood;
 uniform bool uHasNormal, uHasMask, uHasSceneMask;
 uniform vec3 uAmbient, uSun, uDirection;
 uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, uNormalStrength, uFace;
@@ -87,6 +89,17 @@ void main() {
     float strand2 = exp(-pow((p.x+.035+sin(p.y*29.0+uMotionTime*.42)*.008)/.010, 2.0)) * smoothstep(.11,.01,p.y) * smoothstep(.0,.08,p.y);
     lit += vec3(.82,.84,.82) * (strand*.055 + strand2*.035);
   }
+  // Extract current relit highlights, suppress skin and broad white clothing.
+  float protection=(1.0-face)*(1.0-body*.98);
+  float eligibility=protection*clamp(exterior*.35+hair*.25+scene.g*.12+lampBulb,0.0,1.0);
+  if(uView==7) {
+    float luminance=dot(lit,vec3(.2126,.7152,.0722));
+    float excess=max(luminance-uBloomThreshold,0.0)/max(luminance,.0001);
+    color=vec4(clamp(lit*excess*eligibility*uBloomMood,0.0,1.0),1); return;
+  }
+  vec3 glow=texture(uBloomMap,vec2(uv.x,1.0-uv.y)).rgb*protection;
+  if(uView==8) { color=vec4(encode(glow),1); return; }
+  lit+=glow*uBloom;
   // Gentle highlight shoulder, identity below 0.8 (no filmic contrast crush).
   lit=mix(lit,.8+(1.0-exp(-(lit-.8)*5.0))*.2,step(vec3(.8),lit));
   color=vec4(encode(lit),1);

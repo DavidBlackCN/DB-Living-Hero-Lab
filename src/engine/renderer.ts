@@ -2,8 +2,9 @@ import { loadAssets, type AssetOptions } from './assets';
 import { lightingAt } from './lighting';
 import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
-export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay';
-export interface Settings { exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number }
+import { createBloom } from './postprocessing';
+export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom';
+export interface Settings { exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; bloom: number; bloomThreshold: number; bloomRadius: number }
 export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
@@ -43,13 +44,17 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   ['uBase','uNormal','uMask','uSceneMask'].forEach((name,i)=>gl.uniform1i(loc(name),i));
   gl.uniform1i(loc('uHasNormal'),Number(!!assets.normal)); gl.uniform1i(loc('uHasMask'),Number(!!assets.mask));
   gl.uniform1i(loc('uHasSceneMask'),Number(!!assets.sceneMask));
+  gl.uniform1i(loc('uBloomMap'),4);
+  let post: ReturnType<typeof createBloom>;
+  try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
   const timeline = new Timeline(options.time ?? 720);
-  const settings: Settings = { exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.8, hair: 0.85, cloth: 0.9, night: 1, refinement: 1 };
+  const settings: Settings = { exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.8, hair: 0.85, cloth: 0.9, night: 1, refinement: 1, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;
   const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, view });
   function render(now = performance.now()) {
+    gl.useProgram(program);
     const dpr = Math.min(devicePixelRatio || 1,1.5);
     const w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));
     if(canvas.width!==w||canvas.height!==h) { canvas.width=w; canvas.height=h; }
@@ -63,8 +68,18 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform1f(loc('uMotionTime'), now / 1000);
     gl.uniform1f(loc('uSteam'), Number(steam && animation && !reducedMotion));
     gl.uniform1f(loc('uNight'),light.night);
-    for(const [key,name] of Object.entries({exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
-    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay'].indexOf(view));
+    gl.uniform1f(loc('uBloomMood'),.12+.88*Math.max(light.night,light.lamp));
+    for(const [key,name] of Object.entries({exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement',bloom:'uBloom',bloomThreshold:'uBloomThreshold',bloomRadius:'uBloomRadius'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
+    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom'].indexOf(view));
+    const bloomActive=(view==='final'&&settings.bloom>0)||view==='bright'||view==='bloom';
+    if(bloomActive) {
+      post.begin(vw,vh);
+      gl.uniform1i(loc('uView'),7); gl.drawArrays(gl.TRIANGLES,0,3);
+      post.finish(settings.bloomRadius*dpr);
+      gl.useProgram(program);
+      gl.viewport(Math.round((w-vw)/2),Math.round((h-vh)/2),vw,vh);
+      gl.uniform1i(loc('uView'),view==='bright'?7:view==='bloom'?8:0);
+    }
     gl.drawArrays(gl.TRIANGLES,0,3);
   }
   function tick(now: number) {
@@ -94,12 +109,12 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
         if(!Number.isFinite(value)) continue;
         const k=key as keyof Settings;
         if (!(k in settings)) continue;
-        settings[k]=Math.max(k==='exposure'?-1:0,Math.min(['face','night','refinement'].includes(k)?1:2,value));
+        settings[k]=Math.max(k==='exposure'?-1:k==='bloomThreshold'?.4:0,Math.min(['face','night','refinement'].includes(k)?1:k==='bloomThreshold'?1:2,value));
       }
       wake();
     },
     getState: state,
-    destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); cleanup(); },
+    destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); post.destroy(); cleanup(); },
   };
 }
 export type LivingHero = Awaited<ReturnType<typeof createLivingHero>>;

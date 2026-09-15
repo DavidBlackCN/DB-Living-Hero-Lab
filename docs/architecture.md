@@ -12,6 +12,7 @@ The baseline sections below describe Phase 1, retained for the comparison path. 
 - `src/engine/shaders.ts`: full-screen triangle, registered analytic normals/masks, relighting and highlight shoulder.
 - `src/engine/assets.ts`: base and optional normal/mask loading plus dimension validation.
 - `src/engine/animation.ts`: contracts and validation for future registered micro-animation assets; blink is intentionally disabled until an exact closed-eye asset exists.
+- `src/engine/postprocessing.ts`: quarter-resolution bloom targets and separable blur passes.
 
 ## Rendering
 
@@ -68,4 +69,4 @@ The app passes `normalUrl`, `maskUrl` and `sceneMaskUrl` to the engine. `assets.
 - `setSettings({ refinement: 0 })` restores the Phase 1 analytic masks, normals and lighting behavior for comparison. `refinement: 1` restores Phase 2. Other common settings and current time are retained.
 - `setDebugView('scene')` shows the scene RGB map; `setDebugView('overlay')` blends registered region colors over the unlit base for alignment inspection.
 
-Optional maps are still optional for consumers of the engine. Without map URLs it uses analytic fallbacks; the demo app explicitly supplies all three generated maps. All original time, reduced-motion, visibility and destroy APIs remain intact.
+Optional maps are still optional for consumers of the engine. Without map URLs it uses analytic fallbacks; the demo app explicitly supplies all three generated maps. Bloom defaults to intensity 0.22, threshold 0.82 and radius 1.0, with face and broad-cloth protection. All original time, reduced-motion, visibility and destroy APIs remain intact.

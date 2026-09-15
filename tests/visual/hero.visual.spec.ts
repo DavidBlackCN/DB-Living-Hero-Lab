@@ -111,3 +111,25 @@ test('directional structure snapshots across key times', async ({ page }) => {
     await page.locator('#view').selectOption('final');
   }
 });
+
+test('projected window light keyframes and night window boundary', async ({ page }) => {
+  for (const [name, minutes] of [['morning', 480], ['noon', 720], ['dusk', 1050]] as const) {
+    await page.locator('#time').fill(String(minutes));
+    await page.locator('#time').dispatchEvent('change');
+    await page.waitForTimeout(100);
+    await page.screenshot({ path: `docs/screenshots/projected/${name}-final.png`, fullPage: true });
+    await page.locator('#view').selectOption('neutral');
+    await page.screenshot({ path: `docs/screenshots/projected/${name}-neutral.png`, fullPage: true });
+    await page.locator('#view').selectOption('projected');
+    await page.screenshot({ path: `docs/screenshots/projected/${name}-projected.png`, fullPage: true });
+    await page.locator('#view').selectOption('final');
+  }
+  await page.locator('#time').fill('1380');
+  await page.locator('#time').dispatchEvent('change');
+  await page.locator('#view').selectOption('scene');
+  await page.screenshot({ path: 'docs/screenshots/projected/night-scene.png', fullPage: true });
+  await page.locator('#view').selectOption('overlay');
+  await page.screenshot({ path: 'docs/screenshots/projected/night-overlay.png', fullPage: true });
+  await page.locator('#view').selectOption('final');
+  await page.screenshot({ path: 'docs/screenshots/projected/night-final.png', fullPage: true });
+});

@@ -16,8 +16,9 @@ uniform float uBloom, uBloomThreshold, uBloomMood;
 uniform bool uHasNormal, uHasMask, uHasSceneMask;
 uniform vec3 uAmbient, uSun, uDirection;
 uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, uNormalStrength, uFace;
-uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uStylized, uSoftness, uMotionTime, uSteam;
+uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uStylized, uSoftness, uProjected, uProjectedIntensity, uProjectedSoftness, uMotionTime, uSteam;
 uniform int uView;
+uniform float uMinutes;
 float region(vec2 p, vec2 center, vec2 radius) {
   return 1.0-smoothstep(0.60,1.0,length((p-center)/radius));
 }
@@ -28,12 +29,7 @@ void main() {
   if(uView==1) { color=vec4(base,1); return; }
   bool refined = uRefinement > .5;
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
-  // Keep the hand-authored window contour crisp enough that its feather does
-  // not carry the exterior night treatment across the lower window frame.
-  // The authored window mask is feathered for compositing, but its lower
-  // edge must stop at the sill instead of tinting the desk below the frame.
-  float windowEdge = 1.0 - smoothstep(.555,.585,uv.y);
-  float exterior = smoothstep(.72,.96,scene.r) * windowEdge;
+  float exterior = smoothstep(.72,.96,scene.r);
   float night = refined ? uNight*uNightStrength : 0.0;
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
@@ -63,6 +59,20 @@ void main() {
     lampBulb = scene.b;
   }
   light+=vec3(1.0,.66,.36)*uLamp*uLampStrength*(lampPool*.66+lampBulb*.5);
+  float dusk=smoothstep(780.0,1050.0,uMinutes);
+  float morning=1.0-smoothstep(480.0,720.0,uMinutes);
+  float daylight=smoothstep(330.0,480.0,uMinutes)*(1.0-smoothstep(1060.0,1170.0,uMinutes));
+  vec2 axis=normalize(mix(vec2(-.22,.98),vec2(-.88,.48),dusk));
+  vec2 delta=uv-vec2(.86-morning*.14,.27+morning*.08);
+  float along=dot(delta,axis);
+  float across=dot(delta,vec2(-axis.y,axis.x));
+  float width=mix(.10+morning*.05,.065,dusk);
+  float projectedBand=1.0-smoothstep(width,width+max(.01,uProjectedSoftness)*.5,abs(across));
+  float projectedReach=smoothstep(-.12,.02,along)*(1.0-smoothstep(.48,.85,along));
+  float receiver=(1.0-exterior)*(1.0-face)*(1.0-body*.65);
+  receiver*=clamp(scene.g+hair*.95+body*.35,0.0,1.0);
+  float projectedAmount=uProjected*uProjectedIntensity*daylight*mix(.7,2.0,dusk)*projectedBand*projectedReach*receiver;
+  light+=mix(vec3(1),vec3(1.0,.86,.66),dusk)*projectedAmount;
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
   if(refined) {
@@ -91,6 +101,9 @@ void main() {
   if(uView==9) {
     float value=dot(light,vec3(.2126,.7152,.0722));
     color=vec4(vec3(value),1); return;
+  }
+  if(uView==10) {
+    color=vec4(vec3(projectedAmount),1); return;
   }
   vec3 lit=linearize(base)*light*exp2(uExposure);
   if(uView==0 && uSteam > 0.5) {

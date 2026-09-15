@@ -29,7 +29,18 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
   const view = query<HTMLSelectElement>('#view');
-  view.insertAdjacentHTML('beforeend', '<option value="bright">Bright Pass</option><option value="bloom">Bloom Only</option><option value="neutral">Neutral Lighting</option>');
+  view.insertAdjacentHTML('beforeend', '<option value="bright">Bright Pass</option><option value="bloom">Bloom Only</option><option value="neutral">Neutral Lighting</option><option value="projected">Projected Light Only</option>');
+  const projected = document.createElement('label');
+  projected.className = 'check';
+  projected.innerHTML = '<input id="projected" type="checkbox" checked> Projected window light';
+  query('#animation').parentElement!.insertAdjacentElement('afterend', projected);
+  query<HTMLInputElement>('#projected').addEventListener('change', event => engine.setSettings({ projected: Number((event.target as HTMLInputElement).checked) }));
+  for (const [key, label, min, max, value] of [['projectedIntensity','Projected intensity',0,1,.42],['projectedSoftness','Projected softness',.05,.6,.22]] as const) {
+    const row=document.createElement('div'); row.className='slider-row';
+    row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(2)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="0.01" value="${value}">`;
+    row.querySelector('input')!.addEventListener('input',event=>{ const v=Number((event.target as HTMLInputElement).value); row.querySelector('output')!.value=v.toFixed(2); engine.setSettings({[key]:v} as Partial<Settings>); });
+    query('#lighting-controls').append(row);
+  }
   const steam = document.createElement('label');
   steam.className = 'check';
   steam.innerHTML = '<input id="steam" type="checkbox" checked> Coffee steam';

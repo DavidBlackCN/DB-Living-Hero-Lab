@@ -41,3 +41,7 @@ The Bloom controls were corrected so intensity, threshold and radius update sepa
 ## Next candidate
 
 The next low-risk task should be texture/GPU memory optimization or browser performance measurement. Breathing and hair motion remain higher visual-risk because they require registered geometry or carefully bounded local deformation. Blink must remain blocked until an official registered asset exists.
+
+## Texture memory optimization
+
+The four full-resolution source/map textures are now uploaded as RGB8/RGB instead of RGBA8/RGBA because alpha is unused. This reduces the nominal main texture allocation from about 126.6 MiB to about 94.9 MiB at 3840×2160. Bloom render targets remain RGBA8 because they are framebuffer attachments. The visual pipeline and registration are unchanged. Performance JSON now reports canvas memory and source-texture memory separately.

@@ -5,7 +5,8 @@ type Sample = {
   dpr: number;
   bloom: boolean;
   canvas: { width: number; height: number };
-  estimatedColorMiB: number;
+  estimatedCanvasMiB: number;
+  estimatedSourceTexturesMiB: number;
   estimatedBloomMiB: number;
   medianFrameMs: number;
   p95FrameMs: number;
@@ -51,7 +52,8 @@ async function measure(page: import('@playwright/test').Page, dpr: number, bloom
   const pixels = result.width * result.height;
   return {
     dpr, bloom, canvas: { width: result.width, height: result.height },
-    estimatedColorMiB: Number((pixels * 4 / 1048576).toFixed(2)),
+    estimatedCanvasMiB: Number((pixels * 4 / 1048576).toFixed(2)),
+    estimatedSourceTexturesMiB: Number((3840 * 2160 * 3 * 4 / 1048576).toFixed(2)),
     estimatedBloomMiB: Number((Math.ceil(result.width / 4) * Math.ceil(result.height / 4) * 4 * 3 / 1048576).toFixed(2)),
     medianFrameMs: Number(result.median.toFixed(2)),
     p95FrameMs: Number(result.p95.toFixed(2)),

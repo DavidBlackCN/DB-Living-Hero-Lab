@@ -6,7 +6,8 @@
       "width": 1440,
       "height": 900
     },
-    "estimatedColorMiB": 4.94,
+    "estimatedCanvasMiB": 4.94,
+    "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 0.93,
     "medianFrameMs": 16.7,
     "p95FrameMs": 33.3,
@@ -20,10 +21,11 @@
       "width": 1440,
       "height": 900
     },
-    "estimatedColorMiB": 4.94,
+    "estimatedCanvasMiB": 4.94,
+    "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 0.93,
     "medianFrameMs": 16.7,
-    "p95FrameMs": 33.4,
+    "p95FrameMs": 33.3,
     "webglError": 0,
     "pageErrors": []
   }

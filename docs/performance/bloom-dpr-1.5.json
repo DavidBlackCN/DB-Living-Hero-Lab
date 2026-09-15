@@ -6,10 +6,11 @@
       "width": 2160,
       "height": 1350
     },
-    "estimatedColorMiB": 11.12,
+    "estimatedCanvasMiB": 11.12,
+    "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 2.09,
-    "medianFrameMs": 50,
-    "p95FrameMs": 66.7,
+    "medianFrameMs": 33.4,
+    "p95FrameMs": 50.1,
     "webglError": 0,
     "pageErrors": []
   },
@@ -20,10 +21,11 @@
       "width": 2160,
       "height": 1350
     },
-    "estimatedColorMiB": 11.12,
+    "estimatedCanvasMiB": 11.12,
+    "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 2.09,
-    "medianFrameMs": 50,
-    "p95FrameMs": 66.7,
+    "medianFrameMs": 49.9,
+    "p95FrameMs": 50.1,
     "webglError": 0,
     "pageErrors": []
   }

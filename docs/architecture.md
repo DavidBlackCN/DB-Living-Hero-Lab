@@ -55,7 +55,7 @@ Manual times settle over a short exponential transition; midnight takes the shor
 
 ## Phase 2: registered regions and night separation
 
-The app passes `normalUrl`, `maskUrl` and `sceneMaskUrl` to the engine. `assets.ts` loads and validates all four images including the base. The renderer binds one additional scene-mask texture; it remains a single render pass. Four 3840×2160 RGBA8 textures nominally use about 126.6 MiB before framebuffer/browser overhead; no texture compression or mipmaps are currently used.
+The app passes `normalUrl`, `maskUrl` and `sceneMaskUrl` to the engine. `assets.ts` loads and validates all four images including the base. The renderer binds one additional scene-mask texture; it remains a single render pass. The four source/map textures use RGB8 because alpha is unused, nominally using about 94.9 MiB at 3840×2160 before framebuffer/browser overhead. Bloom targets remain RGBA8 at quarter resolution; no texture compression or mipmaps are currently used.
 
 `docs/scene-regions.json` stores hand-authored Bézier/polygon contours in a 1200×675 reference view. `scripts/generate-scene-assets.mjs` creates three 3840×2160 SVGs under `public/assets/generated/`; regenerate with `npm run assets:generate`. The browser rasterizes these during image loading. Flat normals remain the default outside specified surfaces. This gives predictable alignment without modifying the base art, but does not claim a geometrically recovered normal field.
 

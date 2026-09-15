@@ -20,6 +20,14 @@ npm run build
 npm run preview
 ```
 
+视觉回归截图：
+
+```sh
+npm run test:visual
+```
+
+该命令会启动独立 Vite 开发服务器，并在固定 1440x900 Chromium 视口中生成四个时段、四个 debug view 和 Coffee Steam 启用态截图到 `docs/screenshots/phase3/`。
+
 ## 调试
 
 - 时间滑条：0–24h，拖动自动退出 realtime；24:00 与次日 00:00 等价。

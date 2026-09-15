@@ -24,4 +24,4 @@ Fine curls, flyaway hairs, flower stems, transparent glass, pen cup and other th
 
 ## Verification
 
-`npm run assets:generate`, `npm run typecheck`, `npm test`, and `npm run build` pass. The Playwright run completed all 8 screenshot cases successfully; the runner required manual termination after cases completed because the dev-server child process remained alive in this environment.
+`npm run assets:generate`, `npm run typecheck`, `npm test`, and `npm run build` pass. The Playwright run completed all 9 screenshot cases successfully, including the steam-enabled state. The generated `test-results/` directory is ignored and is not part of the source artifact.

@@ -65,6 +65,7 @@ export function createBloom(gl: WebGL2RenderingContext) {
       gl.bindFramebuffer(gl.FRAMEBUFFER,null);
       gl.bindTexture(gl.TEXTURE_2D,textures[2]);
     },
+    getSize() { return { width, height }; },
     destroy,
   };
 }

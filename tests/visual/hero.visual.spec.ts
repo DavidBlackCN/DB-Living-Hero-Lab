@@ -53,6 +53,14 @@ test('bloom controls preserve independent settings', async ({ page }) => {
   await page.screenshot({ path: 'docs/screenshots/phase4/bloom-controls.png', fullPage: true });
 });
 
+test('runtime GPU stats expose quarter-resolution bloom targets', async ({ page }) => {
+  const stats = await page.evaluate(() => (window as unknown as { livingHero: { getStats: () => Record<string, number | boolean> } }).livingHero.getStats());
+  expect(stats.artworkWidth).toBe(3840);
+  expect(stats.artworkHeight).toBe(2160);
+  expect(stats.sourceTextureMiB).toBe(94.92);
+  expect(stats.contextLost).toBe(false);
+});
+
 for (const dpr of [1, 1.5]) {
   test(`bloom DPR ${dpr}`, async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: dpr, reducedMotion: 'reduce' });

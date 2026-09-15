@@ -9,7 +9,7 @@
     "estimatedCanvasMiB": 11.12,
     "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 2.09,
-    "medianFrameMs": 33.5,
+    "medianFrameMs": 49.9,
     "p95FrameMs": 50.1,
     "webglError": 0,
     "pageErrors": []
@@ -24,8 +24,8 @@
     "estimatedCanvasMiB": 11.12,
     "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 2.09,
-    "medianFrameMs": 50,
-    "p95FrameMs": 50.1,
+    "medianFrameMs": 49.9,
+    "p95FrameMs": 66.6,
     "webglError": 0,
     "pageErrors": []
   }

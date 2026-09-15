@@ -49,6 +49,11 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   }
   query<HTMLInputElement>('#animation').addEventListener('change',event=>engine.setAnimation((event.target as HTMLInputElement).checked));
   query<HTMLInputElement>('#reduced').addEventListener('change',event=>engine.setReducedMotion((event.target as HTMLInputElement).checked));
+  const stats=document.createElement('p'); stats.className='note'; stats.id='gpu-stats';
+  query('.controls').append(stats);
+  const updateStats=()=>{ const s=engine.getStats(); stats.textContent=`GPU ${s.canvasWidth}×${s.canvasHeight} · RGB textures ${s.sourceTextureMiB} MiB · Bloom ${s.bloomWidth}×${s.bloomHeight} (${s.bloomTextureMiB} MiB)`; };
+  updateStats();
+  const statsTimer=window.setInterval(updateStats,1000);
   return { update(state: HeroState) {
     query('#clock').textContent=formatTime(state.minutes);
     query('#mode').textContent=state.realtime?'LOCAL TIME':'MANUAL';
@@ -56,5 +61,5 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     if(document.activeElement!==time) time.value=String(Math.round(state.target));
     query('#target').textContent=Number(time.value)===1440?'24:00':formatTime(state.target);
     query<HTMLInputElement>('#reduced').checked=state.reducedMotion;
-  }, destroy() { root.replaceChildren(); } };
+  }, destroy() { window.clearInterval(statsTimer); root.replaceChildren(); } };
 }

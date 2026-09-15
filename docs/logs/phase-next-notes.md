@@ -53,3 +53,7 @@ Added a safe `webglcontextrestored` handler. Since WebGL programs, textures and 
 ## Verification
 
 After the context event lifecycle change: `npm run typecheck`, `npm test`, `npm run build`, and the full Playwright suite all pass. The browser suite remains at 18 passing tests, including DPR checks, Bloom comparisons, performance samples, and the four time-of-day baselines.
+
+## Runtime GPU observability
+
+Added `getStats()` to the engine and a small debug-panel readout for canvas dimensions, RGB source texture estimate, and quarter-resolution Bloom target dimensions/estimate. `postprocessing.ts` exposes the current Bloom target size. The panel clears its refresh interval during destroy. Playwright now asserts the runtime 4K asset dimensions, 94.92 MiB source-texture estimate, and non-lost context state; the browser suite passes 19 tests.

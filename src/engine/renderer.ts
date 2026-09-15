@@ -6,6 +6,7 @@ import { createBloom } from './postprocessing';
 export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom';
 export interface Settings { exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; bloom: number; bloomThreshold: number; bloomRadius: number }
 export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
+export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
   const assets = await loadAssets(options);
@@ -124,6 +125,12 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     },
     getState: state,
     getSettings: (): Settings => ({ ...settings }),
+    getStats: (): HeroStats => {
+      const dpr=Math.min(devicePixelRatio||1,1.5);
+      const canvasWidth=Math.max(1,Math.round(canvas.clientWidth*dpr)), canvasHeight=Math.max(1,Math.round(canvas.clientHeight*dpr));
+      const bloomSize=post.getSize();
+      return { dpr, canvasWidth, canvasHeight, artworkWidth: assets.base.width, artworkHeight: assets.base.height, sourceTextureMiB: Number((assets.base.width*assets.base.height*3*4/1048576).toFixed(2)), bloomWidth: bloomSize.width, bloomHeight: bloomSize.height, bloomTextureMiB: Number((bloomSize.width*bloomSize.height*4*3/1048576).toFixed(2)), contextLost: lost };
+    },
     destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
   };
 }

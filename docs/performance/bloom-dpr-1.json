@@ -25,7 +25,7 @@
     "estimatedSourceTexturesMiB": 94.92,
     "estimatedBloomMiB": 0.93,
     "medianFrameMs": 16.7,
-    "p95FrameMs": 33.3,
+    "p95FrameMs": 33.4,
     "webglError": 0,
     "pageErrors": []
   }

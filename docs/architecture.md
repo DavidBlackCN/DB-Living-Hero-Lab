@@ -51,7 +51,7 @@ Manual times settle over a short exponential transition; midnight takes the shor
 
 `prefers-reduced-motion` is read at initialization and observed for changes. Reduced motion or disabling the animation master skips interpolation. The master also controls the first micro-animation, procedural coffee steam. Steam is Final-view-only, independently toggleable, and disabled by reduced motion or a hidden tab. Blink has a registered-asset contract in `animation.ts`, but remains disabled until an exact closed-eye asset exists. Breathing, hair motion and bloom are not implemented yet.
 
-`destroy()` removes observers/listeners, cancels callbacks and deletes GPU resources. On context loss, the app shows an explicit reload message; automatic GPU resource reconstruction is a later improvement. On initialization failure, a static CSS image is shown with the error and without working lighting controls.
+`destroy()` removes observers/listeners, cancels callbacks and deletes GPU resources. On context loss, the app pauses rendering; when the browser reports restoration, the app performs a full page reload so no invalid WebGL objects are reused. This is a safe recovery path; no-refresh resource reconstruction remains a later improvement. On initialization failure, a static CSS image is shown with the error and without working lighting controls.
 
 ## Phase 2: registered regions and night separation
 

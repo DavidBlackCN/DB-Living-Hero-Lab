@@ -96,8 +96,15 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; wake(); }
   function motion() { reducedMotion=media.matches; wake(); }
   function contextLost(event: Event) { event.preventDefault(); lost=true; cancelAnimationFrame(frame); clearTimeout(timer); frame=0; options.onError?.('WebGL 上下文已丢失，请重新加载页面恢复。'); }
+  function contextRestored() {
+    // GPU objects are invalid after loss. A full page restart is the safe
+    // recovery until resource construction is split into a reusable factory.
+    if(destroyed) return;
+    options.onError?.('WebGL 上下文已恢复，正在重新加载场景。');
+    window.location.reload();
+  }
   const observer = new ResizeObserver(wake); observer.observe(canvas);
-  document.addEventListener('visibilitychange',visibility); media.addEventListener('change',motion); canvas.addEventListener('webglcontextlost',contextLost);
+  document.addEventListener('visibilitychange',visibility); media.addEventListener('change',motion); canvas.addEventListener('webglcontextlost',contextLost); canvas.addEventListener('webglcontextrestored',contextRestored);
   wake();
   return {
     setTime(minutes: number) { timeline.setTime(minutes); wake(); },
@@ -117,7 +124,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     },
     getState: state,
     getSettings: (): Settings => ({ ...settings }),
-    destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); post.destroy(); cleanup(); },
+    destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
   };
 }
 export type LivingHero = Awaited<ReturnType<typeof createLivingHero>>;

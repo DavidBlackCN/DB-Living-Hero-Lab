@@ -45,3 +45,11 @@ The next low-risk task should be texture/GPU memory optimization or browser perf
 ## Texture memory optimization
 
 The four full-resolution source/map textures are now uploaded as RGB8/RGB instead of RGBA8/RGBA because alpha is unused. This reduces the nominal main texture allocation from about 126.6 MiB to about 94.9 MiB at 3840×2160. Bloom render targets remain RGBA8 because they are framebuffer attachments. The visual pipeline and registration are unchanged. Performance JSON now reports canvas memory and source-texture memory separately.
+
+## Context loss recovery
+
+Added a safe `webglcontextrestored` handler. Since WebGL programs, textures and Bloom framebuffers are invalid after context loss, the current implementation reloads the page after the browser reports restoration rather than attempting an incomplete in-place reconstruction. Rendering remains paused during loss. A reusable GPU resource factory can later replace this reload path.
+
+## Verification
+
+After the context event lifecycle change: `npm run typecheck`, `npm test`, `npm run build`, and the full Playwright suite all pass. The browser suite remains at 18 passing tests, including DPR checks, Bloom comparisons, performance samples, and the four time-of-day baselines.

@@ -28,6 +28,11 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   realtime.addEventListener('change',()=>engine.setRealtime(realtime.checked));
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
+  const steam = document.createElement('label');
+  steam.className = 'check';
+  steam.innerHTML = '<input id="steam" type="checkbox" checked> Coffee steam';
+  query('#animation').parentElement!.insertAdjacentElement('afterend', steam);
+  query<HTMLInputElement>('#steam').addEventListener('change',event=>engine.setSteam((event.target as HTMLInputElement).checked));
   query<HTMLInputElement>('#animation').addEventListener('change',event=>engine.setAnimation((event.target as HTMLInputElement).checked));
   query<HTMLInputElement>('#reduced').addEventListener('change',event=>engine.setReducedMotion((event.target as HTMLInputElement).checked));
   return { update(state: HeroState) {

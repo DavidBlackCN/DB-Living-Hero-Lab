@@ -11,6 +11,7 @@ try {
     onUpdate: state=>panel?.update(state), onError: message=>status.textContent=message,
   });
   panel=createPanel(document.querySelector('#debug')!,engine);
+  (window as Window & { livingHero?: typeof engine }).livingHero = engine;
   panel.update(engine.getState());
   status.textContent='WEBGL2 · 3840 × 2160 · 完整构图 · DPR ≤ 1.5';
   window.addEventListener('pagehide',event=>{ if(!event.persisted) { panel?.destroy(); engine.destroy(); } });

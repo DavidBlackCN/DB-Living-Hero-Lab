@@ -9,9 +9,11 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/timeline.test.mjs",
+    "test:visual": "playwright test",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "typescript": "~5.9.3",
     "vite": "^7.1.0"
   }

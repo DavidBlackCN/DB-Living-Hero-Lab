@@ -4,7 +4,7 @@ import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay';
 export interface Settings { exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number }
-export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; view: DebugView }
+export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
   const assets = await loadAssets(options);
@@ -46,10 +46,10 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   const timeline = new Timeline(options.time ?? 720);
   const settings: Settings = { exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.8, hair: 0.85, cloth: 0.9, night: 1, refinement: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
-  let reducedMotion = media.matches, animation = true, view: DebugView = 'final';
+  let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;
-  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, view });
-  function render() {
+  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, view });
+  function render(now = performance.now()) {
     const dpr = Math.min(devicePixelRatio || 1,1.5);
     const w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));
     if(canvas.width!==w||canvas.height!==h) { canvas.width=w; canvas.height=h; }
@@ -60,6 +60,8 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     const light=lightingAt(timeline.minutes);
     gl.uniform3fv(loc('uAmbient'),light.ambient); gl.uniform3fv(loc('uSun'),light.sun); gl.uniform3fv(loc('uDirection'),light.direction);
     gl.uniform1f(loc('uLamp'),light.lamp);
+    gl.uniform1f(loc('uMotionTime'), now / 1000);
+    gl.uniform1f(loc('uSteam'), Number(steam && animation && !reducedMotion));
     gl.uniform1f(loc('uNight'),light.night);
     for(const [key,name] of Object.entries({exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
     gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay'].indexOf(view));
@@ -68,10 +70,10 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   function tick(now: number) {
     frame=0; if(destroyed||lost||document.hidden) return;
     timeline.update(Math.max(0,Math.min((now-previous)/1000,.1)),reducedMotion||!animation); previous=now;
-    render();
+    render(now);
     if(now-lastNotify>80 || timeline.minutes===timeline.target) { options.onUpdate?.(state()); lastNotify=now; }
     if(timeline.minutes!==timeline.target) frame=requestAnimationFrame(tick);
-    else if(timeline.realtime) timer=window.setTimeout(wake,1000);
+    else if(timeline.realtime || (steam && animation && !reducedMotion)) timer=window.setTimeout(wake, steam ? 33 : 1000);
   }
   function wake() { clearTimeout(timer); if(!destroyed&&!lost&&!document.hidden&&!frame) { previous=performance.now(); frame=requestAnimationFrame(tick); } }
   function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; wake(); }
@@ -85,6 +87,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     setRealtime(enabled: boolean) { timeline.realtime=enabled; wake(); },
     setReducedMotion(enabled: boolean) { reducedMotion=enabled; wake(); },
     setAnimation(enabled: boolean) { animation=enabled; wake(); },
+    setSteam(enabled: boolean) { steam=enabled; wake(); },
     setDebugView(mode: DebugView) { view=mode; wake(); },
     setSettings(patch: Partial<Settings>) {
       for(const [key,value] of Object.entries(patch)) {

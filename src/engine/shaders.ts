@@ -14,7 +14,7 @@ uniform sampler2D uBase, uNormal, uMask, uSceneMask;
 uniform bool uHasNormal, uHasMask, uHasSceneMask;
 uniform vec3 uAmbient, uSun, uDirection;
 uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, uNormalStrength, uFace;
-uniform float uHair, uCloth, uNight, uNightStrength, uRefinement;
+uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uMotionTime, uSteam;
 uniform int uView;
 float region(vec2 p, vec2 center, vec2 radius) {
   return 1.0-smoothstep(0.60,1.0,length((p-center)/radius));
@@ -80,6 +80,13 @@ void main() {
     color=vec4(mix(base,tint,.42*coverage),1); return;
   }
   vec3 lit=linearize(base)*light*exp2(uExposure);
+  if(uView==0 && uSteam > 0.5) {
+    vec2 p = uv - vec2(.825,.635);
+    float wave = sin(p.y*34.0 + uMotionTime*.55) * .010;
+    float strand = exp(-pow((p.x-wave)/.012, 2.0)) * smoothstep(.10,-.02,p.y) * smoothstep(.0,.07,p.y);
+    float strand2 = exp(-pow((p.x+.035+sin(p.y*29.0+uMotionTime*.42)*.008)/.010, 2.0)) * smoothstep(.11,.01,p.y) * smoothstep(.0,.08,p.y);
+    lit += vec3(.82,.84,.82) * (strand*.055 + strand2*.035);
+  }
   // Gentle highlight shoulder, identity below 0.8 (no filmic contrast crush).
   lit=mix(lit,.8+(1.0-exp(-(lit-.8)*5.0))*.2,step(vec3(.8),lit));
   color=vec4(encode(lit),1);

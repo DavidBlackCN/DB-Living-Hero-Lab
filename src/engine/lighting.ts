@@ -14,18 +14,23 @@ const keys = [
 ];
 // Art-directed darkness, independent of lamp strength and user exposure.
 const nightWeights = [1, 0.8, 0.1, 0, 0, 0, 0.18, 0.85, 1, 1];
+const directions = [
+  [0.54, -0.62, 0.56], [0.58, -0.52, 0.62], [0.46, -0.78, 0.63],
+  [0.10, -0.96, 0.72], [-0.04, -0.98, 0.76], [0.34, -0.82, 0.70],
+  [0.82, -0.34, 0.46], [0.86, -0.12, 0.36], [0.70, -0.38, 0.48], [0.54, -0.62, 0.56],
+];
 export function lightingAt(minutes: number) {
   const t = wrapTime(minutes);
   const i = keys.findIndex((key, index) => index < keys.length - 1 && t >= key.time && t < keys[index + 1].time);
   const a = keys[i], b = keys[i + 1];
   const x = (t - a.time) / (b.time - a.time), f = x * x * (3 - 2 * x);
   const mix = (u: number, v: number) => u + (v - u) * f;
-  const angle = (t / 1440) * Math.PI * 2;
+  const direction = directions[i].map((v, j) => mix(v, directions[i + 1][j]));
   return {
     ambient: a.ambient.map((v, j) => mix(v, b.ambient[j])),
     night: mix(nightWeights[i], nightWeights[i + 1]),
     sun: a.sun.map((v, j) => mix(v, b.sun[j])), lamp: mix(a.lamp, b.lamp),
     // Keep the key light on the actual window side (image right).
-    direction: [0.65, -0.35 + 0.18 * Math.cos(angle), 0.72],
+    direction,
   };
 }

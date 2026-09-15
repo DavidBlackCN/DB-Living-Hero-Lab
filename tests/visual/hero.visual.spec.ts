@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 const times = [
   ['dawn', 360], ['noon', 720], ['dusk', 1050], ['night', 1380],
 ] as const;
-const views = ['normal', 'masks', 'scene', 'overlay'] as const;
+const views = ['normal', 'masks', 'scene', 'overlay', 'neutral'] as const;
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -99,3 +99,15 @@ for (const view of views) {
     await page.screenshot({ path: `docs/screenshots/phase3/${view}.png`, fullPage: true });
   });
 }
+
+test('directional structure snapshots across key times', async ({ page }) => {
+  for (const [name, minutes] of [['morning', 480], ['noon', 720], ['dusk', 1050], ['night', 1380]] as const) {
+    await page.locator('#time').fill(String(minutes));
+    await page.locator('#time').dispatchEvent('change');
+    await page.waitForTimeout(100);
+    await page.screenshot({ path: `docs/screenshots/phase-next/${name}-final.png`, fullPage: true });
+    await page.locator('#view').selectOption('neutral');
+    await page.screenshot({ path: `docs/screenshots/phase-next/${name}-neutral.png`, fullPage: true });
+    await page.locator('#view').selectOption('final');
+  }
+});

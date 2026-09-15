@@ -16,7 +16,7 @@ uniform float uBloom, uBloomThreshold, uBloomMood;
 uniform bool uHasNormal, uHasMask, uHasSceneMask;
 uniform vec3 uAmbient, uSun, uDirection;
 uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, uNormalStrength, uFace;
-uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uMotionTime, uSteam;
+uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uStylized, uSoftness, uMotionTime, uSteam;
 uniform int uView;
 float region(vec2 p, vec2 center, vec2 radius) {
   return 1.0-smoothstep(0.60,1.0,length((p-center)/radius));
@@ -28,7 +28,9 @@ void main() {
   if(uView==1) { color=vec4(base,1); return; }
   bool refined = uRefinement > .5;
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
-  float exterior = scene.r;
+  // Keep the hand-authored window contour crisp enough that its feather does
+  // not carry the exterior night treatment across the lower window frame.
+  float exterior = smoothstep(.42,.68,scene.r);
   float night = refined ? uNight*uNightStrength : 0.0;
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
@@ -44,6 +46,8 @@ void main() {
   if(uHasNormal && refined) normal=normalize(texture(uNormal,uv).rgb*2.0-1.0);
   normal=normalize(mix(vec3(0,0,1),normal,uNormalStrength));
   float diffuse=.35+.65*max(dot(normal,normalize(uDirection)),0.0);
+  float broad=smoothstep(.38-uSoftness,.62+uSoftness,dot(normal,normalize(uDirection)));
+  diffuse=mix(diffuse,mix(.48,1.0,broad),uStylized);
   float window=smoothstep(.43,.94,uv.x);
   float receive=mix(.36,1.0,window);
   if(refined) receive *= 1.0 + hair*(uHair-1.0) + body*(uCloth-1.0);
@@ -80,6 +84,10 @@ void main() {
     vec3 tint = vec3(face,hair,body) + vec3(.1,.7,1)*exterior + vec3(1,.6,.1)*scene.g;
     float coverage = clamp(face+hair+body+exterior+scene.g,0.0,1.0);
     color=vec4(mix(base,tint,.42*coverage),1); return;
+  }
+  if(uView==9) {
+    float value=dot(light,vec3(.2126,.7152,.0722));
+    color=vec4(vec3(value),1); return;
   }
   vec3 lit=linearize(base)*light*exp2(uExposure);
   if(uView==0 && uSteam > 0.5) {

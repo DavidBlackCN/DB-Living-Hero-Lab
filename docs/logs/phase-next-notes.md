@@ -34,6 +34,10 @@ The bloom target is quarter-resolution and uses two lightweight fullscreen blur 
 
 The Bloom controls were corrected so intensity, threshold and radius update separate engine settings. Toggling Bloom off and on preserves the selected intensity instead of restoring the default. Playwright now asserts those values through `getSettings()`, checks for page errors and WebGL errors, and validates 1440x900 canvas dimensions at DPR 1.0 and 1.5. The full browser suite completed 16 tests successfully.
 
+## Local performance baseline
+
+`npm run test:perf` records Bloom OFF/ON samples at DPR 1.0 and 1.5 in `docs/performance/`. On the current Chromium machine, DPR 1.0 measured a 16.7ms median frame interval and roughly 33.3ms p95 with or without Bloom. DPR 1.5 measured a 50ms median and 66.7ms p95 with or without Bloom. This suggests the high-DPR cost is dominated by the scene/render target workload rather than the quarter-resolution Bloom pass, but it is only a single-machine headless Chromium baseline. All samples reported WebGL error 0 and no page errors.
+
 ## Next candidate
 
 The next low-risk task should be texture/GPU memory optimization or browser performance measurement. Breathing and hair motion remain higher visual-risk because they require registered geometry or carefully bounded local deformation. Blink must remain blocked until an official registered asset exists.

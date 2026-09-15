@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/timeline.test.mjs",
     "test:visual": "playwright test",
+    "test:perf": "playwright test tests/visual/performance.spec.ts",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {

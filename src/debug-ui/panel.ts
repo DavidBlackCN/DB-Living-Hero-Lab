@@ -39,11 +39,12 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   bloom.className = 'check';
   bloom.innerHTML = '<input id="bloom" type="checkbox" checked> Bloom';
   query('#steam').parentElement!.insertAdjacentElement('afterend', bloom);
-  query<HTMLInputElement>('#bloom').addEventListener('change',event=>engine.setSettings({ bloom: (event.target as HTMLInputElement).checked ? .22 : 0 }));
+  let bloomIntensity = .22;
+  query<HTMLInputElement>('#bloom').addEventListener('change',event=>engine.setSettings({ bloom: (event.target as HTMLInputElement).checked ? bloomIntensity : 0 }));
   for (const [key, label, min, max, value] of [['bloomIntensity','Bloom intensity',0,1,.22],['bloomThreshold','Bloom threshold',.4,1,.82],['bloomRadius','Bloom radius',.5,2,1]] as const) {
     const row=document.createElement('div'); row.className='slider-row';
     row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(2)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="0.01" value="${value}">`;
-    row.querySelector('input')!.addEventListener('input',event=>{ const v=Number((event.target as HTMLInputElement).value); row.querySelector('output')!.value=v.toFixed(2); engine.setSettings({bloom:v} as Partial<Settings>); });
+    row.querySelector('input')!.addEventListener('input',event=>{ const v=Number((event.target as HTMLInputElement).value); row.querySelector('output')!.value=v.toFixed(2); const patch: Partial<Settings> = key === 'bloomIntensity' ? { bloom:v } : key === 'bloomThreshold' ? { bloomThreshold:v } : { bloomRadius:v }; engine.setSettings(patch); if(key==='bloomIntensity') { bloomIntensity=v; query<HTMLInputElement>('#bloom').checked=v>0; } });
     query('#lighting-controls').append(row);
   }
   query<HTMLInputElement>('#animation').addEventListener('change',event=>engine.setAnimation((event.target as HTMLInputElement).checked));

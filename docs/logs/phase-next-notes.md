@@ -30,6 +30,10 @@ Playwright captured matched Dusk and Night Bloom OFF/ON screenshots. Dusk ON add
 
 The bloom target is quarter-resolution and uses two lightweight fullscreen blur passes. The main relighting pass remains one draw, and bloom adds three draws only when enabled or when a bloom debug view is selected. DPR 1.0 and 1.5 use the same scaled quarter-resolution target strategy; a cross-GPU benchmark is still future work.
 
+## Follow-up validation
+
+The Bloom controls were corrected so intensity, threshold and radius update separate engine settings. Toggling Bloom off and on preserves the selected intensity instead of restoring the default. Playwright now asserts those values through `getSettings()`, checks for page errors and WebGL errors, and validates 1440x900 canvas dimensions at DPR 1.0 and 1.5. The full browser suite completed 16 tests successfully.
+
 ## Next candidate
 
 The next low-risk task should be texture/GPU memory optimization or browser performance measurement. Breathing and hair motion remain higher visual-risk because they require registered geometry or carefully bounded local deformation. Blink must remain blocked until an official registered asset exists.

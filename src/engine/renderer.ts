@@ -114,6 +114,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
       wake();
     },
     getState: state,
+    getSettings: (): Settings => ({ ...settings }),
     destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); post.destroy(); cleanup(); },
   };
 }

@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const times = [
   ['dawn', 360], ['noon', 720], ['dusk', 1050], ['night', 1380],
@@ -37,6 +37,43 @@ test('coffee steam enabled state', async ({ page }) => {
   await page.waitForTimeout(120);
   await page.screenshot({ path: 'docs/screenshots/phase3/steam-enabled.png', fullPage: true });
 });
+
+test('bloom controls preserve independent settings', async ({ page }) => {
+  const state = await page.evaluate(() => (window as Window & { livingHero?: { setSettings: (settings: Record<string, number>) => void; getState: () => unknown } }).livingHero?.getState());
+  if (!state) throw new Error('Living Hero engine did not initialize');
+  await page.locator('#bloomIntensity').fill('0.14');
+  await page.locator('#bloomThreshold').fill('0.91');
+  await page.locator('#bloomRadius').fill('1.45');
+  await page.locator('input[type="checkbox"]#bloom').uncheck();
+  await page.locator('input[type="checkbox"]#bloom').check();
+  const settings = await page.evaluate(() => (window as unknown as { livingHero: { getSettings: () => Record<string, number> } }).livingHero.getSettings());
+  expect(settings.bloom).toBe(.14);
+  expect(settings.bloomThreshold).toBe(.91);
+  expect(settings.bloomRadius).toBe(1.45);
+  await page.screenshot({ path: 'docs/screenshots/phase4/bloom-controls.png', fullPage: true });
+});
+
+for (const dpr of [1, 1.5]) {
+  test(`bloom DPR ${dpr}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: dpr, reducedMotion: 'reduce' });
+    try {
+      const page = await context.newPage();
+      const errors: string[] = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.goto('http://127.0.0.1:4173');
+      await page.locator('#animation').uncheck();
+      await page.getByRole('button', { name: 'Dusk', exact: true }).click();
+      await expect(page.locator('#clock')).toHaveText('17:30');
+      const result = await page.locator('#hero').evaluate((element: HTMLCanvasElement) => {
+        const gl = element.getContext('webgl2')!;
+        return { width: element.width, height: element.height, error: gl.getError() };
+      });
+      expect(result).toEqual({ width: 1440*dpr, height: 900*dpr, error: 0 });
+      expect(errors).toEqual([]);
+      await page.screenshot({ path: `docs/screenshots/phase4/dusk-dpr-${dpr}.png` });
+    } finally { await context.close(); }
+  });
+}
 
 for (const [name, minutes] of times) {
   test(`visual baseline: ${name}`, async ({ page }) => {

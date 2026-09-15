@@ -11,7 +11,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     <label for="view">调试视图</label><select id="view"><option value="final">Final · 合成画面</option><option value="base">Base · 原图对照</option><option value="normal">Normal · 低频法线</option><option value="masks">Masks · 人物遮罩</option><option value="lighting">Lighting · 光照贡献</option><option value="scene">Scene · 窗外 / 桌面 / 灯</option><option value="overlay">Overlay · 配准叠加</option></select>
     <label class="check"><input id="animation" type="checkbox" checked>动画总开关 · 时间平滑过渡</label>
     <label class="check"><input id="reduced" type="checkbox">减少动态效果</label>
-    <p class="note">手工轮廓遮罩 / 低频法线 · 仍为近似<br>当前阶段不含眨眼、呼吸与蒸汽。</p></div></details>`;
+    <p class="note">手工轮廓遮罩 / 低频法线 · 仍为近似<br>含投光、Bloom、蒸汽；眨眼尚未接入。</p></div></details>`;
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   for(const [key,label,min,max,value] of [
     ['exposure','曝光 EV',-1,1,0],['ambient','环境光',0,2,1],['sun','窗光',0,2,1],['lamp','台灯',0,2,1],['normal','法线强度',0,2,1],['face','脸部保护',0,1,.8],

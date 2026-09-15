@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { visualRoot } from './review-output';
 
 const times = [
   ['dawn', 360], ['noon', 720], ['dusk', 1050], ['night', 1380],
@@ -18,16 +19,16 @@ for (const [name, minutes] of [['dusk', 1050], ['night', 1380]] as const) {
     await page.locator('#time').fill(String(minutes));
     await page.locator('#time').dispatchEvent('change');
     await page.locator('input[type="checkbox"]#bloom').uncheck();
-    await page.screenshot({ path: `docs/screenshots/phase4/${name}-bloom-off.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase4/${name}-bloom-off.png`, fullPage: true });
     await page.locator('input[type="checkbox"]#bloom').check();
-    await page.screenshot({ path: `docs/screenshots/phase4/${name}-bloom-on.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase4/${name}-bloom-on.png`, fullPage: true });
   });
 }
 
 for (const view of ['bright', 'bloom'] as const) {
   test(`bloom debug: ${view}`, async ({ page }) => {
     await page.locator('#view').selectOption(view);
-    await page.screenshot({ path: `docs/screenshots/phase4/${view}.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase4/${view}.png`, fullPage: true });
   });
 }
 
@@ -35,7 +36,7 @@ test('coffee steam enabled state', async ({ page }) => {
   await page.locator('#animation').check();
   await page.locator('#steam').check();
   await page.waitForTimeout(120);
-  await page.screenshot({ path: 'docs/screenshots/phase3/steam-enabled.png', fullPage: true });
+  await page.screenshot({ path: `${visualRoot}/phase3/steam-enabled.png`, fullPage: true });
 });
 
 test('bloom controls preserve independent settings', async ({ page }) => {
@@ -50,7 +51,7 @@ test('bloom controls preserve independent settings', async ({ page }) => {
   expect(settings.bloom).toBe(.14);
   expect(settings.bloomThreshold).toBe(.91);
   expect(settings.bloomRadius).toBe(1.45);
-  await page.screenshot({ path: 'docs/screenshots/phase4/bloom-controls.png', fullPage: true });
+  await page.screenshot({ path: `${visualRoot}/phase4/bloom-controls.png`, fullPage: true });
 });
 
 test('runtime GPU stats expose quarter-resolution bloom targets', async ({ page }) => {
@@ -78,7 +79,7 @@ for (const dpr of [1, 1.5]) {
       });
       expect(result).toEqual({ width: 1440*dpr, height: 900*dpr, error: 0 });
       expect(errors).toEqual([]);
-      await page.screenshot({ path: `docs/screenshots/phase4/dusk-dpr-${dpr}.png` });
+      await page.screenshot({ path: `${visualRoot}/phase4/dusk-dpr-${dpr}.png` });
     } finally { await context.close(); }
   });
 }
@@ -88,7 +89,7 @@ for (const [name, minutes] of times) {
     await page.locator('#time').fill(String(minutes));
     await page.locator('#time').dispatchEvent('change');
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `docs/screenshots/phase3/${name}.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase3/${name}.png`, fullPage: true });
   });
 }
 
@@ -96,7 +97,7 @@ for (const view of views) {
   test(`visual debug: ${view}`, async ({ page }) => {
     await page.locator('#view').selectOption(view);
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `docs/screenshots/phase3/${view}.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase3/${view}.png`, fullPage: true });
   });
 }
 
@@ -105,9 +106,9 @@ test('directional structure snapshots across key times', async ({ page }) => {
     await page.locator('#time').fill(String(minutes));
     await page.locator('#time').dispatchEvent('change');
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `docs/screenshots/phase-next/${name}-final.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase-next/${name}-final.png`, fullPage: true });
     await page.locator('#view').selectOption('neutral');
-    await page.screenshot({ path: `docs/screenshots/phase-next/${name}-neutral.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/phase-next/${name}-neutral.png`, fullPage: true });
     await page.locator('#view').selectOption('final');
   }
 });
@@ -117,19 +118,19 @@ test('projected window light keyframes and night window boundary', async ({ page
     await page.locator('#time').fill(String(minutes));
     await page.locator('#time').dispatchEvent('change');
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `docs/screenshots/projected/${name}-final.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/projected/${name}-final.png`, fullPage: true });
     await page.locator('#view').selectOption('neutral');
-    await page.screenshot({ path: `docs/screenshots/projected/${name}-neutral.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/projected/${name}-neutral.png`, fullPage: true });
     await page.locator('#view').selectOption('projected');
-    await page.screenshot({ path: `docs/screenshots/projected/${name}-projected.png`, fullPage: true });
+    await page.screenshot({ path: `${visualRoot}/projected/${name}-projected.png`, fullPage: true });
     await page.locator('#view').selectOption('final');
   }
   await page.locator('#time').fill('1380');
   await page.locator('#time').dispatchEvent('change');
   await page.locator('#view').selectOption('scene');
-  await page.screenshot({ path: 'docs/screenshots/projected/night-scene.png', fullPage: true });
+  await page.screenshot({ path: `${visualRoot}/projected/night-scene.png`, fullPage: true });
   await page.locator('#view').selectOption('overlay');
-  await page.screenshot({ path: 'docs/screenshots/projected/night-overlay.png', fullPage: true });
+  await page.screenshot({ path: `${visualRoot}/projected/night-overlay.png`, fullPage: true });
   await page.locator('#view').selectOption('final');
-  await page.screenshot({ path: 'docs/screenshots/projected/night-final.png', fullPage: true });
+  await page.screenshot({ path: `${visualRoot}/projected/night-final.png`, fullPage: true });
 });

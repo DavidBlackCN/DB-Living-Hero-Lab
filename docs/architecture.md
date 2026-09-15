@@ -1,5 +1,23 @@
 # Living Hero architecture
 
+## Current review update — 2026-09-16
+
+The historical baseline below is retained for context. Current glass/receiver
+semantics, projected-light algorithm, validation and constraints are documented
+in [window-light-review.md](logs/window-light-review.md).
+
+- `lighting.ts` exports `projectedLightAt` for continuous artwork-directed daylight.
+- `renderer.ts` uploads its geometry/shape/energy; `shaders.ts` evaluates two soft
+  aperture lobes in aspect-correct image coordinates and gates them by receivers.
+- Scene R is directly usable glass coverage with an inward-only feather. Scene G
+  is indoor receiver weight, including book/cup/stacked books/chair as well as desk.
+  Scene B remains lamp emission. Texture count and core API are unchanged.
+- Flower occlusion is generated offline by Python/Pillow/NumPy within the source
+  JSON ROI and embedded in the scene SVG; there is no new runtime texture/pass.
+- Neutral is fixed-scale grayscale luminance (×0.6); Projected is raw projection.
+- Blink remains a dormant contract; [the registered-asset workflow](logs/blink-registered-plan.md)
+  describes the future pre-relighting composition seam without a current branch.
+
 The baseline sections below describe Phase 1, retained for the comparison path. **The current app loads the Phase 2 maps and uses the refinements documented at the end of this file by default.**
 
 ## Boundaries

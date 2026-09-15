@@ -1,19 +1,19 @@
-# Phase 1 visual validation
+# Visual validation artifacts
 
-These are retained baseline captures. See [Phase 2](phase2/README.md) for the current rendering and same-viewport comparison.
+Screenshots and generated metrics are local QA artifacts, excluded from Git.
+Only Markdown instructions in this directory are tracked. Runtime artwork and
+technical textures under `public/assets/` remain tracked.
 
-Actual Edge browser screenshots, default lighting values, full composition. JPEG bytes are saved as `.jpg` without repainting. The debug panel is included to show the time and control values.
+Current instructions: [window / projected-light review](window-light-review/README.md).
+Image links there work after local capture; images are not shipped in a fresh clone.
 
-| Dawn · 06:00 | Noon · 12:00 |
-| --- | --- |
-| ![Dawn](dawn.jpg) | ![Noon](noon.jpg) |
+```powershell
+$env:VISUAL_OUTPUT_ROOT='docs/screenshots/window-light-review/stage2'
+npm run test:visual
+python scripts/summarize-visual-review.py
+```
 
-| Dusk · 17:30 | Night · 23:00 |
-| --- | --- |
-| ![Dusk](dusk.jpg) | ![Night](night.jpg) |
-
-Additional diagnostic captures: `debug-normal.jpg`, `debug-masks.jpg`.
-
-To reproduce: `npm run dev`, open the root page, use default strengths, Final view, realtime off, click each named preset and wait until the large rendered clock reaches the target before capturing. Keep the same viewport and panel state across all four shots. Update these images after a major shader or lighting change.
-
-`source-preview.jpg` is a 1200×675 downscaled source inspection image, not a rendering validation screenshot.
+Old phase screenshots and rejected Blink preview images were removed during the
+2026-09-16 cleanup. Historical observations remain in `docs/logs/`; this cleanup
+does not rewrite earlier Git commits. Pre-change captures cannot be recreated
+using the current renderer. The summary script skips unavailable earlier stages.

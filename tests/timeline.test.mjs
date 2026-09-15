@@ -9,7 +9,7 @@ const url = source => `data:text/javascript;base64,${Buffer.from(source).toStrin
 const timelineUrl = url(compile(await readFile(new URL('../src/engine/timeline.ts', import.meta.url), 'utf8')));
 const { Timeline, wrapTime, formatTime, localMinutes } = await import(timelineUrl);
 const lightingSource = compile(await readFile(new URL('../src/engine/lighting.ts', import.meta.url), 'utf8')).replace("'./timeline'", JSON.stringify(timelineUrl));
-const { lightingAt } = await import(url(lightingSource));
+const { lightingAt, projectedLightAt } = await import(url(lightingSource));
 
 test('24h endpoint and negative times wrap consistently', () => {
   assert.equal(wrapTime(1440), 0); assert.equal(wrapTime(-1), 1439);
@@ -46,4 +46,20 @@ test('night suppression is off at noon and strongest at night', () => {
   assert.equal(lightingAt(720).night, 0);
   assert.equal(lightingAt(1380).night, 1);
   assert.ok(lightingAt(360).night < lightingAt(1050).night);
+});
+
+test('window projection is continuous, window-side and absent after sunset', () => {
+  for (let m=0; m<=1440; m++) {
+    const p=projectedLightAt(m);
+    assert.ok([...p.origin,...p.axis,p.width,p.spread,p.separation,p.reach,p.energy].every(Number.isFinite));
+    assert.ok(p.origin[0] >= .87 && p.origin[0] <= .96);
+    assert.ok(p.axis[0] < 0 && p.axis[1] > 0);
+    assert.ok(p.width > 0 && p.energy >= 0);
+    if (m<=330 || m>=1170) assert.equal(p.energy,0);
+    const next=projectedLightAt(m+.001);
+    assert.ok(Math.abs(next.energy-p.energy)<.001);
+    assert.ok(next.origin.every((v,j)=>Math.abs(v-p.origin[j])<.001));
+    assert.ok(next.axis.every((v,j)=>Math.abs(v-p.axis[j])<.001));
+  }
+  assert.deepEqual(projectedLightAt(0),projectedLightAt(1440));
 });

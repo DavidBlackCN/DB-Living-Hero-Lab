@@ -34,3 +34,31 @@ export function lightingAt(minutes: number) {
     direction,
   };
 }
+
+// Art-directed projection in artwork space. Origin stays in the real right-hand
+// window; axis uses equal X/Y units (image height), not stretched 16:9 UVs.
+// These are lighting keyframes, not additional user-facing tuning parameters.
+const projectionKeys = [
+  { time: 0, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
+  { time: 330, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
+  { time: 480, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: .85 },
+  { time: 720, origin: [.90,.18], axis: [-.42,.907], width: .22, spread: .045, separation: .16, reach: 1.05, energy: .72 },
+  { time: 1050, origin: [.94,.28], axis: [-.90,.435], width: .105, spread: .08, separation: .27, reach: 1.10, energy: 1.65 },
+  { time: 1170, origin: [.96,.32], axis: [-.95,.312], width: .105, spread: .08, separation: .27, reach: 1.15, energy: 0 },
+  { time: 1440, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
+];
+
+export function projectedLightAt(minutes: number) {
+  const t = wrapTime(minutes);
+  const i = projectionKeys.findIndex((key, index) => index < projectionKeys.length-1 && t >= key.time && t < projectionKeys[index+1].time);
+  const a = projectionKeys[i], b = projectionKeys[i+1];
+  const x = (t-a.time)/(b.time-a.time), f = x*x*(3-2*x);
+  const mix = (u: number, v: number) => u + (v-u)*f;
+  return {
+    origin: a.origin.map((v,j) => mix(v,b.origin[j])),
+    axis: a.axis.map((v,j) => mix(v,b.axis[j])),
+    width: mix(a.width,b.width), spread: mix(a.spread,b.spread),
+    separation: mix(a.separation,b.separation), reach: mix(a.reach,b.reach),
+    energy: mix(a.energy,b.energy),
+  };
+}

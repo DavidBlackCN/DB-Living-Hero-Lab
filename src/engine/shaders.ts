@@ -19,6 +19,8 @@ uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, u
 uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uStylized, uSoftness, uProjected, uProjectedIntensity, uProjectedSoftness, uMotionTime, uSteam;
 uniform int uView;
 uniform float uMinutes;
+uniform vec4 uProjectionGeometry, uProjectionShape;
+uniform float uProjectionEnergy;
 float region(vec2 p, vec2 center, vec2 radius) {
   return 1.0-smoothstep(0.60,1.0,length((p-center)/radius));
 }
@@ -29,7 +31,9 @@ void main() {
   if(uView==1) { color=vec4(base,1); return; }
   bool refined = uRefinement > .5;
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
-  float exterior = smoothstep(.72,.96,scene.r);
+  // Source-authored glass coverage already has an inward-only edge transition.
+  // Scene, Overlay, lamp exclusion and night suppression share this exact value.
+  float exterior = scene.r;
   float night = refined ? uNight*uNightStrength : 0.0;
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
@@ -60,19 +64,22 @@ void main() {
   }
   light+=vec3(1.0,.66,.36)*uLamp*uLampStrength*(lampPool*.66+lampBulb*.5);
   float dusk=smoothstep(780.0,1050.0,uMinutes);
-  float morning=1.0-smoothstep(480.0,720.0,uMinutes);
-  float daylight=smoothstep(330.0,480.0,uMinutes)*(1.0-smoothstep(1060.0,1170.0,uMinutes));
-  vec2 axis=normalize(mix(vec2(-.22,.98),vec2(-.88,.48),dusk));
-  vec2 delta=uv-vec2(.86-morning*.14,.27+morning*.08);
+  vec2 axis=normalize(uProjectionGeometry.zw);
+  vec2 delta=(uv-uProjectionGeometry.xy)*vec2(1200.0/675.0,1.0);
   float along=dot(delta,axis);
   float across=dot(delta,vec2(-axis.y,axis.x));
-  float width=mix(.10+morning*.05,.065,dusk);
-  float projectedBand=1.0-smoothstep(width,width+max(.01,uProjectedSoftness)*.5,abs(across));
-  float projectedReach=smoothstep(-.12,.02,along)*(1.0-smoothstep(.48,.85,along));
-  float receiver=(1.0-exterior)*(1.0-face)*(1.0-body*.65);
-  receiver*=clamp(scene.g+hair*.95+body*.35,0.0,1.0);
-  float projectedAmount=uProjected*uProjectedIntensity*daylight*mix(.7,2.0,dusk)*projectedBand*projectedReach*receiver;
-  light+=mix(vec3(1),vec3(1.0,.86,.66),dusk)*projectedAmount;
+  float width=uProjectionShape.x + max(along,0.0)*uProjectionShape.y + (uProjectedSoftness-.22)*.12;
+  width=max(width,.025);
+  // Two diffuse aperture lobes, with a soft mullion gap. Widening penumbra
+  // and distance falloff avoid a flat translucent rectangle over the image.
+  float upper=exp(-2.0*pow(across/width,2.0));
+  float lower=exp(-2.0*pow((across+uProjectionShape.z)/(width*1.12),2.0));
+  float projectedBand=1.0-(1.0-upper)*(1.0-lower*.78);
+  float projectedReach=smoothstep(-.06,.08,along)*(1.0-smoothstep(uProjectionShape.w*.58,uProjectionShape.w,along));
+  float receiver=max(scene.g,max(hair*.82*uHair,body*.62*uCloth));
+  receiver=clamp(receiver,0.0,1.0)*(1.0-exterior)*(1.0-face);
+  float projectedAmount=(refined && uHasSceneMask ? 1.0 : 0.0)*uProjected*uProjectedIntensity*uSunStrength*uProjectionEnergy*projectedBand*projectedReach*receiver;
+  light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
   if(refined) {
@@ -100,7 +107,9 @@ void main() {
   }
   if(uView==9) {
     float value=dot(light,vec3(.2126,.7152,.0722));
-    color=vec4(vec3(value),1); return;
+    // Fixed scale across all times, so daylight coefficients above 1 remain
+    // distinguishable. No per-frame normalization that hides energy changes.
+    color=vec4(vec3(value*.6),1); return;
   }
   if(uView==10) {
     color=vec4(vec3(projectedAmount),1); return;

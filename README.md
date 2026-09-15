@@ -1,6 +1,10 @@
 # Black Sister Living Hero Lab
 
-独立的 Living Hero 光影实验工程。当前已在 Lighting MVP 基础上完成 **Phase 2 区域光照迭代**，以原始 4K 插画为底图，使用 Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。
+独立的 Living Hero 光影实验工程。当前完成 **窗户边界校准与时段投光迭代（2026-09-16）**，以原始 4K 插画为底图，使用 Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。
+
+本轮人工验收入口：[四时段五视图与前后对比](docs/screenshots/window-light-review/README.md)。
+实现、验证和限制见 [阶段记录](docs/logs/window-light-review.md)；Blink 仅完成 [可行性与接入规划](docs/logs/blink-registered-plan.md)。
+测试截图、实验预览、性能采样 JSON 和运行日志均为本地产物，不提交到 GitHub；图片链接需在本地生成后查看。原始插画和运行所需技术贴图继续纳入版本管理。
 
 ## 本地运行
 
@@ -54,6 +58,6 @@ docs/prompts/     技术资产提示词预留
 docs/screenshots/ dawn / noon / dusk / night 实际浏览器截图
 ```
 
-当前默认加载三张可再生成的 SVG 技术贴图：人物轮廓遮罩、场景区域遮罩、低频法线。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 再生成，然后刷新页面。它们仍是手工近似，细发丝、花枝与玻璃尚未精确分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图。
+当前默认加载三张可再生成的 SVG 技术贴图：人物轮廓遮罩、场景区域遮罩、低频法线。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 再生成，然后刷新页面。重新生成需要 Python 3 + Pillow + NumPy（`python -m pip install Pillow numpy`），用于从原图提取局部白花遮挡；运行应用和 build 不需要 Python。细发丝、花枝与透明物体仍是近似分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图。
 
-窗外夜间亮度现已独立控制，台灯不再照亮窗外区域。原图已有日照和阴影仍无法完全消除；尚未实现眨眼、呼吸、头发运动、蒸汽或 bloom。下一步继续细化复杂边缘，并制作轻量微动画资产。详见 [架构说明](docs/architecture.md)、[Phase 2 记录](docs/logs/phase2-notes.md) 与 [最新截图](docs/screenshots/phase2/README.md)。
+玻璃轮廓独立向内羽化，Scene / Overlay / Final 使用一致覆盖值。时段投光影响头发、衣服及桌上物体；Neutral 与 Projected Light Only 可用于检查空间结构。Bloom、蒸汽已有实现，眨眼、呼吸和头发运动尚未接入。原图已有日照与阴影仍无法完全消除，低频法线也无法还原细发丝和衣褶。先人工验收，再决定高质量配准法线的制作；尚未迁移到 Blog。

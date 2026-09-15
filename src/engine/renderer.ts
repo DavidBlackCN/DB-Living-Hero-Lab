@@ -1,5 +1,5 @@
 import { loadAssets, type AssetOptions } from './assets';
-import { lightingAt } from './lighting';
+import { lightingAt, projectedLightAt } from './lighting';
 import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 import { createBloom } from './postprocessing';
@@ -66,6 +66,10 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     const vw=Math.round(assets.base.width*scale),vh=Math.round(assets.base.height*scale);
     gl.viewport(Math.round((w-vw)/2),Math.round((h-vh)/2),vw,vh);
     const light=lightingAt(timeline.minutes);
+    const projection=projectedLightAt(timeline.minutes);
+    gl.uniform4f(loc('uProjectionGeometry'),projection.origin[0],projection.origin[1],projection.axis[0],projection.axis[1]);
+    gl.uniform4f(loc('uProjectionShape'),projection.width,projection.spread,projection.separation,projection.reach);
+    gl.uniform1f(loc('uProjectionEnergy'),projection.energy);
     gl.uniform1f(loc('uMinutes'),timeline.minutes);
     gl.uniform3fv(loc('uAmbient'),light.ambient); gl.uniform3fv(loc('uSun'),light.sun); gl.uniform3fv(loc('uDirection'),light.direction);
     gl.uniform1f(loc('uLamp'),light.lamp);

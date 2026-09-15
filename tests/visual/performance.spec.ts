@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { performanceRoot } from './review-output';
 
 type Sample = {
   dpr: number;
@@ -73,8 +74,8 @@ for (const dpr of [1, 1.5]) {
         expect(sample.pageErrors).toEqual([]);
         expect(sample.canvas).toEqual({ width: 1440 * dpr, height: 900 * dpr });
       }
-      await mkdir('docs/performance', { recursive: true });
-      await writeFile(`docs/performance/bloom-dpr-${dpr}.json`, JSON.stringify(samples, null, 2) + '\n');
+      await mkdir(performanceRoot, { recursive: true });
+      await writeFile(`${performanceRoot}/bloom-dpr-${dpr}.json`, JSON.stringify(samples, null, 2) + '\n');
     } finally { await context.close(); }
   });
 }

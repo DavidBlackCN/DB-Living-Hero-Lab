@@ -2,3 +2,13 @@ node_modules/
 dist/
 test-results/
 .npm-cache/
+*.log
+playwright-report/
+blob-report/
+
+# Generated QA artifacts stay local; keep their instructions in version control.
+docs/screenshots/**
+!docs/screenshots/**/
+!docs/screenshots/**/*.md
+docs/blink-debug/
+docs/performance/*.json

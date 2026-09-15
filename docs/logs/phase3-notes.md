@@ -22,6 +22,10 @@ Added a small procedural shader effect centered above the cup near the registere
 
 Fine curls, flyaway hairs, flower stems, transparent glass, pen cup and other thin boundaries remain approximate. The normal texture still represents broad orientation only. The source artwork's baked lighting cannot be removed by the shader. Blink, breathing, hair motion, bloom, GPU benchmarks, and automatic WebGL context restoration remain future work.
 
+## Blink preparation
+
+No closed-eye or eye-local registered asset exists in the repository, so blink was not drawn procedurally. `src/engine/animation.ts` now defines the future asset contract and rejects mismatched base dimensions. Blink remains disabled until a registered local frame or overlay is supplied.
+
 ## Verification
 
 `npm run assets:generate`, `npm run typecheck`, `npm test`, and `npm run build` pass. The Playwright run completed all 9 screenshot cases successfully, including the steam-enabled state. The generated `test-results/` directory is ignored and is not part of the source artifact.

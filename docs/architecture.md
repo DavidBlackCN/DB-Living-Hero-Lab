@@ -11,6 +11,7 @@ The baseline sections below describe Phase 1, retained for the comparison path. 
 - `src/engine/lighting.ts`: periodic smoothstep keyframes for linear RGB ambient, window light, warm lamp; window-side light direction varies with time.
 - `src/engine/shaders.ts`: full-screen triangle, registered analytic normals/masks, relighting and highlight shoulder.
 - `src/engine/assets.ts`: base and optional normal/mask loading plus dimension validation.
+- `src/engine/animation.ts`: contracts and validation for future registered micro-animation assets; blink is intentionally disabled until an exact closed-eye asset exists.
 
 ## Rendering
 
@@ -47,7 +48,7 @@ Normal RGB is data encoded from [-1,1] to [0,1], +X right, +Y down, +Z toward vi
 
 Manual times settle over a short exponential transition; midnight takes the short path. Realtime reads `Date` in the local timezone, then uses the same interpolation. When settled, manual mode stops requesting frames; realtime polls at one second. Background visibility cancels frame and polling callbacks, and foreground resumes from the current local clock. ResizeObserver wakes a redraw.
 
-`prefers-reduced-motion` is read at initialization and observed for changes. Reduced motion or disabling the animation master skips interpolation. The master also controls the first micro-animation, procedural coffee steam. Steam is Final-view-only, independently toggleable, and disabled by reduced motion or a hidden tab. Blink, breathing, hair motion and bloom are not implemented yet.
+`prefers-reduced-motion` is read at initialization and observed for changes. Reduced motion or disabling the animation master skips interpolation. The master also controls the first micro-animation, procedural coffee steam. Steam is Final-view-only, independently toggleable, and disabled by reduced motion or a hidden tab. Blink has a registered-asset contract in `animation.ts`, but remains disabled until an exact closed-eye asset exists. Breathing, hair motion and bloom are not implemented yet.
 
 `destroy()` removes observers/listeners, cancels callbacks and deletes GPU resources. On context loss, the app shows an explicit reload message; automatic GPU resource reconstruction is a later improvement. On initialization failure, a static CSS image is shown with the error and without working lighting controls.
 

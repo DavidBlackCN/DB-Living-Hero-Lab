@@ -30,7 +30,10 @@ void main() {
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
   // Keep the hand-authored window contour crisp enough that its feather does
   // not carry the exterior night treatment across the lower window frame.
-  float exterior = smoothstep(.42,.68,scene.r);
+  // The authored window mask is feathered for compositing, but its lower
+  // edge must stop at the sill instead of tinting the desk below the frame.
+  float windowEdge = 1.0 - smoothstep(.555,.585,uv.y);
+  float exterior = smoothstep(.72,.96,scene.r) * windowEdge;
   float night = refined ? uNight*uNightStrength : 0.0;
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));

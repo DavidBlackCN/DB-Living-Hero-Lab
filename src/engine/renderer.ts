@@ -51,7 +51,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   let post: ReturnType<typeof createBloom>;
   try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
   const timeline = new Timeline(options.time ?? 720);
-  const settings: Settings = { exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.8, hair: 0.85, cloth: 0.9, night: 1, refinement: 1, stylized: 0.42, softness: 0.18, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
+  const settings: Settings = { exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.8, hair: 0.85, cloth: 0.9, night: 1, refinement: 1, stylized: 0.62, softness: 0.14, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;

@@ -15,7 +15,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   for(const [key,label,min,max,value] of [
     ['exposure','曝光 EV',-1,1,0],['ambient','环境光',0,2,1],['sun','窗光',0,2,1],['lamp','台灯',0,2,1],['normal','法线强度',0,2,1],['face','脸部保护',0,1,.8],
-    ['hair','头发受光',0,2,.85],['cloth','服装受光',0,2,.9],['night','夜间日光抑制',0,1,1],['stylized','Stylized band',0,1,.42],['softness','Band softness',0,1,.18],
+    ['hair','头发受光',0,2,.85],['cloth','服装受光',0,2,.9],['night','夜间日光抑制',0,1,1],['stylized','Stylized band',0,1,.62],['softness','Band softness',0,1,.14],
   ] as const) {
     const row=document.createElement('div'); row.className='slider-row';
     row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(2)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="0.01" value="${value}">`;

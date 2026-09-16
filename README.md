@@ -6,6 +6,8 @@
 实现、验证和限制见 [空间光影阶段记录](docs/logs/spatial-light-review.md)。
 测试截图、实验预览、性能采样 JSON 和运行日志均为本地产物，不提交到 GitHub；图片链接需在本地生成后查看。原始插画和运行所需技术贴图继续纳入版本管理。
 
+新增 [配准 normal v1 候选与笔具 mask 修正](docs/screenshots/normal-map-review/README.md)。运行开发服务器后访问 `/?normal=registered` 可预览候选；普通 `/` 保留低频版用于对照。候选可用 `npm run assets:normal` 重建，当前仍需人工审核，不代表高质量法线已最终验收。
+
 ## 本地运行
 
 推荐 Node.js 22.12+（本机验证：22.17.1）。

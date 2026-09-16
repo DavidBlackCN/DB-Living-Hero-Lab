@@ -1,5 +1,7 @@
 # 技术资产提示词预留
 
+最新：已尝试内置图像生成制作 normal，但输出未通过配准检查；[完整提示词与拒用原因](normal-map-v1.md)。当前可运行的 normal v1 候选来自可复现的原图坐标曲面，不使用这次 AI 输出。
+
 本阶段未调用图像生成，未重绘原画。程序性近似记录在 `../architecture.md` 与 `../logs/phase1-notes.md`。
 
 Phase 2 采用可编辑向量轮廓和低频法线渐变，源数据为 `../scene-regions.json`，生成脚本为 `../../scripts/generate-scene-assets.mjs`。不使用生成模型，因此无模型提示词；完整制作与修订记录见 `../logs/phase2-notes.md`。

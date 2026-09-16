@@ -5,7 +5,9 @@ const status=document.querySelector<HTMLElement>('#status')!;
 let panel: ReturnType<typeof createPanel> | undefined;
 try {
   const engine=await createLivingHero(document.querySelector<HTMLCanvasElement>('#hero')!,{
-    normalUrl: '/assets/generated/normal-low-frequency.svg',
+    // Candidate stays opt-in until its source registration and look are reviewed.
+    normalUrl: new URLSearchParams(location.search).get('normal') === 'registered'
+      ? '/assets/generated/normal-registered-v1.png' : '/assets/generated/normal-low-frequency.svg',
     maskUrl: '/assets/generated/character-masks.svg',
     sceneMaskUrl: '/assets/generated/scene-masks.svg',
     lightShapingUrl: '/assets/generated/light-shaping.svg',

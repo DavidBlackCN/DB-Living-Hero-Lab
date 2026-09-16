@@ -4,13 +4,13 @@ Screenshots and generated metrics are local QA artifacts, excluded from Git.
 Only Markdown instructions in this directory are tracked. Runtime artwork and
 technical textures under `public/assets/` remain tracked.
 
-Current instructions: [window / projected-light review](window-light-review/README.md).
+Current instructions: [spatial light / shadow / glass review](spatial-light-review/README.md).
 Image links there work after local capture; images are not shipped in a fresh clone.
 
 ```powershell
-$env:VISUAL_OUTPUT_ROOT='docs/screenshots/window-light-review/stage2'
+$env:VISUAL_OUTPUT_ROOT='docs/screenshots/spatial-light-review/final'
 npm run test:visual
-python scripts/summarize-visual-review.py
+python scripts/summarize-spatial-review.py
 ```
 
 Old phase screenshots and rejected Blink preview images were removed during the

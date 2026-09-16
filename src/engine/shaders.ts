@@ -11,9 +11,10 @@ precision highp float;
 in vec2 uv;
 out vec4 color;
 uniform sampler2D uBase, uNormal, uMask, uSceneMask;
+uniform sampler2D uLightShaping;
 uniform sampler2D uBloomMap;
 uniform float uBloom, uBloomThreshold, uBloomMood;
-uniform bool uHasNormal, uHasMask, uHasSceneMask;
+uniform bool uHasNormal, uHasMask, uHasSceneMask, uHasLightShaping;
 uniform vec3 uAmbient, uSun, uDirection;
 uniform float uLamp, uExposure, uAmbientStrength, uSunStrength, uLampStrength, uNormalStrength, uFace;
 uniform float uHair, uCloth, uNight, uNightStrength, uRefinement, uStylized, uSoftness, uProjected, uProjectedIntensity, uProjectedSoftness, uMotionTime, uSteam;
@@ -26,15 +27,23 @@ float region(vec2 p, vec2 center, vec2 radius) {
 }
 vec3 linearize(vec3 c) { return mix(c/12.92, pow((c+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),c)); }
 vec3 encode(vec3 c) { return mix(c*12.92,1.055*pow(max(c,0.0),vec3(1.0/2.4))-0.055,step(vec3(0.0031308),c)); }
+float castCoverage(vec2 p, vec2 offset) {
+  // The source silhouette is prefiltered; a single translated field avoids
+  // multiple stepped outlines and adds no offscreen pass.
+  return texture(uLightShaping,p-offset).g;
+}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
   if(uView==1) { color=vec4(base,1); return; }
   bool refined = uRefinement > .5;
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
-  // Source-authored glass coverage already has an inward-only edge transition.
+  // Source-authored glass geometry has native subpixel antialiasing, no erosion.
   // Scene, Overlay, lamp exclusion and night suppression share this exact value.
   float exterior = scene.r;
+  if(uView==11) { color=vec4(vec3(exterior),1); return; }
   float night = refined ? uNight*uNightStrength : 0.0;
+  bool spatial=refined && uHasLightShaping && uHasSceneMask;
+  vec3 shape=spatial ? texture(uLightShaping,uv).rgb : vec3(1,0,0);
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
   float body = region(uv,vec2(.551,.585),vec2(.195,.24));
@@ -62,7 +71,6 @@ void main() {
     lampPool *= (1.0-exterior) * mix(.7,1.0,scene.g);
     lampBulb = scene.b;
   }
-  light+=vec3(1.0,.66,.36)*uLamp*uLampStrength*(lampPool*.66+lampBulb*.5);
   float dusk=smoothstep(780.0,1050.0,uMinutes);
   vec2 axis=normalize(uProjectionGeometry.zw);
   vec2 delta=(uv-uProjectionGeometry.xy)*vec2(1200.0/675.0,1.0);
@@ -75,16 +83,47 @@ void main() {
   float upper=exp(-2.0*pow(across/width,2.0));
   float lower=exp(-2.0*pow((across+uProjectionShape.z)/(width*1.12),2.0));
   float projectedBand=1.0-(1.0-upper)*(1.0-lower*.78);
+  // The gap between panes removes energy instead of adding another warm stripe.
+  float mullion=exp(-pow((across+uProjectionShape.z*.48)/(.015+uProjectedSoftness*.035+max(along,0.0)*.012),2.0));
+  projectedBand*=1.0-mullion*.78;
   float projectedReach=smoothstep(-.06,.08,along)*(1.0-smoothstep(uProjectionShape.w*.58,uProjectionShape.w,along));
   float receiver=max(scene.g,max(hair*.82*uHair,body*.62*uCloth));
   receiver=clamp(receiver,0.0,1.0)*(1.0-exterior)*(1.0-face);
   float projectedAmount=(refined && uHasSceneMask ? 1.0 : 0.0)*uProjected*uProjectedIntensity*uSunStrength*uProjectionEnergy*projectedBand*projectedReach*receiver;
+  float shadowAmount=0.0;
+  if(spatial) {
+    // Raised silhouettes project onto the registered desk/book receivers only.
+    // The casting object itself and exterior glass are excluded as receivers.
+    vec2 sunOffset=axis*vec2(675.0/1200.0,1.0)*mix(.085,.13,dusk);
+    vec2 lampOffset=vec2(-.032,.044);
+    float castOcclusion=castCoverage(uv,mix(sunOffset,lampOffset,night));
+    castOcclusion*=scene.g*(1.0-shape.g)*(1.0-exterior);
+    float day=clamp(uProjectionEnergy,0.0,1.0)*uProjected*clamp(uProjectedIntensity/.42,0.0,1.0)*uSunStrength;
+    float aperture=projectedBand*projectedReach;
+    float unlitReceiver=receiver*(1.0-aperture);
+    float dayShade=clamp(day*(unlitReceiver*.38+castOcclusion*.38+(1.0-shape.r)*.12*(1.0-exterior)*(1.0-face)),0.0,.68);
+    light*=1.0-dayShade;
+    projectedAmount*=1.0-castOcclusion*.82;
+    // Night: quiet interior ambient, directional cool spill near the window,
+    // then a distinct warm lamp contribution below. No daytime beam remains.
+    vec3 room=uAmbient*uAmbientStrength*mix(.42,.80,shape.r);
+    vec3 cool=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
+    light=mix(light,(room+cool)*(1.0-castOcclusion*.32),night*(1.0-exterior));
+    vec2 deskDelta=(uv-vec2(.795,.765))/vec2(.21,.145);
+    vec2 subjectDelta=(uv-vec2(.755,.54))/vec2(.115,.235);
+    float deskPool=exp(-dot(deskDelta,deskDelta))*scene.g;
+    float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65+face*.16);
+    lampPool=(deskPool*.95+subjectPool*.72+lampPool*.16)*(1.0-exterior)*(1.0-castOcclusion*.62);
+    shadowAmount=1.0-(1.0-dayShade)*(1.0-shape.b*.30)*(1.0-night*(1.0-shape.r)*.50)*(1.0-night*castOcclusion*.32);
+  }
   light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
+  light+=vec3(1.0,.63,.32)*uLamp*uLampStrength*(lampPool*(spatial?1.10:.66)+lampBulb*mix(.5,1.5,night));
+  if(spatial) light*=1.0-shape.b*.30;
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
   if(refined) {
     // Neutralize only part of the face tint; preserve local shading and eye linework.
-    float readable = max(dot(light,vec3(.2126,.7152,.0722)),.43*uAmbientStrength);
+    float readable = max(dot(light,vec3(.2126,.7152,.0722)),mix(.43,.18,night)*uAmbientStrength);
     safeLight = mix(light,vec3(readable)*vec3(1.04,1.0,.98),.65);
   }
   light=mix(light,safeLight,face*uFace);
@@ -92,7 +131,7 @@ void main() {
   if(refined) {
     // Region-specific suppression of the source illustration's baked daytime highlights.
     // This cannot reconstruct hidden shadow detail or remove shadows from the artwork.
-    light *= mix(vec3(1),vec3(.14,.20,.31),exterior*night);
+    light=mix(light,vec3(.10,.16,.27)*uAmbientStrength,exterior*night);
     float highlight = smoothstep(.45,.95,dot(base,vec3(.2126,.7152,.0722)));
     light *= 1.0 - night*.15*highlight*(1.0-exterior)*(1.0-face);
   }
@@ -114,6 +153,7 @@ void main() {
   if(uView==10) {
     color=vec4(vec3(projectedAmount),1); return;
   }
+  if(uView==12) { color=vec4(vec3(shadowAmount),1); return; }
   vec3 lit=linearize(base)*light*exp2(uExposure);
   if(uView==0 && uSteam > 0.5) {
     vec2 p = uv - vec2(.825,.635);

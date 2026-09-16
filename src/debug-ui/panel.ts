@@ -29,7 +29,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
   const view = query<HTMLSelectElement>('#view');
-  view.insertAdjacentHTML('beforeend', '<option value="bright">Bright Pass</option><option value="bloom">Bloom Only</option><option value="neutral">Neutral Lighting</option><option value="projected">Projected Light Only</option>');
+  view.insertAdjacentHTML('beforeend', '<option value="bright">Bright Pass</option><option value="bloom">Bloom Only</option><option value="neutral">Neutral Lighting</option><option value="projected">Projected Light Only</option><option value="exterior">Exterior Mask</option><option value="shadow">Shadow / Occlusion</option>');
   const projected = document.createElement('label');
   projected.className = 'check';
   projected.innerHTML = '<input id="projected" type="checkbox" checked> Projected window light';

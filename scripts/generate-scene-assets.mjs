@@ -17,15 +17,11 @@ const flowerData = (await readFile(new URL('window-flower-occlusion.png', output
 const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" fill="black"/>
 <g filter="url(#soft)">${path('hair', '#00ff00')}${path('cloth', '#0000ff')}${path('bodice', '#0000ff')}${path('face', '#ff0000')}${path('handLeft', '#000000')}${path('handRight', '#000000')}</g></svg>`;
 
-// Exterior is a coverage mask, not a broadly blurred lighting region. Erode then
-// feather, and intersect with the original silhouette: no outward blur onto frames.
-const glassCoverage = `<filter id="glassCoverage" x="-1%" y="-1%" width="102%" height="102%" color-interpolation-filters="sRGB">
-<feMorphology in="SourceGraphic" operator="erode" radius="0.65"/>
-<feGaussianBlur stdDeviation="0.45"/>
-<feComposite in2="SourceGraphic" operator="in"/></filter>`;
-const scene = `${header}<defs>${feather}${glassCoverage}
+// Geometry follows the native source edge. SVG rasterization provides subpixel
+// coverage; erosion would create an artificial bright seam inside the glass.
+const scene = `${header}<defs>${feather}
 <mask id="glass" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675" style="mask-type:alpha">
-<g filter="url(#glassCoverage)"><path fill="white" d="${regions.windowGlassLeft} ${regions.windowGlassRight}"/></g>
+<path fill="white" d="${regions.windowGlassLeft} ${regions.windowGlassRight}"/>
 </mask><mask id="flowerOcclusion" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><image width="1200" height="675" href="data:image/png;base64,${flowerData}"/></mask></defs><rect width="1200" height="675" fill="black"/>
 <g mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
 <g filter="url(#soft)">
@@ -42,7 +38,16 @@ const normals = `${header}<defs>${feather}
 <g filter="url(#soft)">${path('desk', '#804bee')}${path('book', '#8076fe')}${path('cup', '#8080ff')}${path('books', '#8080ff')}
 ${path('hair', 'url(#hair)')}${path('cloth', 'url(#cloth)')}${path('bodice', 'url(#cloth)')}${path('face', 'url(#face)')}${path('handLeft', '#8080ff')}${path('handRight', '#8080ff')}</g></svg>`;
 
-for (const [name, source] of Object.entries({ 'character-masks.svg': masks, 'scene-masks.svg': scene, 'normal-low-frequency.svg': normals })) {
+// Small, source-registered data map: R window access, G raised-object silhouette,
+// B contact occlusion. Screen blending adds independent RGB channels on black.
+const access=regions.windowAccess;
+const shaping=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" color-interpolation="sRGB">
+<defs><filter id="caster" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4.5"/></filter><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<g style="isolation:isolate"><rect width="1200" height="675" fill="url(#access)"/>
+<g style="mix-blend-mode:screen" filter="url(#caster)">${['hair','cloth','bodice','hat','face','handLeft','handRight','cup','books'].map(n=>path(n,'#00ff00')).join('')}</g>
+<g style="mix-blend-mode:screen" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g></g></svg>`;
+
+for (const [name, source] of Object.entries({ 'character-masks.svg': masks, 'scene-masks.svg': scene, 'normal-low-frequency.svg': normals, 'light-shaping.svg': shaping })) {
   await writeFile(new URL(name, output), source + '\n');
   console.log(`Generated ${fileURLToPath(new URL(name, output))}`);
 }

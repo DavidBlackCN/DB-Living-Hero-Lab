@@ -1,7 +1,7 @@
 import { wrapTime } from './timeline';
 // Linear-light RGB coefficients; wrap the final key back to midnight.
 const keys = [
-  { time: 0, ambient: [0.28, 0.34, 0.48], sun: [0.04, 0.06, 0.10], lamp: 0.72 },
+  { time: 0, ambient: [0.18, 0.20, 0.24], sun: [0, 0, 0], lamp: 0.72 },
   { time: 300, ambient: [0.33, 0.39, 0.51], sun: [0.09, 0.13, 0.19], lamp: 0.50 },
   { time: 360, ambient: [0.57, 0.61, 0.67], sun: [0.33, 0.31, 0.27], lamp: 0.17 },
   { time: 540, ambient: [0.75, 0.77, 0.79], sun: [0.35, 0.34, 0.31], lamp: 0.02 },
@@ -9,8 +9,8 @@ const keys = [
   { time: 930, ambient: [0.76, 0.72, 0.66], sun: [0.40, 0.30, 0.20], lamp: 0.04 },
   { time: 1050, ambient: [0.61, 0.52, 0.48], sun: [0.58, 0.32, 0.17], lamp: 0.20 },
   { time: 1140, ambient: [0.34, 0.36, 0.48], sun: [0.12, 0.10, 0.15], lamp: 0.58 },
-  { time: 1380, ambient: [0.28, 0.34, 0.48], sun: [0.04, 0.06, 0.10], lamp: 0.72 },
-  { time: 1440, ambient: [0.28, 0.34, 0.48], sun: [0.04, 0.06, 0.10], lamp: 0.72 },
+  { time: 1380, ambient: [0.18, 0.20, 0.24], sun: [0, 0, 0], lamp: 0.72 },
+  { time: 1440, ambient: [0.18, 0.20, 0.24], sun: [0, 0, 0], lamp: 0.72 },
 ];
 // Art-directed darkness, independent of lamp strength and user exposure.
 const nightWeights = [1, 0.8, 0.1, 0, 0, 0, 0.18, 0.85, 1, 1];
@@ -39,13 +39,13 @@ export function lightingAt(minutes: number) {
 // window; axis uses equal X/Y units (image height), not stretched 16:9 UVs.
 // These are lighting keyframes, not additional user-facing tuning parameters.
 const projectionKeys = [
-  { time: 0, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
-  { time: 330, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
-  { time: 480, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: .85 },
-  { time: 720, origin: [.90,.18], axis: [-.42,.907], width: .22, spread: .045, separation: .16, reach: 1.05, energy: .72 },
-  { time: 1050, origin: [.94,.28], axis: [-.90,.435], width: .105, spread: .08, separation: .27, reach: 1.10, energy: 1.65 },
+  { time: 0, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 0 },
+  { time: 330, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 0 },
+  { time: 480, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 1.15 },
+  { time: 720, origin: [.90,.18], axis: [-.42,.907], width: .19, spread: .035, separation: .24, reach: 1.05, energy: .95 },
+  { time: 1050, origin: [.94,.28], axis: [-.90,.435], width: .105, spread: .08, separation: .27, reach: 1.10, energy: 1.85 },
   { time: 1170, origin: [.96,.32], axis: [-.95,.312], width: .105, spread: .08, separation: .27, reach: 1.15, energy: 0 },
-  { time: 1440, origin: [.87,.30], axis: [-.13,.99], width: .105, spread: .035, separation: .18, reach: .85, energy: 0 },
+  { time: 1440, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 0 },
 ];
 
 export function projectedLightAt(minutes: number) {

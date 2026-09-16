@@ -8,6 +8,7 @@ try {
     normalUrl: '/assets/generated/normal-low-frequency.svg',
     maskUrl: '/assets/generated/character-masks.svg',
     sceneMaskUrl: '/assets/generated/scene-masks.svg',
+    lightShapingUrl: '/assets/generated/light-shaping.svg',
     onUpdate: state=>panel?.update(state), onError: message=>status.textContent=message,
   });
   panel=createPanel(document.querySelector('#debug')!,engine);

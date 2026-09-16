@@ -2,8 +2,8 @@
 
 独立的 Living Hero 光影实验工程。当前完成 **窗户边界校准与时段投光迭代（2026-09-16）**，以原始 4K 插画为底图，使用 Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。
 
-本轮人工验收入口：[四时段五视图与前后对比](docs/screenshots/window-light-review/README.md)。
-实现、验证和限制见 [阶段记录](docs/logs/window-light-review.md)；Blink 仅完成 [可行性与接入规划](docs/logs/blink-registered-plan.md)。
+本轮人工验收入口：[四时段七视图、灰度与窗框配准](docs/screenshots/spatial-light-review/README.md)。
+实现、验证和限制见 [空间光影阶段记录](docs/logs/spatial-light-review.md)。
 测试截图、实验预览、性能采样 JSON 和运行日志均为本地产物，不提交到 GitHub；图片链接需在本地生成后查看。原始插画和运行所需技术贴图继续纳入版本管理。
 
 ## 本地运行
@@ -39,7 +39,7 @@ npm run test:visual
 - Dawn / Noon / Dusk / Night：06:00 / 12:00 / 17:30 / 23:00。
 - 曝光、环境光、窗光、台灯、法线强度、脸部保护可独立调整。
 - 新增头发／服装受光、夜间日光抑制；关闭「区域光照增强」可对照一版效果。
-- Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查。
+- Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查；Neutral、Projected Light Only、Exterior Mask、Shadow / Occlusion 用于隔离检查光、玻璃边界和暗部。
 - 动画开关当前控制时间平滑过渡；减少动态效果会立即跳到目标时间，默认尊重系统偏好。
 - 点击面板标题可收起面板。完整保留原图，非 16:9 屏幕出现留边。
 
@@ -58,6 +58,6 @@ docs/prompts/     技术资产提示词预留
 docs/screenshots/ dawn / noon / dusk / night 实际浏览器截图
 ```
 
-当前默认加载三张可再生成的 SVG 技术贴图：人物轮廓遮罩、场景区域遮罩、低频法线。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 再生成，然后刷新页面。重新生成需要 Python 3 + Pillow + NumPy（`python -m pip install Pillow numpy`），用于从原图提取局部白花遮挡；运行应用和 build 不需要 Python。细发丝、花枝与透明物体仍是近似分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图。
+当前默认加载四张可再生成的 SVG 技术贴图：人物轮廓遮罩、场景区域遮罩、低频法线、空间遮挡数据。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 再生成，然后刷新页面。重新生成需要 Python 3 + Pillow + NumPy（`python -m pip install Pillow numpy`），用于从原图提取局部白花遮挡；运行应用和 build 不需要 Python。细发丝、花枝与透明物体仍是近似分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图；`lightShapingUrl` 接受相同比例、准确配准的较低分辨率数据图。
 
-玻璃轮廓独立向内羽化，Scene / Overlay / Final 使用一致覆盖值。时段投光影响头发、衣服及桌上物体；Neutral 与 Projected Light Only 可用于检查空间结构。Bloom、蒸汽已有实现，眨眼、呼吸和头发运动尚未接入。原图已有日照与阴影仍无法完全消除，低频法线也无法还原细发丝和衣褶。先人工验收，再决定高质量配准法线的制作；尚未迁移到 Blog。
+玻璃轮廓直接按原图边界栅格化，已删除会产生缝隙的内缩羽化，Scene / Overlay / Final / Exterior Mask 使用一致覆盖值。时段投光配合背光压暗、物体投影与接触阴影；夜景分为冷色窗外、暖色台灯光池和暗室。Bloom、蒸汽已有实现，本轮未扩展其他动效。原图已有日照与阴影仍无法完全消除，低频法线也无法还原细发丝和衣褶。先人工验收，再决定高质量配准法线的制作；尚未迁移到 Blog。

@@ -47,6 +47,7 @@ async function measure(page: import('@playwright/test').Page, dpr: number, bloom
       median: percentile(.5),
       p95: percentile(.95),
       webglError: gl.getError(),
+      sourceTextureMiB: window.livingHero.getStats().sourceTextureMiB,
     };
   });
   page.off('pageerror', listener);
@@ -54,7 +55,7 @@ async function measure(page: import('@playwright/test').Page, dpr: number, bloom
   return {
     dpr, bloom, canvas: { width: result.width, height: result.height },
     estimatedCanvasMiB: Number((pixels * 4 / 1048576).toFixed(2)),
-    estimatedSourceTexturesMiB: Number((3840 * 2160 * 3 * 4 / 1048576).toFixed(2)),
+    estimatedSourceTexturesMiB: result.sourceTextureMiB,
     estimatedBloomMiB: Number((Math.ceil(result.width / 4) * Math.ceil(result.height / 4) * 4 * 3 / 1048576).toFixed(2)),
     medianFrameMs: Number(result.median.toFixed(2)),
     p95FrameMs: Number(result.p95.toFixed(2)),

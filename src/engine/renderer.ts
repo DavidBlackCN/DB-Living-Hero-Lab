@@ -3,7 +3,7 @@ import { lightingAt, projectedLightAt } from './lighting';
 import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 import { createBloom } from './postprocessing';
-export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected';
+export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow';
 export interface Settings { exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
 export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
 export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
@@ -26,15 +26,15 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) ?? 'Shader link failed');
     gl.useProgram(program);
-    [assets.base, assets.normal, assets.mask, assets.sceneMask].forEach((image, i) => {
+    [assets.base, assets.normal, assets.mask, assets.sceneMask, assets.lightShaping].forEach((image, i) => {
       const texture = gl.createTexture()!; textures.push(texture);
-      gl.activeTexture(gl.TEXTURE0+i); gl.bindTexture(gl.TEXTURE_2D,texture);
+      gl.activeTexture(gl.TEXTURE0+(i===4?5:i)); gl.bindTexture(gl.TEXTURE_2D,texture);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
       // None of the scene maps use alpha. RGB8 avoids allocating an unused
-      // fourth channel for four full-resolution 4K textures.
+      // fourth channel for the four 4K maps and smaller light-shaping map.
       if(image) gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB8,gl.RGB,gl.UNSIGNED_BYTE,image);
       else gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB8,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([128,128,255]));
     });
@@ -47,6 +47,8 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   ['uBase','uNormal','uMask','uSceneMask'].forEach((name,i)=>gl.uniform1i(loc(name),i));
   gl.uniform1i(loc('uHasNormal'),Number(!!assets.normal)); gl.uniform1i(loc('uHasMask'),Number(!!assets.mask));
   gl.uniform1i(loc('uHasSceneMask'),Number(!!assets.sceneMask));
+  gl.uniform1i(loc('uLightShaping'),5);
+  gl.uniform1i(loc('uHasLightShaping'),Number(!!assets.lightShaping));
   gl.uniform1i(loc('uBloomMap'),4);
   let post: ReturnType<typeof createBloom>;
   try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
@@ -79,7 +81,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform1f(loc('uBloomMood'),.12+.88*Math.max(light.night,light.lamp));
     gl.uniform1f(loc('uProjected'),settings.projected);
     for(const [key,name] of Object.entries({exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement',stylized:'uStylized',softness:'uSoftness',projectedIntensity:'uProjectedIntensity',projectedSoftness:'uProjectedSoftness',bloom:'uBloom',bloomThreshold:'uBloomThreshold',bloomRadius:'uBloomRadius'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
-    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected'].indexOf(view));
+    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected','exterior','shadow'].indexOf(view));
     const bloomActive=(view==='final'&&settings.bloom>0)||view==='bright'||view==='bloom';
     if(bloomActive) {
       post.begin(vw,vh);
@@ -135,7 +137,8 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
       const dpr=Math.min(devicePixelRatio||1,1.5);
       const canvasWidth=Math.max(1,Math.round(canvas.clientWidth*dpr)), canvasHeight=Math.max(1,Math.round(canvas.clientHeight*dpr));
       const bloomSize=post.getSize();
-      return { dpr, canvasWidth, canvasHeight, artworkWidth: assets.base.width, artworkHeight: assets.base.height, sourceTextureMiB: Number((assets.base.width*assets.base.height*3*4/1048576).toFixed(2)), bloomWidth: bloomSize.width, bloomHeight: bloomSize.height, bloomTextureMiB: Number((bloomSize.width*bloomSize.height*4*3/1048576).toFixed(2)), contextLost: lost };
+      const sourceBytes=[assets.base,assets.normal,assets.mask,assets.sceneMask,assets.lightShaping].reduce((sum,map)=>sum+(map?map.width*map.height*3:3),0);
+      return { dpr, canvasWidth, canvasHeight, artworkWidth: assets.base.width, artworkHeight: assets.base.height, sourceTextureMiB: Number((sourceBytes/1048576).toFixed(2)), bloomWidth: bloomSize.width, bloomHeight: bloomSize.height, bloomTextureMiB: Number((bloomSize.width*bloomSize.height*4*3/1048576).toFixed(2)), contextLost: lost };
     },
     destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
   };

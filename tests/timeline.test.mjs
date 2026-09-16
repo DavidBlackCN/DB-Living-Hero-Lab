@@ -45,6 +45,7 @@ test('lighting is finite across the full day and continuous at midnight and keyf
 test('night suppression is off at noon and strongest at night', () => {
   assert.equal(lightingAt(720).night, 0);
   assert.equal(lightingAt(1380).night, 1);
+  assert.deepEqual(lightingAt(1380).sun, [0,0,0]);
   assert.ok(lightingAt(360).night < lightingAt(1050).night);
 });
 

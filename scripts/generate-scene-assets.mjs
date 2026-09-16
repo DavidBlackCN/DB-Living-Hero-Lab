@@ -10,20 +10,24 @@ await mkdir(output, { recursive: true });
 const path = (name, fill) => `<path d="${regions[name]}" fill="${fill}"/>`;
 const header = `<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 1200 675" color-interpolation="sRGB">`;
 const feather = `<filter id="soft" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1.15"/></filter>`;
-const occluders = ['hair', 'cloth', 'face', 'hat', 'lamp', 'vase', 'pictureFrame', 'penCup'];
+const occluders = ['hair', 'cloth', 'face', 'hat', 'lamp', 'vase', 'pictureFrame'];
 execFileSync('python', [fileURLToPath(new URL('./generate-flower-occlusion.py', import.meta.url))]);
 const flowerData = (await readFile(new URL('window-flower-occlusion.png', output))).toString('base64');
 
 const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" fill="black"/>
 <g filter="url(#soft)">${path('hair', '#00ff00')}${path('cloth', '#0000ff')}${path('bodice', '#0000ff')}${path('face', '#ff0000')}${path('handLeft', '#000000')}${path('handRight', '#000000')}</g></svg>`;
 
-// Geometry follows the native source edge. SVG rasterization provides subpixel
-// coverage; erosion would create an artificial bright seam inside the glass.
+// Right glass retains native edge coverage. Only the source's defocused left
+// lower edge gets an inward alpha transition, clipped by the glass geometry.
+const lowerTransition = regions.windowGlassLeftLowerTransition;
 const scene = `${header}<defs>${feather}
+<linearGradient id="leftLower" gradientUnits="userSpaceOnUse" x1="${lowerTransition.inner[0]}" y1="${lowerTransition.inner[1]}" x2="${lowerTransition.edge[0]}" y2="${lowerTransition.edge[1]}"><stop stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+<filter id="penEdge" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
+<filter id="defocusedStem" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
 <mask id="glass" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675" style="mask-type:alpha">
-<path fill="white" d="${regions.windowGlassLeft} ${regions.windowGlassRight}"/>
+${path('windowGlassLeft', 'url(#leftLower)')}${path('windowGlassRight', 'white')}
 </mask><mask id="flowerOcclusion" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><image width="1200" height="675" href="data:image/png;base64,${flowerData}"/></mask></defs><rect width="1200" height="675" fill="black"/>
-<g mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
+<g mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<g filter="url(#penEdge)">${path('penCup', 'black')}</g><g filter="url(#defocusedStem)">${path('windowSoftForeground', 'black')}</g><rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
 <g filter="url(#soft)">
 ${path('chair', '#006600')}${path('desk', '#00ff00')}${path('book', '#00e600')}${path('cup', '#00bf00')}${path('books', '#00a600')}${['handLeft', 'handRight'].map(n => path(n, '#000000')).join('')}
 ${path('lampEmitter', '#0000ff')}</g></svg>`;

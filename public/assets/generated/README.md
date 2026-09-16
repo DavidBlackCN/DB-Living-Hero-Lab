@@ -1,5 +1,7 @@
 # Technical assets
 
+Latest local correction: [left lower glass softness and pen occlusion](../../../docs/screenshots/left-mask-softness/README.md). The left lower edge now has a source-authored, inward alpha transition matching the illustration's defocus; the right glass remains native hard-edge coverage. This local exception supersedes the general glass-edge description below. It changes the scene texture only, with no runtime shader changes.
+
 The demo loads four registered vector data textures, authored from the original artwork's major contours. These are technical approximations, not AI segmentation or physically reconstructed normals.
 
 | Asset | Data |

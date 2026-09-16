@@ -65,7 +65,9 @@ test('glass raster excludes lower frame, mullion, sill and indoor objects', asyn
       for (let y = 304 + (x-1085)*.08; y < 355; y += 3) excluded.push([x, y]);
     }
     const flowers = [[1164,230],[1168,252],[1154,291],[1127,243]];
-    const glass = [[1090,100],[1180,180],[1095,282],[1105,284],[885,240],[925,244]];
+    // The old angular pen silhouette excluded background above the real tip.
+    excluded.push([942,268]);
+    const glass = [[1090,100],[1180,180],[1095,282],[1105,284],[885,240],[925,244],[941,253]];
     return { excluded: excluded.map(p => ({ p, red: sample(p) })), glass: glass.map(p => ({ p, red: sample(p) })), flowers: flowers.map(p => ({ p, red: sample(p) })) };
   });
   for (const { p, red } of result.excluded) expect(red, `exterior leak at ${p}`).toBe(0);
@@ -85,12 +87,20 @@ test('glass meets source edges without an eroded seam or lower-frame spill', asy
     return [
       ...probes.verticalRightPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x+d,y),frame:at(x-d,y)})),
       ...probes.lowerRightPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x,y-d),frame:at(x,y+d)})),
-      ...probes.lowerLeftPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x,y-d),frame:at(x,y+d)})),
+      // The source has a defocused lower edge: full glass is 12 native pixels
+      // inside, while the original frame-side probe must still remain zero.
+      ...probes.lowerLeftPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x,y-12),frame:at(x,y+d),transition:[at(x,y-5),at(x,y-2)]})),
     ];
   }, probes);
   for(const sample of samples) {
     expect(sample.glass,`uncovered glass beside ${sample.edge}`).toBeGreaterThan(245);
     expect(sample.frame,`frame spill beside ${sample.edge}`).toBeLessThan(5);
+    if('transition' in sample) {
+      const [inner,outer]=sample.transition;
+      expect(inner,`soft edge inside ${sample.edge}`).toBeLessThan(245);
+      expect(outer,`soft edge near ${sample.edge}`).toBeGreaterThan(5);
+      expect(inner-outer,`monotonic inward transition ${sample.edge}`).toBeGreaterThan(40);
+    }
   }
   await mkdir(`${visualRoot}/acceptance`,{recursive:true});
   await writeFile(`${visualRoot}/acceptance/window-edge-results.json`,JSON.stringify(samples,null,2)+'\n');

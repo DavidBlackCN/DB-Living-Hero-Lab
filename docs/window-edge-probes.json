@@ -2,5 +2,6 @@
   "coordinates": "Native 3840x2160 source pixels; picked from the source metal/glass transition, not from the generated mask.",
   "verticalRightPane": [[3368.5, 0], [3369, 100], [3365, 300], [3361, 500], [3361, 700], [3357, 850]],
   "lowerRightPane": [[3480, 922.6], [3500, 926.4], [3520, 928], [3550, 932]],
+  "lowerLeftPane": [[2820, 866], [2840, 867.5], [2920, 874], [2940, 875.5]],
   "sampleDistancePixels": 3
 }

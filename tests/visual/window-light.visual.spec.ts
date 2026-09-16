@@ -85,6 +85,7 @@ test('glass meets source edges without an eroded seam or lower-frame spill', asy
     return [
       ...probes.verticalRightPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x+d,y),frame:at(x-d,y)})),
       ...probes.lowerRightPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x,y-d),frame:at(x,y+d)})),
+      ...probes.lowerLeftPane.map(([x,y]:number[])=>({edge:[x,y],glass:at(x,y-d),frame:at(x,y+d)})),
     ];
   }, probes);
   for(const sample of samples) {

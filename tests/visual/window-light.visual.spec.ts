@@ -67,13 +67,16 @@ test('glass raster excludes lower frame, mullion, sill and indoor objects', asyn
     const flowers = [[1164,230],[1168,252],[1154,291],[1127,243]];
     // The old angular pen silhouette excluded background above the real tip.
     excluded.push([942,268]);
+    const softPen=[[935,263],[947,264],[951,270]];
     const glass = [[1090,100],[1180,180],[1095,282],[1105,284],[885,240],[925,244],[941,253]];
-    return { excluded: excluded.map(p => ({ p, red: sample(p) })), glass: glass.map(p => ({ p, red: sample(p) })), flowers: flowers.map(p => ({ p, red: sample(p) })) };
+    return { excluded: excluded.map(p => ({ p, red: sample(p) })), glass: glass.map(p => ({ p, red: sample(p) })), flowers: flowers.map(p => ({ p, red: sample(p) })), softPen:softPen.map(p=>({p,red:sample(p)})) };
   });
   for (const { p, red } of result.excluded) expect(red, `exterior leak at ${p}`).toBe(0);
   for (const { p, red } of result.glass) expect(red, `missing glass at ${p}`).toBeGreaterThan(245);
   // Fine source-colored petals retain fractional coverage at antialiased edges.
   for (const { p, red } of result.flowers) expect(red, `flower protection at ${p}`).toBeLessThan(16);
+  // Source-defocused pen edges can retain one or two quantization levels.
+  for (const { p, red } of result.softPen) expect(red, `pen tip protection at ${p}`).toBeLessThan(5);
 });
 
 test('glass meets source edges without an eroded seam or lower-frame spill', async ({ page }) => {

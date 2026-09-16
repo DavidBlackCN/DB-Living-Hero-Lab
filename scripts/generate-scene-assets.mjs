@@ -21,6 +21,7 @@ const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" f
 // lower edge gets an inward alpha transition, clipped by the glass geometry.
 const lowerTransition = regions.windowGlassLeftLowerTransition;
 const scene = `${header}<defs>${feather}
+<mask id="receivers"><rect width="1200" height="675" fill="black"/><g filter="url(#soft)">${path('chair','#666666')}${['desk','book','cup','books'].map(n=>path(n,'white')).join('')}${['hair','cloth','bodice'].map(n=>path(n,'black')).join('')}${['handLeft','handRight'].map(n=>path(n,'white')).join('')}${path('laptop','black')}</g></mask>
 <linearGradient id="leftLower" gradientUnits="userSpaceOnUse" x1="${lowerTransition.inner[0]}" y1="${lowerTransition.inner[1]}" x2="${lowerTransition.edge[0]}" y2="${lowerTransition.edge[1]}"><stop stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
 <filter id="penEdge" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
 <filter id="defocusedStem" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
@@ -28,9 +29,8 @@ const scene = `${header}<defs>${feather}
 ${path('windowGlassLeft', 'url(#leftLower)')}${path('windowGlassRight', 'white')}
 </mask><mask id="flowerOcclusion" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><image width="1200" height="675" href="data:image/png;base64,${flowerData}"/></mask></defs><rect width="1200" height="675" fill="black"/>
 <g mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<g filter="url(#penEdge)">${path('penCup', 'black')}</g><g filter="url(#defocusedStem)">${path('windowSoftForeground', 'black')}</g><rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
-<g filter="url(#soft)">
-${path('chair', '#006600')}${path('desk', '#00ff00')}${path('book', '#00e600')}${path('cup', '#00bf00')}${path('books', '#00a600')}${['handLeft', 'handRight'].map(n => path(n, '#000000')).join('')}
-${path('lampEmitter', '#0000ff')}</g></svg>`;
+<rect width="1200" height="675" fill="#00ff00" mask="url(#receivers)" style="mix-blend-mode:screen"/>
+<g filter="url(#soft)">${path('lampEmitter', '#0000ff')}</g></svg>`;
 
 // Low-frequency orientation fields, gated by the same contours as the material map.
 // R/G encode image-space X/Y, B encodes Z toward viewer; shader renormalizes.
@@ -42,14 +42,14 @@ const normals = `${header}<defs>${feather}
 <g filter="url(#soft)">${path('desk', '#804bee')}${path('book', '#8076fe')}${path('cup', '#8080ff')}${path('books', '#8080ff')}
 ${path('hair', 'url(#hair)')}${path('cloth', 'url(#cloth)')}${path('bodice', 'url(#cloth)')}${path('face', 'url(#face)')}${path('handLeft', '#8080ff')}${path('handRight', '#8080ff')}</g></svg>`;
 
-// Small, source-registered data map: R window access, G raised-object silhouette,
-// B contact occlusion. Screen blending adds independent RGB channels on black.
+// R window access, G exposed desktop, B contact occlusion. G is NOT a displaced
+// silhouette: translating the whole character painted false shadows on pages.
 const access=regions.windowAccess;
 const shaping=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" color-interpolation="sRGB">
-<defs><filter id="caster" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4.5"/></filter><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<defs><mask id="desktop"><rect width="1200" height="675" fill="black"/>${path('desk','white')}${['hair','cloth','bodice','handLeft','handRight','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
 <g style="isolation:isolate"><rect width="1200" height="675" fill="url(#access)"/>
-<g style="mix-blend-mode:screen" filter="url(#caster)">${['hair','cloth','bodice','hat','face','handLeft','handRight','cup','books'].map(n=>path(n,'#00ff00')).join('')}</g>
-<g style="mix-blend-mode:screen" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g></g></svg>`;
+<g style="mix-blend-mode:screen" mask="url(#desktop)"><rect width="1200" height="675" fill="#00ff00"/></g>
+<g style="mix-blend-mode:screen" mask="url(#desktop)" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g></g></svg>`;
 
 for (const [name, source] of Object.entries({ 'character-masks.svg': masks, 'scene-masks.svg': scene, 'normal-low-frequency.svg': normals, 'light-shaping.svg': shaping })) {
   await writeFile(new URL(name, output), source + '\n');

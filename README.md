@@ -8,6 +8,8 @@
 
 新增 [配准 normal v1 候选与笔具 mask 修正](docs/screenshots/normal-map-review/README.md)。运行开发服务器后访问 `/?normal=registered` 可预览候选；普通 `/` 保留低频版用于对照。候选可用 `npm run assets:normal` 重建，当前仍需人工审核，不代表高质量法线已最终验收。
 
+最新修正：[左手、书页与桌面光影验收](docs/screenshots/desk-light-review/README.md)。校准左手和书本轮廓，消除桌面区域穿过袖子的受光错误，删除无深度依据的整轮廓平移投影。两套 normal 均已复核，候选同步采用修正后的区域。
+
 ## 本地运行
 
 推荐 Node.js 22.12+（本机验证：22.17.1）。
@@ -62,4 +64,4 @@ docs/screenshots/ dawn / noon / dusk / night 实际浏览器截图
 
 当前默认加载四张可再生成的 SVG 技术贴图：人物轮廓遮罩、场景区域遮罩、低频法线、空间遮挡数据。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 再生成，然后刷新页面。重新生成需要 Python 3 + Pillow + NumPy（`python -m pip install Pillow numpy`），用于从原图提取局部白花遮挡；运行应用和 build 不需要 Python。细发丝、花枝与透明物体仍是近似分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图；`lightShapingUrl` 接受相同比例、准确配准的较低分辨率数据图。
 
-玻璃轮廓直接按原图边界栅格化，已删除会产生缝隙的内缩羽化，Scene / Overlay / Final / Exterior Mask 使用一致覆盖值。时段投光配合背光压暗、物体投影与接触阴影；夜景分为冷色窗外、暖色台灯光池和暗室。Bloom、蒸汽已有实现，本轮未扩展其他动效。原图已有日照与阴影仍无法完全消除，低频法线也无法还原细发丝和衣褶。先人工验收，再决定高质量配准法线的制作；尚未迁移到 Blog。
+玻璃轮廓直接按原图边界栅格化；左玻璃下缘有匹配原图虚焦的局部过渡，Scene / Overlay / Final / Exterior Mask 使用一致覆盖值。时段投光配合背光压暗和轻微的书本／杯垫接触阴影；夜景分为冷色窗外、暖色台灯光池和暗室。无接收面高度依据的整轮廓平移投影已删除。Bloom、蒸汽已有实现，本轮未扩展其他动效。原图已有日照与阴影仍无法完全消除，低频法线也无法还原细发丝和衣褶。先人工验收，再继续完善配准法线；尚未迁移到 Blog。

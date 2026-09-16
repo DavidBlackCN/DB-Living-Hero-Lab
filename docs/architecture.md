@@ -4,22 +4,27 @@
 
 The historical baseline below is retained for context. Current glass/receiver
 semantics, projected-light algorithm, validation and constraints are documented
-in [spatial-light-review.md](logs/spatial-light-review.md).
+in [spatial-light-review.md](logs/spatial-light-review.md), superseded for desk
+receivers and shadows by [desk-light-review.md](logs/desk-light-review.md).
 
 - `lighting.ts` exports `projectedLightAt` for continuous artwork-directed daylight.
 - `renderer.ts` uploads its geometry/shape/energy; `shaders.ts` evaluates two soft
   aperture lobes in aspect-correct image coordinates and gates them by receivers.
 - Scene R is source-edge glass coverage with native raster antialiasing, no erosion. Scene G
-  is indoor receiver weight, including book/cup/stacked books/chair as well as desk.
+  is indoor receiver coverage, including hands/book/cup/stacked books/chair as well as desk.
+  Hair/clothing occlude the desktop; hands are included at full receiving coverage.
   Scene B remains lamp emission.
 - Optional `lightShapingUrl` supplies a 1200×675 RGB map: window access, softened
-  raised-object silhouettes, and contact occlusion. It occupies texture unit 5;
+  exposed desktop coverage, and contact occlusion. G is a diagnostic coverage
+  channel; B is clipped to that exposed desktop during generation. It occupies texture unit 5;
   bloom remains on unit 4. Total source texture storage is nominally 97.24 MiB.
   No rendering pass was added. Aspect ratio is validated; registration still
   requires source inspection. Existing consumers can omit this optional map.
-- Projection includes a mullion gap, reduced light outside the aperture and
-  translated silhouette shadows on receivers. Night separately combines quiet
-  room ambient, window-side cool spill and a warm desk/subject lamp pool.
+- Projection includes a mullion gap and reduced light outside the aperture.
+  Translated silhouette shadows were removed: without receiver height they painted
+  detached shadows across the hand/pages. Contact darkening is restrained and
+  source-registered. Night separately combines quiet room ambient, window-side
+  cool spill and a warm desk/subject lamp pool continuous over foreground sleeves.
 - Flower occlusion is generated offline by Python/Pillow/NumPy within the source
   JSON ROI and embedded in the scene SVG; there is no new runtime texture/pass.
 - Neutral is fixed-scale grayscale luminance (×0.6); Projected is raw projection.

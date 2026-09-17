@@ -30,6 +30,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
   const view = query<HTMLSelectElement>('#view');
+  view.insertAdjacentHTML('beforeend', '<option value="ambient">Ambient Fill Only</option><option value="form">Form Light Bands</option><option value="contact">Contact Visibility</option>');
   view.querySelector<HTMLOptionElement>('option[value="normal"]')!.textContent='Normal · 表面法线';
   view.insertAdjacentHTML('beforeend', '<option value="lamp">Lamp Contribution Only</option><option value="directional">Directional Only</option>');
   if(engine.correctionAvailable) {

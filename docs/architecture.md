@@ -1,11 +1,23 @@
 # Living Hero architecture
 
+## Current: incident light layers (2026-09-18)
+
+`light-layers.ts` contains the logical ambient/window/projection/lamp/emission
+composition used by the existing scene shader. It supersedes aggregate final
+attenuation described below. Each incident source has its own contact visibility;
+emission stays independent. Whole-room fill and soft normal bands share time and
+direction. No new framebuffer, runtime texture or dependency is introduced.
+Shadow debug measures removed incident energy; ambient, form and contact views
+isolate the new structure. The Shadow slider controls occlusion; Stylized,
+softness and normals control form. [Implementation, checks and performance limits](logs/light-layer-review.md).
+All calibration sections below describe earlier revisions.
+
 Latest region correction: `lampSill` now follows the physical shelf rather than
 crossing the window apron; `penHolderReceiver` covers the tool holder body.
 This fixes an indoor receiver stripe which exterior-only tests missed. Glass
 coverage and shader behavior are unchanged. See [window interior fix](logs/window-interior-fix.md).
 
-## Spatial convergence 3 — current calibration
+## Spatial convergence 3 — historical calibration
 
 Glass anchors now live in `docs/window-glass.json`; the asset generator applies
 an outer polygon clip and an inward-only edge transition. The normal/correction

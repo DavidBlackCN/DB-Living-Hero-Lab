@@ -1,5 +1,7 @@
 # Black Sister Living Hero Lab
 
+最新一轮（2026-09-18）：先完成 [KumengScreen 源码拆解](docs/logs/kumeng-lighting-analysis.md)，再将环境光、窗光、投光、台灯反射与发光分开合成；补强接触遮挡、体块暗面和左侧空间响应。[实现与验证记录](docs/logs/light-layer-review.md) · [四时刻截图和同亮度对照](docs/screenshots/light-layer-review/README.md)。本地 49 项视觉检查通过；高 DPR 软件渲染有额外开销，真实 GPU 性能待验证。以下为历史更新。
+
 最新修正：[窗框以下异常遮罩带](docs/logs/window-interior-fix.md)。已校准错位的室内窗台受光区域，并补齐笔筒接收区。[局部前后对照](docs/screenshots/window-interior-fix/comparison.png)。
 
 本轮更新：**Hero 底层光影收敛 3（2026-09-17）**。独立玻璃锚点与硬裁剪、增强接触/定向暗部、灯下窗台与右后侧照明、左侧空间响应。参见 [本轮记录](docs/logs/spatial-convergence-3.md) 与 [四时刻截图及前后对照](docs/screenshots/spatial-convergence-3/README.md)。以下前轮记录保留作历史背景。
@@ -49,7 +51,7 @@ npm run test:visual
 - Realtime：读取电脑本地时间；大数字为当前渲染时间，小数字为目标时间。
 - Dawn / Noon / Dusk / Night：06:00 / 12:00 / 17:30 / 23:00。
 - 曝光、环境光、窗光、台灯、法线强度、脸部保护可独立调整。
-- 柔和阴影 / 接触遮挡：默认 0.65，设为 0 可关闭本轮接触与体积暗面层；沿用 Shadow / Occlusion、Lamp 和 Neutral 调试视图。
+- 柔和阴影 / 接触遮挡：默认 0.65，设为 0 关闭接触和局部环境遮挡；体块响应由法线、Stylized 和柔和度控制。Shadow / Occlusion 显示入射光的遮挡比例；Ambient Fill Only、Form Light Bands、Contact Visibility 分别检查环境光、体块和接触数据。
 - 新增头发／服装受光、夜间日光抑制；关闭「区域光照增强」可对照一版效果。
 - Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查；Neutral、Projected Light Only、Exterior Mask、Shadow / Occlusion 用于隔离检查光、玻璃边界和暗部。
 - 动画开关当前控制时间平滑过渡；减少动态效果会立即跳到目标时间，默认尊重系统偏好。

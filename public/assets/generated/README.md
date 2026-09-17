@@ -1,5 +1,13 @@
 # Technical assets
 
+Latest contact update (2026-09-18): B-channel detail contacts combine a tight
+per-path stroke and a faint wider penumbra, both clipped to the same receiver.
+`docs/scene-regions.json` owns `contactPenumbra` (widthScale 2.2, feather 4.5,
+weight .24); run `npm run assets:generate`. Runtime source-specific occlusion in
+`src/engine/light-layers.ts` supersedes the historical `.18 * shadow` formula
+below. Existing glass, scene receivers, normal maps and source art are unchanged.
+See [light-layer review](../../../docs/logs/light-layer-review.md).
+
 Current Technical Art Alignment assets:
 
 - `normal-registered-v2.png`: default 3840×2160 RGB8 surface normals. Authored

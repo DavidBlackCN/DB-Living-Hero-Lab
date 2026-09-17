@@ -55,12 +55,13 @@ test('hand receiving light is continuous and book shadows stay at contact', asyn
         const wrist=Array.from({length:48},(_,i)=>at(neutral,595+i,508));
         hero.setDebugView('shadow');const shadow=await pixels();
         const page=Array.from({length:32},(_,i)=>at(shadow,740,510+i));
-        // The new volume layer may vary smoothly across a page. Retain the old
-        // flat-page guard with it disabled, and reject steps with it enabled.
+        // Incident-light visibility may vary smoothly across a page. Keep the
+        // flat-page guard with contact AO disabled and reject enabled steps.
         hero.setSettings({shadow:0});const legacyShadow=await pixels();
         const legacyPage=Array.from({length:32},(_,i)=>at(legacyShadow,740,510+i));
         hero.setSettings({shadow:.65});
         return {wristMinimum:Math.min(...wrist),pageShadowMinimum:Math.min(...page),
+          shadowAlpha:shadow[((674-525)*1200+740)*4+3],
           maxWristStep:Math.max(...wrist.slice(1).map((v,i)=>Math.abs(v-wrist[i]))),
           pageShadowRange:Math.max(...page)-Math.min(...page),
           maxPageShadowStep:Math.max(...page.slice(1).map((v,i)=>Math.abs(v-page[i]))),
@@ -68,7 +69,9 @@ test('hand receiving light is continuous and book shadows stay at contact', asyn
       },minutes);
       expect(result.maxWristStep,`${normal} ${minutes}: no polygon step across skin`).toBeLessThanOrEqual(3);
       expect(result.wristMinimum,'sampled a rendered lighting buffer').toBeGreaterThan(10);
-      expect(result.pageShadowMinimum,'sampled a rendered shadow buffer').toBeGreaterThan(10);
+      // Shadow now measures energy removed, not an artificial night-darkness
+      // floor. A correctly lit open page can be near zero; alpha verifies draw.
+      expect(result.shadowAlpha,'sampled a rendered shadow buffer').toBe(255);
       if(minutes===0) {
         expect(result.legacyPageShadowRange,'no translated silhouette on night page').toBeLessThanOrEqual(1);
         expect(result.maxPageShadowStep,'new volume darkening stays continuous on the page').toBeLessThanOrEqual(1);

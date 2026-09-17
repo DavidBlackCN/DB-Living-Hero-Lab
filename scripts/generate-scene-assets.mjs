@@ -51,13 +51,17 @@ const access=regions.windowAccess;
 const room=regions.roomParticipation;
 const roomPaths=room.surfaces.map(s=>`<path d="${s.path}" fill="rgb(0,${Math.round(s.weight*255)},0)"/>`).join('');
 const contactClips=[...new Set(regions.contactDetails.map(c=>c.receiver))].map(n=>`<clipPath id="contact-${n}">${path(n,'white')}</clipPath>`).join('');
+// Tight attachment plus a faint, wider loss of ambient visibility. Both are
+// clipped to the receiving object, never projected by shifting its silhouette.
+const penumbra=regions.contactPenumbra;
+const contactPenumbrae=regions.contactDetails.map(c=>`<g clip-path="url(#contact-${c.receiver})"><path d="${c.path}" fill="none" stroke="rgb(0,0,${Math.round(c.weight*penumbra.weight*255)})" stroke-width="${c.width*penumbra.widthScale}" stroke-linecap="round" filter="url(#contactPenumbra)"/></g>`).join('');
 const contactPaths=regions.contactDetails.map(c=>`<g clip-path="url(#contact-${c.receiver})"><path d="${c.path}" fill="none" stroke="rgb(0,0,${Math.round(c.weight*255)})" stroke-width="${c.width}" stroke-linecap="round" filter="url(#contactDetail-${c.name})"/></g>`).join('');
 const shaping=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" color-interpolation="sRGB">
-<defs>${contactClips}${regions.contactDetails.map(c=>`<filter id="contactDetail-${c.name}" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><feGaussianBlur stdDeviation="${c.feather}"/></filter>`).join('')}</defs>
+<defs>${contactClips}<filter id="contactPenumbra" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><feGaussianBlur stdDeviation="${penumbra.feather}"/></filter>${regions.contactDetails.map(c=>`<filter id="contactDetail-${c.name}" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><feGaussianBlur stdDeviation="${c.feather}"/></filter>`).join('')}</defs>
 <defs><mask id="desktop"><rect width="1200" height="675" fill="black"/>${path('desk','white')}${['hair','cloth','bodice','handLeft','handRight','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><mask id="room"><rect width="1200" height="675" fill="white"/>${['hair','cloth','bodice','face','hat','handLeft','handRight','desk','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><filter id="roomSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${room.feather}"/></filter><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
 <g style="isolation:isolate"><rect width="1200" height="675" fill="url(#access)"/>
 <g style="mix-blend-mode:screen" mask="url(#room)"><g filter="url(#roomSoft)">${roomPaths}</g></g>
-<g style="mix-blend-mode:screen" mask="url(#desktop)" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g><g style="mix-blend-mode:screen">${contactPaths}</g></g></svg>`;
+<g style="mix-blend-mode:screen" mask="url(#desktop)" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g><g style="mix-blend-mode:screen">${contactPenumbrae}</g><g style="mix-blend-mode:screen">${contactPaths}</g></g></svg>`;
 
 for (const [name, source] of Object.entries({ 'character-masks.svg': masks, 'scene-masks.svg': scene, 'normal-low-frequency.svg': normals, 'light-shaping.svg': shaping })) {
   await writeFile(new URL(name, output), source + '\n');

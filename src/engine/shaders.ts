@@ -1,3 +1,5 @@
+import { lightLayers } from './light-layers';
+
 export const vertex = `#version 300 es
 precision highp float;
 out vec2 uv;
@@ -41,6 +43,7 @@ float surfaceResponse(vec3 n, vec3 l) {
 float lampResponse(vec3 n, vec3 l) {
   return .08+.92*clamp((dot(n,l)+.70)/1.70,0.0,1.0);
 }
+${lightLayers}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
   if(uView==1) { color=vec4(base,1); return; }
@@ -118,18 +121,6 @@ void main() {
   }
   float shadowAmount=0.0;
   if(spatial) {
-    // Keep receiving light continuous across hand / page / tabletop seams.
-    // A translated 2D silhouette has no receiver height and is not a shadow.
-    float day=clamp(uProjectionEnergy,0.0,1.0)*uProjected*clamp(uProjectedIntensity/.42,0.0,1.0)*uSunStrength;
-    float aperture=projectedBand*projectedReach;
-    float unlitReceiver=receiver*(1.0-aperture);
-    float dayShade=clamp(day*(unlitReceiver*.30+(1.0-shape.r)*.12*(1.0-exterior)*(1.0-face)),0.0,.50);
-    light*=1.0-dayShade;
-    // Night: quiet interior ambient, directional cool spill near the window,
-    // then a distinct warm lamp contribution below. No daytime beam remains.
-    vec3 room=uAmbient*uAmbientStrength*mix(.38,.80,shape.r);
-    vec3 cool=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
-    light=mix(light,room+cool,night*(1.0-exterior));
     vec2 deskDelta=(uv-vec2(.825,.735))/vec2(.20,.115);
     vec2 subjectDelta=(uv-vec2(.752,.49))/vec2(.092,.21);
     vec2 sillDelta=(uv-vec2(.82,.515))/vec2(.13,.10);
@@ -143,11 +134,9 @@ void main() {
     float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65)*rearVisibility;
     float sillPool=exp(-dot(sillDelta,sillDelta))*scene.g;
     lampPool=(deskPool*1.45+subjectPool*1.55+sillPool*1.65+lampPool*.025)*(1.0-exterior);
-    // Registered joints also block direct lamp energy; the room fill survives.
-    lampPool*=1.0-clamp(shape.b*uShadow*.35,0.0,.30);
-    shadowAmount=1.0-(1.0-dayShade)*(1.0-night*(1.0-shape.r)*.50);
   }
-  light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
+  vec3 projectionContribution=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
+  light+=projectionContribution;
   // +Z points toward the viewer: the lamp is behind the figure, not a camera-side
   // fill. Keep a small wrapped response for soft reflected visibility. The desk
   // pool compensates for its upward-facing receiving plane, not the front torso.
@@ -157,28 +146,22 @@ void main() {
   lampSurface=mix(lampSurface,lampFace,face*uFace*.8);
   float lampMaterial=1.0+hair*(uHair-1.0)+body*(uCloth-1.0);
   // Emission is separate: the luminous shade underside is never N.L shaded.
-  vec3 lampContribution=vec3(1.0,.63,.32)*uLamp*uLampStrength*
-    (lampPool*(spatial?1.45:.66)*lampSurface*lampMaterial+lampBulb*mix(.5,1.5,night));
+  vec3 lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*
+    lampPool*(spatial?1.45:.66)*lampSurface*lampMaterial;
+  vec3 lampEmission=vec3(1.0,.63,.32)*uLamp*uLampStrength*lampBulb*mix(.5,1.5,night);
+  vec3 lampContribution=lampReflection+lampEmission;
+  vec3 ambientContribution=uAmbient*uAmbientStrength;
   light+=lampContribution;
   if(spatial) {
-    // B contains source-registered contact bands, never displaced silhouettes.
-    // Turned surfaces lose a little fill, with wide transitions and no face volume.
-    float material=clamp(hair*.85+body*.75+scene.g*.55+shape.g*.40,0.0,1.0)*(1.0-face)*(1.0-exterior);
-    float daylight=clamp(dot(uSun,vec3(.2126,.7152,.0722))*2.0*uSunStrength,0.0,1.0);
-    float darkDay=1.0-smoothstep(.10,.75,dot(normal,normalize(uDirection)));
-    float darkLamp=1.0-smoothstep(-.35,.50,dot(normal,lampDirection));
-    float volume=mix(daylight*darkDay, darkLamp,night)*material*.22;
-    float unlitDay=(1.0-projectedBand*projectedReach)*daylight*uProjected;
-    float unlitLamp=1.0-clamp(lampPool,0.0,1.0);
-    float occluded=mix(unlitDay,unlitLamp,night)*material*.075;
-    // Walls, chair and foreground share the same access field as the subject.
-    // This removes fill away from the aperture rather than adding another glow.
-    float roomShade=shape.g*(1.0-shape.r)*mix(daylight*.16,.09,night);
-    float contact=shape.b*.30*(1.0-exterior);
-    contact=mix(contact,min(contact,.025),face);
-    float attenuation=clamp(uShadow*(contact+volume+occluded+roomShade),0.0,.30);
-    light*=1.0-attenuation;
-    shadowAmount=1.0-(1.0-shadowAmount)*(1.0-attenuation);
+    LightLayers layers=roomLightLayers(normal,scene,shape,face,hair,body,night,
+      receiver,projectedBand*projectedReach,receive,directional,projectionContribution,
+      lampReflection,lampEmission,lampDirection);
+    ambientContribution=layers.ambient;
+    directional=layers.window;
+    projectionContribution=layers.projection;
+    lampContribution=layers.lamp+layers.emission;
+    light=layers.ambient+layers.window+layers.projection+layers.lamp+layers.emission;
+    shadowAmount=layers.occlusion;
   }
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
@@ -216,6 +199,13 @@ void main() {
   }
   if(uView==12) { color=vec4(vec3(shadowAmount),1); return; }
   if(uView==13) { color=vec4(lampContribution,1); return; }
+  if(uView==17) { color=vec4(encode(ambientContribution*.6),1); return; }
+  if(uView==18) {
+    float form=mix(softFormBand(dot(normal,normalize(uDirection)),uSoftness),
+      smoothstep(-.40,.40,dot(normal,lampDirection)),night);
+    color=vec4(vec3(form),1); return;
+  }
+  if(uView==19) { color=vec4(vec3(shape.b),1); return; }
   if(uView==14) { color=vec4(vec3(dot(directional,vec3(.2126,.7152,.0722))*.6),1); return; }
   // Optional scalar log-gain, applied to the original base in linear light.
   // 128 is exactly neutral. Original Base debug always bypasses this experiment.

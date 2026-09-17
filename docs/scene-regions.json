@@ -39,5 +39,16 @@
   "bookContact": "M627 538 L720 579 C780 558 819 538 848 551 L860 549 C875 532 900 534 941 533 L941 536 C900 537 877 535 861 552 L848 554 C819 541 780 561 720 582 L626 541 Z",
   "cupContact": "M938 536 Q985 547 1040 535 L1041 543 Q982 555 937 542 Z",
   "laptop": "M914 631 L1200 553 V675 H998 L915 651 Q899 641 914 631 Z",
-  "windowAccess": { "fromX": 350, "toX": 1110, "minimum": 0.12, "maximum": 1.0 }
+  "windowAccess": { "fromX": 350, "toX": 1110, "minimum": 0.12, "maximum": 1.0 },
+  "roomParticipation": {
+    "note": "Soft receiving weights, not new volume/depth or exterior boundaries. G of existing light-shaping map; silhouettes are excluded by existing source contours.",
+    "feather": 10,
+    "surfaces": [
+      { "name": "left-wall", "weight": 0.80, "path": "M120 0 H566 V244 L506 326 L444 468 L328 590 H120 Z" },
+      { "name": "shelf-books", "weight": 0.40, "path": "M0 0 H110 V603 H0 Z" },
+      { "name": "shelf-edge", "weight": 0.72, "path": "M91 0 H120 V611 H91 Z" },
+      { "name": "left-foreground", "weight": 0.43, "path": "M0 345 C83 351 104 434 176 466 C246 492 296 570 329 675 H0 Z" },
+      { "name": "chair-surround", "weight": 0.58, "path": "M276 303 L442 296 L417 469 L334 603 L287 532 Z" }
+    ]
+  }
 }

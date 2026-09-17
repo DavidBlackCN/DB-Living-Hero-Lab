@@ -8,8 +8,20 @@ selects the earlier SVG. Engine structure, artwork UVs and pass count are retain
 
 Directional sunlight, projected aperture and lamp reflection all use the decoded
 normal. Projection multiplies its existing access/receiver field by N·L. Lamp
-reflection uses an aspect-correct direction toward the source lamp with a fixed
-forward distance, with emission kept separate. See [integration details](logs/normal-light-integration.md).
+reflection uses an aspect-correct direction toward the source lamp. Lighting
+Convergence 2 changes its Z offset to -.08 (behind the figure), uses a wide soft
+diffuse wrap, and keeps emission separate. The smaller subject pool favors the
+right side while the upward-facing desk retains a broad local pool. See
+[current calibration](logs/lighting-convergence-2.md); the earlier
+[integration details](logs/normal-light-integration.md) describe the first version.
+
+Room participation reuses light-shaping G for five soft source-authored receiving
+weights (wall, books/shelf edge, chair surroundings, foreground). The existing
+window aperture is evaluated on a foreshortened upright receiving plane, using
+the same time-driven origin, axis, width and energy. It adds weak normal-aware
+window light only where G permits, with longer reach than the tabletop aperture.
+This is not global ambient, atmospheric scattering or physical ray tracing.
+Scene-mask/exterior coverage, main subject projection and normal assets are unchanged.
 
 Optional `correctionUrl` must match base dimensions. It is a grayscale signed EV
 gain map: `EV=(R*255-128)/254`, applied as `linearBase*exp2(EV*correction)` before
@@ -43,9 +55,11 @@ receivers and shadows by [desk-light-review.md](logs/desk-light-review.md).
   is indoor receiver coverage, including hands/book/cup/stacked books/chair as well as desk.
   Hair/clothing occlude the desktop; hands are included at full receiving coverage.
   Scene B remains lamp emission.
-- Optional `lightShapingUrl` supplies a 1200×675 RGB map: window access, softened
-  exposed desktop coverage, and contact occlusion. G is a diagnostic coverage
-  channel; B is clipped to that exposed desktop during generation. It occupies texture unit 5;
+- Optional `lightShapingUrl` supplies a 1200×675 RGB map: R window access, G soft
+  room receiving weights, B contact occlusion. G previously exported unused
+  desktop coverage; custom maps must now use G=0 to disable room participation
+  or author registered room weights. B is still clipped to exposed desktop
+  during generation. It occupies texture unit 5;
   bloom remains on unit 4. Total source texture storage is nominally 97.24 MiB.
   No rendering pass was added. Aspect ratio is validated; registration still
   requires source inspection. Existing consumers can omit this optional map.

@@ -42,13 +42,15 @@ const normals = `${header}<defs>${feather}
 <g filter="url(#soft)">${path('desk', '#804bee')}${path('book', '#8076fe')}${path('cup', '#8080ff')}${path('books', '#8080ff')}
 ${path('hair', 'url(#hair)')}${path('cloth', 'url(#cloth)')}${path('bodice', 'url(#cloth)')}${path('face', 'url(#face)')}${path('handLeft', '#8080ff')}${path('handRight', '#8080ff')}</g></svg>`;
 
-// R window access, G exposed desktop, B contact occlusion. G is NOT a displaced
-// silhouette: translating the whole character painted false shadows on pages.
+// R window access, G room receiving weights, B contact occlusion. Reuse the
+// formerly unused desktop G channel; no additional texture or depth field.
 const access=regions.windowAccess;
+const room=regions.roomParticipation;
+const roomPaths=room.surfaces.map(s=>`<path d="${s.path}" fill="rgb(0,${Math.round(s.weight*255)},0)"/>`).join('');
 const shaping=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" color-interpolation="sRGB">
-<defs><mask id="desktop"><rect width="1200" height="675" fill="black"/>${path('desk','white')}${['hair','cloth','bodice','handLeft','handRight','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<defs><mask id="desktop"><rect width="1200" height="675" fill="black"/>${path('desk','white')}${['hair','cloth','bodice','handLeft','handRight','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><mask id="room"><rect width="1200" height="675" fill="white"/>${['hair','cloth','bodice','face','hat','handLeft','handRight','desk','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><filter id="roomSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${room.feather}"/></filter><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
 <g style="isolation:isolate"><rect width="1200" height="675" fill="url(#access)"/>
-<g style="mix-blend-mode:screen" mask="url(#desktop)"><rect width="1200" height="675" fill="#00ff00"/></g>
+<g style="mix-blend-mode:screen" mask="url(#room)"><g filter="url(#roomSoft)">${roomPaths}</g></g>
 <g style="mix-blend-mode:screen" mask="url(#desktop)" filter="url(#contact)">${path('bookContact','#0000cc')}${path('cupContact','#0000ff')}</g></g></svg>`;
 
 for (const [name, source] of Object.entries({ 'character-masks.svg': masks, 'scene-masks.svg': scene, 'normal-low-frequency.svg': normals, 'light-shaping.svg': shaping })) {

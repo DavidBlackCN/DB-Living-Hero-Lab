@@ -35,6 +35,11 @@ vec3 encode(vec3 c) { return mix(c*12.92,1.055*pow(max(c,0.0),vec3(1.0/2.4))-0.0
 float surfaceResponse(vec3 n, vec3 l) {
   return .18+.82*max(dot(n,l),0.0);
 }
+// Wide diffuse wrap preserves turning surfaces under a rear-side area lamp.
+// A hard max(N.L,0) would flatten every back-facing surface to the same floor.
+float lampResponse(vec3 n, vec3 l) {
+  return .08+.92*clamp((dot(n,l)+.70)/1.70,0.0,1.0);
+}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
   if(uView==1) { color=vec4(base,1); return; }
@@ -95,6 +100,21 @@ void main() {
   receiver=clamp(receiver,0.0,1.0)*(1.0-exterior)*(1.0-face);
   float projectedAmount=(refined && uHasSceneMask ? 1.0 : 0.0)*uProjected*uProjectedIntensity*uSunStrength*uProjectionEnergy*projectedBand*projectedReach*receiver;
   projectedAmount *= surfaceResponse(normal,normalize(uDirection));
+  // Same window aperture on the upright room plane, foreshortened relative to
+  // the desk plane. Soft source-authored G weights keep shelves/foreground quiet.
+  // This is receiving light, not an atmospheric overlay or displaced shadow.
+  if(spatial) {
+    vec2 roomAxis=normalize(vec2(-1.0,axis.y*.40));
+    float roomAlong=dot(delta,roomAxis);
+    float roomAcross=dot(delta,vec2(-roomAxis.y,roomAxis.x));
+    float roomWidth=uProjectionShape.x*1.25+max(roomAlong,0.0)*.10;
+    float roomUpper=exp(-2.0*pow(roomAcross/roomWidth,2.0));
+    float roomLower=exp(-2.0*pow((roomAcross+uProjectionShape.z)/(roomWidth*1.12),2.0));
+    float roomBand=1.0-(1.0-roomUpper)*(1.0-roomLower*.65);
+    float roomReach=smoothstep(0.0,.15,roomAlong)*(1.0-smoothstep(.60,2.30,roomAlong));
+    projectedAmount+=uProjected*uProjectedIntensity*uSunStrength*uProjectionEnergy*
+      roomBand*roomReach*shape.g*.65*(1.0-exterior)*(1.0-face)*surfaceResponse(normal,normalize(uDirection));
+  }
   float shadowAmount=0.0;
   if(spatial) {
     // Keep receiving light continuous across hand / page / tabletop seams.
@@ -110,21 +130,23 @@ void main() {
     vec3 cool=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
     light=mix(light,room+cool,night*(1.0-exterior));
     vec2 deskDelta=(uv-vec2(.795,.765))/vec2(.21,.145);
-    vec2 subjectDelta=(uv-vec2(.755,.54))/vec2(.115,.235);
+    vec2 subjectDelta=(uv-vec2(.78,.53))/vec2(.09,.22);
     // The table behind the arm must not cut a bright triangle into the sleeve.
     // Apply the same smooth local lamp field to foreground surfaces instead.
     float lampReceiver=max(scene.g,max(hair*.85,body*.90));
     float deskPool=exp(-dot(deskDelta,deskDelta))*lampReceiver;
     float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65+face*.16);
-    lampPool=(deskPool*.95+subjectPool*.72+lampPool*.16)*(1.0-exterior);
+    lampPool=(deskPool*1.35+subjectPool*1.25+lampPool*.10)*(1.0-exterior);
     shadowAmount=1.0-(1.0-dayShade)*(1.0-shape.b*.12)*(1.0-night*(1.0-shape.r)*.50);
   }
   light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
-  // Artwork-space lamp location with one fixed forward distance, not inferred
-  // depth or a physical shadow caster. +Y points DOWN, matching the normal map.
-  vec3 lampDirection=normalize(vec3((vec2(.797,.327)-uv)*vec2(1200.0/675.0,1.0),.28));
-  float lampSurface=surfaceResponse(normal,lampDirection);
-  lampSurface=mix(lampSurface,surfaceResponse(vec3(0,0,1),lampDirection),face*uFace*.8);
+  // +Z points toward the viewer: the lamp is behind the figure, not a camera-side
+  // fill. Keep a small wrapped response for soft reflected visibility. The desk
+  // pool compensates for its upward-facing receiving plane, not the front torso.
+  vec3 lampDirection=normalize(vec3((vec2(.797,.327)-uv)*vec2(1200.0/675.0,1.0),spatial?-.08:.28));
+  float lampSurface=spatial?lampResponse(normal,lampDirection):surfaceResponse(normal,lampDirection);
+  float lampFace=spatial?lampResponse(vec3(0,0,1),lampDirection):surfaceResponse(vec3(0,0,1),lampDirection);
+  lampSurface=mix(lampSurface,lampFace,face*uFace*.8);
   float lampMaterial=1.0+hair*(uHair-1.0)+body*(uCloth-1.0);
   // Emission is separate: the luminous shade underside is never N.L shaded.
   vec3 lampContribution=vec3(1.0,.63,.32)*uLamp*uLampStrength*

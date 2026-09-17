@@ -12,7 +12,7 @@ test('shadow convergence captures: fixed exposure before and after', async ({pag
   await page.evaluate(()=>{const h=window.livingHero;h.setReducedMotion(true);h.setAnimation(false);h.setSteam(false);});
   const directory=`${visualRoot}/shadow`; await mkdir(directory,{recursive:true});
   for(const [name,minutes] of [['0600',360],['1200',720],['1730',1050],['2300',1380]] as const) {
-    for(const view of ['final','neutral','shadow','lamp','exterior','projected','base'] as DebugView[]) {
+    for(const view of ['final','neutral','shadow','lamp','exterior','projected','base','normal'] as DebugView[]) {
       await page.evaluate(async({minutes,view})=>{
         window.livingHero.setTime(minutes);window.livingHero.setDebugView(view);
         await new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r())));

@@ -52,3 +52,11 @@ Replacement `normalUrl` / `maskUrl` / `sceneMaskUrl` assets must match the hero'
 - `kuro-standard.png` is identity reference only, never the runtime scene.
 
 Thin flyaway hairs, gaps between curls, indoor flower stems and translucent glass still need finer segmentation. No inverse-lighting reconstruction has been performed. See docs/architecture.md.
+
+## Spatial convergence 3
+
+Glass bounds now come from `docs/window-glass.json` (1200×675 ordered anchors).
+`scene-masks.svg` hard-clips exterior coverage after occluder filtering; left edge
+softness stays inward. `light-shaping.svg` keeps its RGB contract, with per-contact
+`feather` in scene-regions and stronger chair participation. Regenerate with
+`npm run assets:generate`. See `docs/logs/spatial-convergence-3.md` for calibration.

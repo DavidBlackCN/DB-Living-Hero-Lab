@@ -926,3 +926,13 @@ The goal is:
 > preserve the artwork while giving it convincing, controllable, anime-friendly dynamic lighting.
 
 Prefer a stable, registered, visually coherent solution over a technically impressive but fragile or misregistered one.
+
+## 30. Current session scope — 2026-09-17
+
+Converge only the Hero lighting foundation: independently maintainable hand-authored
+glass bounds; contact/form shadows; rear-right lamp visibility, sill and right-desk
+pools with attenuation; restrained left-wall/chair/foreground participation.
+Inspect the running baseline before changes and deliver 06:00 / 12:00 / 17:30 /
+23:00 captures, explicit self-checks and remaining limitations. No blink rendering,
+new character animation, UI rearrangement, base replacement, architecture rewrite
+or large dependencies. Keep runtime cost controlled and commit validated work locally.

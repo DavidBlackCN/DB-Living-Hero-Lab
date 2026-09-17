@@ -5,6 +5,8 @@ import { execFileSync } from 'node:child_process';
 // Technical data only. The flower extractor reads source colors; neither script
 // writes/repaints the approved base illustration.
 const regions = JSON.parse(await readFile(new URL('../docs/scene-regions.json', import.meta.url), 'utf8'));
+const glass = JSON.parse(await readFile(new URL('../docs/window-glass.json', import.meta.url), 'utf8'));
+const glassPolygon = (pane, fill) => `<polygon points="${glass[pane].map(p=>p.join(',')).join(' ')}" fill="${fill}"/>`;
 const output = new URL('../public/assets/generated/', import.meta.url);
 await mkdir(output, { recursive: true });
 const path = (name, fill) => `<path d="${regions[name]}" fill="${fill}"/>`;
@@ -19,16 +21,17 @@ const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" f
 
 // Right glass retains native edge coverage. Only the source's defocused left
 // lower edge gets an inward alpha transition, clipped by the glass geometry.
-const lowerTransition = regions.windowGlassLeftLowerTransition;
+const lowerTransition = glass.leftLowerTransition;
 const scene = `${header}<defs>${feather}
 <mask id="receivers"><rect width="1200" height="675" fill="black"/><g filter="url(#soft)">${path('chair','#666666')}${['lampSill','desk','book','cup','books'].map(n=>path(n,'white')).join('')}${path('penCup','#bbbbbb')}${path('pictureFrame','#777777')}${path('vase','#777777')}${['hair','cloth','bodice'].map(n=>path(n,'black')).join('')}${['handLeft','handRight'].map(n=>path(n,'white')).join('')}${path('laptop','black')}</g></mask>
 <linearGradient id="leftLower" gradientUnits="userSpaceOnUse" x1="${lowerTransition.inner[0]}" y1="${lowerTransition.inner[1]}" x2="${lowerTransition.edge[0]}" y2="${lowerTransition.edge[1]}"><stop stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
 <filter id="penEdge" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
 <filter id="defocusedStem" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<clipPath id="glassBounds">${glassPolygon('left', 'white')}${glassPolygon('right', 'white')}</clipPath>
 <mask id="glass" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675" style="mask-type:alpha">
-${path('windowGlassLeft', 'url(#leftLower)')}${path('windowGlassRight', 'white')}
+${glassPolygon('left', 'url(#leftLower)')}${glassPolygon('right', 'white')}
 </mask><mask id="flowerOcclusion" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><image width="1200" height="675" href="data:image/png;base64,${flowerData}"/></mask></defs><rect width="1200" height="675" fill="black"/>
-<g mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<g filter="url(#penEdge)">${path('penCup', 'black')}</g><g filter="url(#defocusedStem)">${path('windowSoftForeground', 'black')}</g><rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
+<g clip-path="url(#glassBounds)" mask="url(#glass)"><rect width="1200" height="675" fill="red"/>${occluders.map(n => path(n, '#000000')).join('')}<g filter="url(#penEdge)">${path('penCup', 'black')}</g><g filter="url(#defocusedStem)">${path('windowSoftForeground', 'black')}</g><rect width="1200" height="675" fill="black" mask="url(#flowerOcclusion)"/></g>
 <rect width="1200" height="675" fill="#00ff00" mask="url(#receivers)" style="mix-blend-mode:screen"/>
 <g filter="url(#soft)">${path('lampEmitter', '#0000ff')}</g></svg>`;
 
@@ -48,9 +51,9 @@ const access=regions.windowAccess;
 const room=regions.roomParticipation;
 const roomPaths=room.surfaces.map(s=>`<path d="${s.path}" fill="rgb(0,${Math.round(s.weight*255)},0)"/>`).join('');
 const contactClips=[...new Set(regions.contactDetails.map(c=>c.receiver))].map(n=>`<clipPath id="contact-${n}">${path(n,'white')}</clipPath>`).join('');
-const contactPaths=regions.contactDetails.map(c=>`<g clip-path="url(#contact-${c.receiver})"><path d="${c.path}" fill="none" stroke="rgb(0,0,${Math.round(c.weight*255)})" stroke-width="${c.width}" stroke-linecap="round" filter="url(#contactDetail)"/></g>`).join('');
+const contactPaths=regions.contactDetails.map(c=>`<g clip-path="url(#contact-${c.receiver})"><path d="${c.path}" fill="none" stroke="rgb(0,0,${Math.round(c.weight*255)})" stroke-width="${c.width}" stroke-linecap="round" filter="url(#contactDetail-${c.name})"/></g>`).join('');
 const shaping=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" color-interpolation="sRGB">
-<defs>${contactClips}<filter id="contactDetail" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<defs>${contactClips}${regions.contactDetails.map(c=>`<filter id="contactDetail-${c.name}" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="675"><feGaussianBlur stdDeviation="${c.feather}"/></filter>`).join('')}</defs>
 <defs><mask id="desktop"><rect width="1200" height="675" fill="black"/>${path('desk','white')}${['hair','cloth','bodice','handLeft','handRight','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><mask id="room"><rect width="1200" height="675" fill="white"/>${['hair','cloth','bodice','face','hat','handLeft','handRight','desk','book','cup','books','laptop'].map(n=>path(n,'black')).join('')}</mask><filter id="roomSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${room.feather}"/></filter><linearGradient id="access" gradientUnits="userSpaceOnUse" x1="${access.fromX}" x2="${access.toX}"><stop stop-color="rgb(${access.minimum*255},0,0)"/><stop offset="1" stop-color="rgb(${access.maximum*255},0,0)"/></linearGradient><filter id="contact"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
 <g style="isolation:isolate"><rect width="1200" height="675" fill="url(#access)"/>
 <g style="mix-blend-mode:screen" mask="url(#room)"><g filter="url(#roomSoft)">${roomPaths}</g></g>

@@ -6,10 +6,7 @@
   "bodice": "M607 288 L626 287 L604 431 C643 450 696 452 741 433 L750 319 L771 311 L776 393 L753 456 L732 489 L663 492 L611 511 L580 491 L590 433 Z",
   "handLeft": "M593 494 C602 496 613 494 622 491 L641 482 Q646 481 649 478 Q653 476 657 480 C668 485 682 486 686 491 C691 499 696 514 700 522 Q703 526 698 525 L690 521 L694 529 Q697 533 691 532 L684 530 Q681 533 677 531 C669 525 661 518 653 516 L649 518 L660 527 Q663 531 658 532 C650 532 639 525 634 522 C624 525 617 530 608 527 L585 521 L581 518 L582 515 L580 510 Q585 507 587 503 Q585 499 591 498 Z",
   "handRight": "M875 467 C888 462 909 468 925 487 L940 507 L925 518 L905 512 L890 501 L871 495 Z",
-  "windowGlassLeft": "M834 0 H988.1 L988 62.5 L987.1 125 L986.8 175 L986.2 250 L985.6 279.5 L944 276 L920 274 L902 272.3 L866.84317 269.44351 L844 222 Z",
-  "windowGlassLeftLowerTransition": { "inner": [902.2, 269.9], "edge": [902, 272.3] },
   "windowSoftForeground": "M900 270 C904 269 905 272 904 277 L889 318 L881 318 L897 276 C897 273 898 271 900 270 Z",
-  "windowGlassRight": "M1052.66 0 L1052.81 31.25 L1051.56 93.75 L1050.31 156.25 L1050.31 218.75 L1049.06 265.625 L1048.75 282.5 L1085 287.8 L1094 289.2 L1100 290 L1110 291.25 L1120 292 L1160 295 L1200 298 V0 Z",
   "windowFlowers": "M1144 201 L1163 201 L1163 220 L1174 222 L1174 239 L1187 239 L1190 260 L1200 261 V310 H1095 L1095 257 L1104 256 L1112 271 L1128 280 L1128 269 L1114 255 L1114 237 L1124 235 L1139 243 L1144 264 L1150 273 L1150 246 L1144 241 L1147 223 Z",
   "windowFlowerExtraction": {
     "roiPadding": 2,
@@ -41,17 +38,17 @@
   "laptop": "M914 631 L1200 553 V675 H998 L915 651 Q899 641 914 631 Z",
   "lampSill": "M871 318 L1200 373 V409 L885 350 Z",
   "contactDetails": [
-    { "name": "fringe-face", "receiver": "face", "width": 3, "weight": 0.28, "path": "M671 161 C686 150 698 156 711 161 C728 172 742 181 756 172 L771 173" },
-    { "name": "side-lock-face", "receiver": "face", "width": 3, "weight": 0.25, "path": "M672 178 C670 197 677 220 690 234" },
-    { "name": "chin-neck", "receiver": "cloth", "width": 4, "weight": 0.70, "path": "M681 242 C698 259 719 268 741 257" },
-    { "name": "left-strap", "receiver": "cloth", "width": 3, "weight": 0.65, "path": "M621 302 L609 377 L602 425" },
-    { "name": "right-strap", "receiver": "cloth", "width": 3, "weight": 0.65, "path": "M746 332 L744 387 L738 433" },
-    { "name": "left-hand-page", "receiver": "book", "width": 3, "weight": 0.65, "path": "M632 523 L647 532 L660 534 M678 533 L691 535 L699 528" },
-    { "name": "right-hand-page", "receiver": "book", "width": 3, "weight": 0.65, "path": "M891 503 L908 515 L926 520 L938 513" },
-    { "name": "tools-foot", "receiver": "lampSill", "width": 4, "weight": 0.70, "path": "M943 358 Q972 362 1005 358" },
-    { "name": "frame-foot", "receiver": "lampSill", "width": 4, "weight": 0.55, "path": "M1006 360 L1067 372" },
-    { "name": "vase-foot", "receiver": "lampSill", "width": 4, "weight": 0.65, "path": "M1138 402 Q1163 407 1193 401" },
-    { "name": "chair-drape", "receiver": "chair", "width": 4, "weight": 0.70, "path": "M362 334 L371 389 M367 399 L382 486" }
+    { "name": "fringe-face", "receiver": "face", "width": 3, "feather": 0.9, "weight": 0.28, "path": "M671 161 C686 150 698 156 711 161 C728 172 742 181 756 172 L771 173" },
+    { "name": "side-lock-face", "receiver": "face", "width": 3, "feather": 0.9, "weight": 0.25, "path": "M672 178 C670 197 677 220 690 234" },
+    { "name": "chin-neck", "receiver": "cloth", "width": 4, "feather": 1.25, "weight": 0.70, "path": "M681 242 C698 259 719 268 741 257" },
+    { "name": "left-strap", "receiver": "cloth", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M621 302 L609 377 L602 425" },
+    { "name": "right-strap", "receiver": "cloth", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M746 332 L744 387 L738 433" },
+    { "name": "left-hand-page", "receiver": "book", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M632 523 L647 532 L660 534 M678 533 L691 535 L699 528" },
+    { "name": "right-hand-page", "receiver": "book", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M891 503 L908 515 L926 520 L938 513" },
+    { "name": "tools-foot", "receiver": "lampSill", "width": 4, "feather": 1.25, "weight": 0.70, "path": "M943 358 Q972 362 1005 358" },
+    { "name": "frame-foot", "receiver": "lampSill", "width": 4, "feather": 1.25, "weight": 0.55, "path": "M1006 360 L1067 372" },
+    { "name": "vase-foot", "receiver": "lampSill", "width": 4, "feather": 1.25, "weight": 0.65, "path": "M1138 402 Q1163 407 1193 401" },
+    { "name": "chair-drape", "receiver": "chair", "width": 4, "feather": 1.25, "weight": 0.70, "path": "M362 334 L371 389 M367 399 L382 486" }
   ],
   "windowAccess": { "fromX": 350, "toX": 1110, "minimum": 0.12, "maximum": 1.0 },
   "roomParticipation": {
@@ -62,7 +59,7 @@
       { "name": "shelf-books", "weight": 0.40, "path": "M0 0 H110 V603 H0 Z" },
       { "name": "shelf-edge", "weight": 0.72, "path": "M91 0 H120 V611 H91 Z" },
       { "name": "left-foreground", "weight": 0.43, "path": "M0 345 C83 351 104 434 176 466 C246 492 296 570 329 675 H0 Z" },
-      { "name": "chair-surround", "weight": 0.58, "path": "M276 303 L442 296 L417 469 L334 603 L287 532 Z" }
+      { "name": "chair-surround", "weight": 0.65, "path": "M276 303 L442 296 L417 469 L334 603 L287 532 Z" }
     ]
   }
 }

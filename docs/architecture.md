@@ -1,5 +1,19 @@
 # Living Hero architecture
 
+## Spatial convergence 3 — current calibration
+
+Glass anchors now live in `docs/window-glass.json`; the asset generator applies
+an outer polygon clip and an inward-only edge transition. The normal/correction
+generator derives glass exclusions from the same anchors.
+
+Contact softness is authored per path. The existing Shadow control now also
+attenuates direct lamp energy at contacts and controls room access/form shading.
+Total aggregate attenuation is capped at .30; face contact remains capped at .025.
+The rear-right lamp pool and sill receiver have been recalibrated. No passes,
+textures, dependencies or public API were added. Full current coefficients,
+validation and limits: [spatial convergence 3](logs/spatial-convergence-3.md).
+The calibration sections below are historical and superseded where noted here.
+
 ## Lighting / Shadow Convergence — latest calibration
 
 The current spatial lamp uses a reading pool at (.825,.735), radius (.20,.115),

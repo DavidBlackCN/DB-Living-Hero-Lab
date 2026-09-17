@@ -1,0 +1,7 @@
+{
+  "coordinateSystem": "Original artwork, top-left 1200 x 675. Ordered boundary anchors; no outward blur or geometry inference.",
+  "left": [[834,0],[988.1,0],[988,62.5],[987.1,125],[986.8,175],[986.2,250],[985.6,279.5],[944,276],[920,274],[902,272.3],[866.84317,269.44351],[844,222]],
+  "right": [[1052.66,0],[1052.81,31.25],[1051.56,93.75],[1050.31,156.25],[1050.31,218.75],[1049.06,265.625],[1048.75,282.5],[1085,287.8],[1094,289.2],[1100,290],[1110,291.25],[1120,292],[1160,295],[1200,298],[1200,0]],
+  "leftLowerTransition": {"inner": [902.2,269.9], "edge": [902,272.3]},
+  "note": "Left bottom edge fades inward only. Hard clip after all occluder filters. Flower extraction only subtracts coverage. Frame, sill and lamp base stay outside polygons."
+}

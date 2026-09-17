@@ -127,19 +127,24 @@ void main() {
     light*=1.0-dayShade;
     // Night: quiet interior ambient, directional cool spill near the window,
     // then a distinct warm lamp contribution below. No daytime beam remains.
-    vec3 room=uAmbient*uAmbientStrength*mix(.42,.80,shape.r);
+    vec3 room=uAmbient*uAmbientStrength*mix(.38,.80,shape.r);
     vec3 cool=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
     light=mix(light,room+cool,night*(1.0-exterior));
     vec2 deskDelta=(uv-vec2(.825,.735))/vec2(.20,.115);
-    vec2 subjectDelta=(uv-vec2(.78,.49))/vec2(.085,.20);
-    vec2 sillDelta=(uv-vec2(.82,.49))/vec2(.13,.105);
+    vec2 subjectDelta=(uv-vec2(.752,.49))/vec2(.092,.21);
+    vec2 sillDelta=(uv-vec2(.82,.515))/vec2(.13,.10);
     // The table behind the arm must not cut a bright triangle into the sleeve.
     // Apply the same smooth local lamp field to foreground surfaces instead.
     float lampReceiver=max(scene.g,max(hair*.85,body*.90));
     float deskPool=exp(-dot(deskDelta,deskDelta))*lampReceiver;
-    float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65+face*.16);
+    // Right shoulder / trailing hair see the rear lamp; the front torso and face
+    // are shielded by the figure itself. Smooth visibility, not a painted rim.
+    float rearVisibility=smoothstep(.62,.74,uv.x)*(1.0-face);
+    float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65)*rearVisibility;
     float sillPool=exp(-dot(sillDelta,sillDelta))*scene.g;
-    lampPool=(deskPool*1.45+subjectPool*1.55+sillPool+lampPool*.06)*(1.0-exterior);
+    lampPool=(deskPool*1.45+subjectPool*1.55+sillPool*1.65+lampPool*.025)*(1.0-exterior);
+    // Registered joints also block direct lamp energy; the room fill survives.
+    lampPool*=1.0-clamp(shape.b*uShadow*.35,0.0,.30);
     shadowAmount=1.0-(1.0-dayShade)*(1.0-night*(1.0-shape.r)*.50);
   }
   light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
@@ -158,17 +163,20 @@ void main() {
   if(spatial) {
     // B contains source-registered contact bands, never displaced silhouettes.
     // Turned surfaces lose a little fill, with wide transitions and no face volume.
-    float material=clamp(hair*.85+body*.75+scene.g*.55,0.0,1.0)*(1.0-face)*(1.0-exterior);
+    float material=clamp(hair*.85+body*.75+scene.g*.55+shape.g*.40,0.0,1.0)*(1.0-face)*(1.0-exterior);
     float daylight=clamp(dot(uSun,vec3(.2126,.7152,.0722))*2.0*uSunStrength,0.0,1.0);
     float darkDay=1.0-smoothstep(.10,.75,dot(normal,normalize(uDirection)));
     float darkLamp=1.0-smoothstep(-.35,.50,dot(normal,lampDirection));
-    float volume=mix(daylight*darkDay, darkLamp,night)*material*.10;
+    float volume=mix(daylight*darkDay, darkLamp,night)*material*.22;
     float unlitDay=(1.0-projectedBand*projectedReach)*daylight*uProjected;
     float unlitLamp=1.0-clamp(lampPool,0.0,1.0);
-    float occluded=mix(unlitDay,unlitLamp,night)*material*.045;
-    float contact=shape.b*.18*(1.0-exterior);
+    float occluded=mix(unlitDay,unlitLamp,night)*material*.075;
+    // Walls, chair and foreground share the same access field as the subject.
+    // This removes fill away from the aperture rather than adding another glow.
+    float roomShade=shape.g*(1.0-shape.r)*mix(daylight*.16,.09,night);
+    float contact=shape.b*.30*(1.0-exterior);
     contact=mix(contact,min(contact,.025),face);
-    float attenuation=clamp(uShadow*(contact+volume+occluded),0.0,.22);
+    float attenuation=clamp(uShadow*(contact+volume+occluded+roomShade),0.0,.30);
     light*=1.0-attenuation;
     shadowAmount=1.0-(1.0-shadowAmount)*(1.0-attenuation);
   }

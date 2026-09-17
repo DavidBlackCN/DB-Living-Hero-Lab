@@ -13,6 +13,9 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 regions = json.loads((ROOT / 'docs/scene-regions.json').read_text(encoding='utf-8'))
+glass = json.loads((ROOT / 'docs/window-glass.json').read_text(encoding='utf-8'))
+for pane, name in [('left', 'windowGlassLeft'), ('right', 'windowGlassRight')]:
+    regions[name] = 'M' + ' L'.join(f'{x} {y}' for x, y in glass[pane]) + ' Z'
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--version', choices=['v1', 'v2'], default='v2')
 parser.add_argument('--correction-only', action='store_true', help='Use the existing v2 normal to bake an optional bounded gain experiment')

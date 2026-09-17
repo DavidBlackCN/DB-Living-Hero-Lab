@@ -1,5 +1,12 @@
 # Technical Art Alignment — 2026-09-16
 
+2026-09-17 status: Round 1 was manually accepted by the user. The follow-up
+[Lighting Convergence / Visual Polish](lighting-convergence.md) records the final
+morning calibration and local review. Current phase gate:
+**Technical Art Alignment: ACCEPTED WITH BAKED-LIGHT LIMITATION**.
+Development stops for the user's 1.5 review; the remainder below is the historical
+Round 1 report, not a new request to reopen correction or animation work.
+
 ## Handoff and baseline
 
 Starting commit: `4e5502c`. The existing uncommitted `REQUIREMENTS.md` is user work

@@ -15,8 +15,8 @@ const keys = [
 // Art-directed darkness, independent of lamp strength and user exposure.
 const nightWeights = [1, 0.8, 0.1, 0, 0, 0, 0.18, 0.85, 1, 1];
 const directions = [
-  [0.54, -0.62, 0.56], [0.58, -0.52, 0.62], [0.76, -0.44, 0.56],
-  [0.10, -0.96, 0.72], [-0.04, -0.98, 0.76], [0.34, -0.82, 0.70],
+  [0.54, -0.62, 0.56], [0.58, -0.52, 0.62], [0.90, -0.28, 0.48],
+  [0.38, -0.82, 0.66], [-0.04, -0.98, 0.76], [0.34, -0.82, 0.70],
   [0.82, -0.34, 0.46], [0.86, -0.12, 0.36], [0.70, -0.38, 0.48], [0.54, -0.62, 0.56],
 ];
 export function lightingAt(minutes: number) {
@@ -40,9 +40,11 @@ export function lightingAt(minutes: number) {
 // These are lighting keyframes, not additional user-facing tuning parameters.
 const projectionKeys = [
   { time: 0, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 0 },
-  { time: 330, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 0 },
-  { time: 360, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: .85 },
-  { time: 480, origin: [.90,.22], axis: [-.70,.714], width: .09, spread: .035, separation: .22, reach: 1.14, energy: 1.15 },
+  // Morning enters higher in the window and crosses the shoulder/book at a
+  // shallower angle. Preserve energy and converge to the accepted noon key.
+  { time: 330, origin: [.93,.14], axis: [-.83,.558], width: .095, spread: .04, separation: .24, reach: 1.25, energy: 0 },
+  { time: 360, origin: [.93,.14], axis: [-.83,.558], width: .095, spread: .04, separation: .24, reach: 1.25, energy: .85 },
+  { time: 480, origin: [.91,.14], axis: [-.77,.638], width: .10, spread: .04, separation: .24, reach: 1.19, energy: 1.15 },
   { time: 720, origin: [.90,.18], axis: [-.42,.907], width: .19, spread: .035, separation: .24, reach: 1.05, energy: .95 },
   { time: 1050, origin: [.94,.28], axis: [-.90,.435], width: .105, spread: .08, separation: .27, reach: 1.10, energy: 1.85 },
   { time: 1170, origin: [.96,.32], axis: [-.95,.312], width: .105, spread: .08, separation: .27, reach: 1.15, energy: 0 },

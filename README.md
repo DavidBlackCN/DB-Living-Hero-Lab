@@ -1,14 +1,15 @@
 # Black Sister Living Hero Lab
 
-独立的 Living Hero 光影实验工程。当前进入 **Technical Art Alignment（2026-09-16）**：配准 normal v2、三类光源的表面响应、晨昏校准及可关闭的 intrinsic correction 实验。继续使用原始 4K 插画、Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。
+独立的 Living Hero 光影实验工程。当前完成 **Technical Art Alignment 1.5 — Lighting Convergence（2026-09-17）**。
+阶段判断：**Technical Art Alignment: ACCEPTED WITH BAKED-LIGHT LIMITATION**。晨间方向已收敛，Normal v2 与四时段通过本轮浏览器视觉审查；停止开发，等待本轮人工验收。继续使用原始 4K 插画、Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。
 
-本轮验收入口：[四时段、灰度、法线及 correction 对照](docs/screenshots/technical-art-alignment/README.md)。
-实现、验证和限制见 [Technical Art Alignment 记录](docs/logs/technical-art-alignment.md)。
+本轮验收入口：[晨间前后、四时段灰度与原生 4K 局部](docs/screenshots/lighting-convergence/README.md)。
+实现、验证和限制见 [Lighting Convergence 记录](docs/logs/lighting-convergence.md)；[第一轮记录](docs/logs/technical-art-alignment.md)保留历史过程。
 测试截图、实验预览、性能采样 JSON 和运行日志均为本地产物，不提交到 GitHub；图片链接需在本地生成后查看。原始插画和运行所需技术贴图继续纳入版本管理。
 
 普通 `/` 默认展示 v2；`/?normal=registered`（或 `v1`）保留 v1；`/?normal=low-frequency` 保留低频对照。`npm run assets:normal` 重建 v2，`npm run assets:normal -- --version v1` 重建 v1。曲面为手工近似，自动检查通过不等于最终艺术验收。
 
-`/?correction=1` 加载可开关的增益实验（默认页面不加载）。面板可切换 Original / Correction，并查看 Correction、Corrected Base；Base 始终显示原图。`npm run assets:correction` 从 v2 重建实验贴图。它只能温和修正推定的固定受光，无法移除原画阴影或恢复真正 albedo。
+`/?correction=1` 加载可开关的增益实验（默认页面不加载）。实验已结束，收益有限，继续默认关闭。面板可切换 Original / Correction，并查看 Correction、Corrected Base；Base 始终显示原图。`npm run assets:correction` 从 v2 重建实验贴图。它只能温和修正推定的固定受光，无法移除原画阴影或恢复真正 albedo。
 
 最新修正：[左手、书页与桌面光影验收](docs/screenshots/desk-light-review/README.md)。校准左手和书本轮廓，消除桌面区域穿过袖子的受光错误，删除无深度依据的整轮廓平移投影。两套 normal 均已复核，候选同步采用修正后的区域。
 

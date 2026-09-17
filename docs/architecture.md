@@ -1,5 +1,10 @@
 # Living Hero architecture
 
+Latest region correction: `lampSill` now follows the physical shelf rather than
+crossing the window apron; `penHolderReceiver` covers the tool holder body.
+This fixes an indoor receiver stripe which exterior-only tests missed. Glass
+coverage and shader behavior are unchanged. See [window interior fix](logs/window-interior-fix.md).
+
 ## Spatial convergence 3 — current calibration
 
 Glass anchors now live in `docs/window-glass.json`; the asset generator applies

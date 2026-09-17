@@ -23,7 +23,7 @@ const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" f
 // lower edge gets an inward alpha transition, clipped by the glass geometry.
 const lowerTransition = glass.leftLowerTransition;
 const scene = `${header}<defs>${feather}
-<mask id="receivers"><rect width="1200" height="675" fill="black"/><g filter="url(#soft)">${path('chair','#666666')}${['lampSill','desk','book','cup','books'].map(n=>path(n,'white')).join('')}${path('penCup','#bbbbbb')}${path('pictureFrame','#777777')}${path('vase','#777777')}${['hair','cloth','bodice'].map(n=>path(n,'black')).join('')}${['handLeft','handRight'].map(n=>path(n,'white')).join('')}${path('laptop','black')}</g></mask>
+<mask id="receivers"><rect width="1200" height="675" fill="black"/><g filter="url(#soft)">${path('chair','#666666')}${['lampSill','desk','book','cup','books'].map(n=>path(n,'white')).join('')}${path('penCup','#bbbbbb')}${path('penHolderReceiver','#bbbbbb')}${path('pictureFrame','#777777')}${path('vase','#777777')}${['hair','cloth','bodice'].map(n=>path(n,'black')).join('')}${['handLeft','handRight'].map(n=>path(n,'white')).join('')}${path('laptop','black')}</g></mask>
 <linearGradient id="leftLower" gradientUnits="userSpaceOnUse" x1="${lowerTransition.inner[0]}" y1="${lowerTransition.inner[1]}" x2="${lowerTransition.edge[0]}" y2="${lowerTransition.edge[1]}"><stop stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
 <filter id="penEdge" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
 <filter id="defocusedStem" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter>

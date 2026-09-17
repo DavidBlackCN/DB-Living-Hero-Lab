@@ -76,7 +76,7 @@ test('lamp reaches its sill receivers and attenuates toward the front desk', asy
     return new Promise<Record<string,number>>(resolve=>requestAnimationFrame(()=>{
       const c=document.querySelector<HTMLCanvasElement>('#hero')!,gl=c.getContext('webgl2')!;
       const a=new Uint8Array(1200*675*4);gl.readPixels(0,0,1200,675,gl.RGBA,gl.UNSIGNED_BYTE,a);
-      const boxes={sill:[970,341,1000,349],tools:[955,297,981,327],front:[850,595,910,625],
+      const boxes={sill:[1076,385,1090,392],tools:[955,297,981,327],front:[850,595,910,625],
         face:[698,183,749,223],leftPage:[680,530,730,548],rightPage:[855,515,882,533]};
       resolve(Object.fromEntries(Object.entries(boxes).map(([name,[x0,y0,x1,y1]])=>{
         let sum=0;for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)sum+=a[((674-y)*1200+x)*4]/255;

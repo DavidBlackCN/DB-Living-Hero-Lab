@@ -1,5 +1,7 @@
 # Black Sister Living Hero Lab
 
+最新修正：[窗框以下异常遮罩带](docs/logs/window-interior-fix.md)。已校准错位的室内窗台受光区域，并补齐笔筒接收区。[局部前后对照](docs/screenshots/window-interior-fix/comparison.png)。
+
 本轮更新：**Hero 底层光影收敛 3（2026-09-17）**。独立玻璃锚点与硬裁剪、增强接触/定向暗部、灯下窗台与右后侧照明、左侧空间响应。参见 [本轮记录](docs/logs/spatial-convergence-3.md) 与 [四时刻截图及前后对照](docs/screenshots/spatial-convergence-3/README.md)。以下前轮记录保留作历史背景。
 
 独立的 Living Hero 光影实验工程。当前完成 **Lighting / Shadow Convergence（2026-09-17）**。

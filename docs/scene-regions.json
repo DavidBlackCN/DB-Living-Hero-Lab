@@ -36,7 +36,8 @@
   "bookContact": "M627 538 L720 579 C780 558 819 538 848 551 L860 549 C875 532 900 534 941 533 L941 536 C900 537 877 535 861 552 L848 554 C819 541 780 561 720 582 L626 541 Z",
   "cupContact": "M938 536 Q985 547 1040 535 L1041 543 Q982 555 937 542 Z",
   "laptop": "M914 631 L1200 553 V675 H998 L915 651 Q899 641 914 631 Z",
-  "lampSill": "M871 318 L1200 373 V409 L885 350 Z",
+  "lampSill": "M884 342 L1200 395 V428 L884 368 Z",
+  "penHolderReceiver": "M939 298 L1009 300 L1003 350 L997 358 L939 360 L936 349 Z",
   "contactDetails": [
     { "name": "fringe-face", "receiver": "face", "width": 3, "feather": 0.9, "weight": 0.28, "path": "M671 161 C686 150 698 156 711 161 C728 172 742 181 756 172 L771 173" },
     { "name": "side-lock-face", "receiver": "face", "width": 3, "feather": 0.9, "weight": 0.25, "path": "M672 178 C670 197 677 220 690 234" },

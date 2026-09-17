@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+test('sill receiver follows the real shelf and does not stripe the apron or tool holder',async({page})=>{
+  await page.goto('/');
+  const values=await page.evaluate(async()=>{
+    const im=new Image();im.src='/assets/generated/scene-masks.svg';await im.decode();
+    const c=document.createElement('canvas');c.width=1200;c.height=675;
+    const ctx=c.getContext('2d')!;ctx.drawImage(im,0,0,c.width,c.height);
+    const green=(x:number,y:number)=>ctx.getImageData(x,y,1,1).data[1];
+    // Source-selected points: the old shelf polygon crossed the apron and
+    // gave the holder an unrelated horizontal change at y=336.
+    return {apron:[green(920,330),green(1100,370)],sill:green(1080,390),
+      holder:[green(980,325),green(980,340),green(980,350)]};
+  });
+  for(const v of values.apron)expect(v).toBeLessThan(2);
+  expect(values.sill).toBeGreaterThan(250);
+  expect(Math.max(...values.holder)-Math.min(...values.holder)).toBeLessThan(3);
+  for(const v of values.holder)expect(v).toBeGreaterThan(180);
+});
+
 test('glass excludes the complete indoor strip at preview and native resolution', async ({page}) => {
   await page.goto('/');
   const checks=await page.evaluate(async()=>{

@@ -1,5 +1,23 @@
 # Technical assets
 
+Current Technical Art Alignment assets:
+
+- `normal-registered-v2.png`: default 3840×2160 RGB8 surface normals. Authored
+  tapered ribbons, sleeves/fingers, distinct book pages, cup, chair/laptop/lamp.
+  `npm run assets:normal` uses `docs/normal-surfaces.json`. Encoding is unchanged.
+- `normal-registered-v1.png`: retained comparison; source archived at
+  `docs/normal-surfaces-v1.json`; rebuild with `npm run assets:normal -- --version v1`.
+- `intrinsic-correction-v1.png`: optional **3840×2160 grayscale data**, uploaded
+  as R8. Neutral value 128, EV `(R-128)/254`. Bounded scalar gain before lighting,
+  no displacement or source repaint. `npm run assets:correction` builds it from
+  v2 normal and source regions. Only `?correction=1` loads it in the demo.
+
+The approved Hero is unchanged. v2 is deterministic authored geometry, not a
+recovered ground-truth surface. Correction is an experiment, not albedo recovery.
+See [v2 notes](../../../docs/logs/normal-v2-review.md) and
+[current review](../../../docs/screenshots/technical-art-alignment/README.md).
+Historical v1/low-frequency descriptions below are retained for context.
+
 Latest local correction: [left lower glass softness and pen occlusion](../../../docs/screenshots/left-mask-softness/README.md). The left lower edge now has a source-authored, inward alpha transition matching the illustration's defocus; the right glass remains native hard-edge coverage. This local exception supersedes the general glass-edge description below. It changes the scene texture only, with no runtime shader changes.
 
 The demo loads four registered vector data textures, authored from the original artwork's major contours. These are technical approximations, not AI segmentation or physically reconstructed normals.

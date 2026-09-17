@@ -1,0 +1,48 @@
+{
+  "coordinates": "Original artwork coordinates / 3.2; top-left 1200x675. X right, Y down, Z toward viewer. Authored geometry, never source luminance.",
+  "layers": [
+    { "name": "desk", "region": "desk", "normal": [0, -0.50, 0.866] },
+    { "name": "book-left", "path": "M632 517 C660 505 704 490 734 492 Q750 492 763 497 C788 509 824 519 855 540 C841 525 810 525 784 531 L720 553 Z", "normal": [-0.04, -0.38, 0.924], "ridges": [
+      { "points": [[650,521],[729,512],[809,504],[847,535]], "radius": 24, "height": 7 }
+    ] },
+    { "name": "book-right", "path": "M763 497 C780 477 815 488 850 493 L884 501 L940 517 L940 528 C899 527 873 525 855 540 C824 519 788 509 763 497 Z", "normal": [0.04, -0.38, 0.924], "ridges": [
+      { "points": [[779,495],[823,492],[875,507],[931,520]], "radius": 22, "height": 6 }
+    ] },
+    { "name": "cup-handle", "path": "M1037 450 C1068 441 1074 469 1050 490 L1036 496 L1037 484 C1057 475 1060 456 1042 460 Z", "normal": [0,0,1], "ridges": [
+      { "points": [[1040,455],[1074,440],[1063,479],[1038,492]], "radius": 5, "height": 3 }
+    ] },
+    { "name": "cup-body", "path": "M948 444 C968 434 1015 434 1039 444 L1034 484 C1030 511 1021 522 1008 525 L978 525 C964 523 955 512 953 489 Z", "normal": [0,0,1], "cylinder": {"centerX":994,"radius":46,"strength":0.72} },
+    { "name": "cup-top", "path": "M948 441 C966 429 1015 429 1040 441 C1039 451 971 456 948 444 Z", "normal": [0,-0.55,0.835] },
+    { "name": "hair", "region": "hair", "normal": [0,0,1], "ellipsoid": {"center":[742,169],"radius":[140,200],"strength":[0.14,0.09]}, "ridges": [
+      {"points":[[752,62],[714,85],[700,126],[679,154]],"radius":15,"height":6},
+      {"points":[[774,65],[780,121],[757,168],[733,171]],"radius":16,"height":7},
+      {"points":[[807,98],[823,153],[796,211],[765,244]],"radius":13,"height":6},
+      {"points":[[651,123],[633,204],[583,255],[524,287]],"radius":14,"height":6},
+      {"points":[[658,188],[650,250],[678,271],[650,333]],"radius":12,"height":5},
+      {"points":[[793,220],[796,277],[812,298],[828,324]],"radius":13,"height":6},
+      {"points":[[820,228],[839,301],[889,326],[902,384]],"radius":16,"height":7},
+      {"points":[[842,287],[848,343],[901,367],[881,427]],"radius":12,"height":6},
+      {"points":[[547,302],[513,352],[515,399],[475,439]],"radius":13,"height":5},
+      {"points":[[881,393],[923,404],[916,439],[887,449]],"radius":11,"height":5}
+    ] },
+    { "name": "cloth", "region": "cloth", "normal": [0,0,1], "ridges": [
+      {"points":[[576,279],[559,329],[548,378],[524,429]],"radius":32,"height":17},
+      {"points":[[512,437],[540,458],[565,473],[584,497]],"radius":28,"height":12},
+      {"points":[[571,326],[582,375],[568,411],[568,434]],"radius":8,"height":3.0},
+      {"points":[[532,438],[549,430],[568,438],[592,450]],"radius":7,"height":2.4},
+      {"points":[[516,462],[533,448],[556,457],[579,473]],"radius":7,"height":2.6},
+      {"points":[[552,488],[567,481],[580,488],[600,504]],"radius":6,"height":2.2},
+      {"points":[[660,284],[662,325],[654,375],[652,423]],"radius":30,"height":9},
+      {"points":[[704,285],[717,336],[705,389],[691,421]],"radius":25,"height":7},
+      {"points":[[760,293],[781,347],[794,400],[810,436]],"radius":29,"height":16},
+      {"points":[[810,436],[842,442],[850,451],[867,471]],"radius":24,"height":12},
+      {"points":[[785,348],[800,376],[802,402],[817,423]],"radius":8,"height":3.0},
+      {"points":[[804,434],[827,426],[846,436],[859,443]],"radius":7,"height":2.5},
+      {"points":[[827,457],[841,442],[855,451],[872,466]],"radius":6,"height":2.4}
+    ] },
+    { "name": "bodice", "region": "bodice", "normal": [0,0,1], "ellipsoid":{"center":[675,399],"radius":[103,140],"strength":[0.12,0.04]} },
+    { "name": "face", "region": "face", "normal": [0,0,1], "ellipsoid":{"center":[727,195],"radius":[80,95],"strength":[0.10,0.07]} },
+    { "name": "hand-left", "region": "handLeft", "normal": [0,-0.10,0.995], "ellipsoid":{"center":[644,505],"radius":[50,25],"strength":[0.10,0.06]} },
+    { "name": "hand-right", "region": "handRight", "normal": [0,-0.10,0.995], "ellipsoid":{"center":[905,490],"radius":[40,30],"strength":[0.10,0.06]} }
+  ]
+}

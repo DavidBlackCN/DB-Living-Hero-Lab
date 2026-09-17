@@ -34,8 +34,8 @@ test('hand receiving light is continuous and book shadows stay at contact', asyn
   expect(regions.contact[2],'contact stays at real book edge').toBeGreaterThan(15);
 
   const measurements=[];
-  for(const normal of ['low-frequency','registered']) {
-    await page.goto(normal==='registered'?'/?normal=registered':'/');
+  for(const normal of ['low-frequency','registered','v2']) {
+    await page.goto('/?normal='+normal);
     await page.waitForFunction(()=>!!window.livingHero);
     for(const minutes of [0,720]) {
       const result=await page.evaluate(async(minutes)=>{
@@ -74,8 +74,8 @@ test('desk review: noon and midnight closeups on both normal maps', async ({page
   test.setTimeout(90_000);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setViewportSize({width:1920,height:1080});
-  for(const normal of ['low-frequency','registered']) {
-    await page.goto(normal==='registered'?'/?normal=registered':'/');
+  for(const normal of ['low-frequency','registered','v2']) {
+    await page.goto('/?normal='+normal);
     await page.waitForFunction(()=>!!window.livingHero);
     await page.addStyleTag({content:'#debug, #status {visibility:hidden!important}'});
     await page.evaluate(()=>{const h=window.livingHero;h.setReducedMotion(true);h.setAnimation(false);h.setSteam(false);});

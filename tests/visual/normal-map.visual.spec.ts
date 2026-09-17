@@ -37,8 +37,8 @@ test('registered normal candidate side-by-side captures without changing light s
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setViewportSize({width:1920,height:1080});
   let disabledFrame:Buffer|undefined;
-  for(const variant of ['low-frequency','registered']) {
-    await page.goto(variant==='registered'?'/?normal=registered':'/');
+  for(const variant of ['low-frequency','registered','v2']) {
+    await page.goto('/?normal='+variant);
     await page.waitForFunction(()=>!!window.livingHero);
     await page.addStyleTag({content:'#debug, #status { visibility:hidden !important; }'});
     await page.evaluate(()=>{const h=window.livingHero;h.setReducedMotion(true);h.setAnimation(false);h.setSteam(false);});
@@ -62,7 +62,7 @@ test('registered normal candidate side-by-side captures without changing light s
     await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
     await page.screenshot({path:`${visualRoot}/normals/${variant}-directional-only.png`});
   }
-  const surfaces=JSON.parse(await readFile('docs/normal-surfaces.json','utf8'));
+  const surfaces=JSON.parse(await readFile('docs/normal-surfaces-v1.json','utf8'));
   const regions=JSON.parse(await readFile('docs/scene-regions.json','utf8'));
   const guide=await page.evaluate(async({surfaces,regions})=>{
     const image=new Image();image.src='/assets/hero-4k-digital-art.png';await image.decode();

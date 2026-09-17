@@ -1,269 +1,821 @@
-# REQUIREMENTS.md
+# DB-Living-Hero-Lab — Requirements
 
-## 1. Project name
+## 1. Project Identity
 
-Black Sister Living Hero Lab
+Project name:
 
----
+**DB-Living-Hero-Lab**
 
-## 2. Project goal
+This repository is an isolated R&D sandbox for a dynamic “Living Hero” homepage scene.
 
-Build a standalone prototype for the “Living Hero” homepage background effect of my personal blog.
+The final destination is my personal Blog project, but this repository exists specifically to validate and mature the visual engine before any production Blog integration.
 
-This prototype is an experimental visual engine project, not the final blog page.
+The project should turn one approved anime-style hero illustration into a living, time-aware scene with:
 
-The purpose is:
-- to validate whether a single anime illustration can be turned into a high-quality dynamic homepage hero scene
-- to reproduce the pleasant “alive scene” feeling inspired by projects like KumengScreen
-- to prepare a reusable rendering engine for later integration into the main Blog project
+- 24-hour lighting changes;
+- directional relighting;
+- window-projected sunlight;
+- warm local lamp lighting;
+- controlled bloom;
+- subtle atmospheric motion;
+- future blink / breathing / hair motion;
+- debug tools for visual validation.
 
----
+The key visual target is not merely:
 
-## 3. Starting assets
+> “a static wallpaper with some filters”
 
-The project starts with only the following local assets:
+but:
 
-### 3.1 Main hero image
-- File: `public/assets/hero-4k-digital-art.png`
-- Type: 4K anime illustration
-- Role: main hero background image
-- Notes:
-  - This is the current approved final hero artwork.
-  - This image should be preserved as the base visual source.
-  - Runtime effects should build on top of this image.
-
-### 3.2 Character identity reference
-- File: `public/assets/kuro-standard.png`
-- Role: Black Sister 1.0 identity reference
-- Notes:
-  - Used only to maintain character identity if derived technical assets are generated.
-  - Not intended as runtime scene artwork.
+> “a coherent anime CG scene whose lighting actually changes through the day.”
 
 ---
 
-## 4. Character / scene constraints
+## 2. Reference Direction
 
-The scene is based on the existing approved hero illustration and must preserve it.
+Primary technical / visual reference:
 
-### 4.1 Character identity must remain consistent
-The runtime result must still clearly read as Black Sister 1.0:
-- soft, warm, approachable anime girl
-- cream beret
-- withered rose on the character’s right side
-- single black ribbon on the left side
-- warm milk-tea brown long hair
-- signature outfit consistent with the approved hero image
+https://github.com/buger404/KumengScreen
 
-### 4.2 Scene mood
-The scene should feel:
-- calm
-- warm
-- soft
-- gentle
-- slightly dreamy
-- suitable for a personal blog homepage hero section
+Reference live result:
+
+https://kumeng-dreamscreen.buger404.chatgpt.site/
+
+Important ideas to learn from the reference project:
+
+- time-driven lighting;
+- albedo + normal-map relighting;
+- anime-friendly stylized shading;
+- face-safe lighting;
+- hair-specific lighting treatment;
+- subtle micro-motion;
+- restrained bloom / tone response;
+- technical-art assets separated from runtime code;
+- visual QA using multiple time states.
+
+Do NOT copy its character, scene, layout, or exact artistic assets.
+
+The goal is to learn from the technical approach while keeping this project visually and architecturally independent.
+
+---
+
+## 3. Approved Source Assets
+
+### 3.1 Main Hero
+
+The approved hero illustration is:
+
+`public/assets/hero-4k-digital-art.png`
+
+This is the current visual master.
+
+Rules:
+
+- do not overwrite it;
+- do not crop or move it;
+- do not redesign the character;
+- do not silently replace it with a newly generated illustration;
+- treat it as the registration reference for all technical textures.
+
+This image is currently a polished CG rather than a clean shadow-free albedo pass.
+
+Therefore it contains baked lighting and shadows.
+
+This limitation must be acknowledged instead of hidden with increasingly complex shader hacks.
+
+---
+
+### 3.2 Character Reference
+
+The project also includes the Black Sister 1.0 standard character reference.
+
+Its purpose is identity validation only.
+
+It may be used when creating technical or animation assets, but it must not replace the approved Hero scene.
+
+---
+
+## 4. Character Identity Constraints
+
+The Hero character is Black Sister 1.0.
+
+Core identity must remain stable:
+
+- cream / ivory beret;
+- withered rose on the character’s right side;
+- single black ribbon on the left side;
+- warm milk-tea brown long hair;
+- left-side small tied hair section;
+- warm eyes;
+- soft small face with rounded jaw;
+- gentle, natural, slightly sweet expression;
+- light knit inner top;
+- pinafore / suspender dress;
+- dark flower-shaped buttons.
+
+Do not redesign the character during technical-art generation.
+
+---
+
+## 5. Visual Tone
+
+Target mood:
+
+- quiet;
+- warm;
+- soft;
+- restrained;
+- cozy;
+- slightly dreamy;
+- suitable for a personal Blog homepage.
 
 Avoid:
-- loud arcade/game HUD energy
-- aggressive action effects
-- exaggerated 3D puppet motion
-- excessive bloom
-- harsh realism that breaks the anime illustration feeling
+
+- aggressive game HUD effects;
+- strong neon;
+- excessive glow;
+- plastic 3D face shading;
+- heavy realism that destroys anime CG coherence;
+- exaggerated Live2D-style deformation;
+- over-animated hair;
+- flashy particles.
+
+The best effect should feel subtle when viewed moment-to-moment, while still producing clearly different lighting structures across the day.
 
 ---
 
-## 5. High-level product target
+# 6. Current Project Status
 
-The final prototype should feel closer to:
-- a living scene
-than to:
-- a static wallpaper with text on top
+The project is no longer in bootstrap stage.
 
-The visual engine should make the image feel alive through:
-- relighting
-- time-of-day transitions
-- subtle motion
-- coherent atmosphere
+Existing systems include:
+
+- Vite + TypeScript application;
+- WebGL2 renderer;
+- framework-separated engine structure;
+- 24-hour timeline;
+- manual time slider;
+- realtime local-time mode;
+- Dawn / Noon / Dusk / Night presets;
+- ambient light;
+- directional daylight;
+- stylized anime lighting band;
+- face / hair / cloth region control;
+- projected window light;
+- exterior / window masking;
+- night exterior suppression;
+- warm lamp contribution;
+- bloom;
+- coffee steam;
+- multiple debug views;
+- Playwright visual QA;
+- performance / GPU diagnostics;
+- WebGL lifecycle handling;
+- generated technical textures;
+- scene region source definitions.
+
+The project also contains:
+
+- `normal-low-frequency.svg`
+- optional `normal-registered-v1.png`
+
+The registered normal v1 is a candidate, not final production-quality technical art.
+
+The AI-generated full normal-map attempt was rejected because it changed geometry / registration.
 
 ---
 
-## 6. Scope of this repository
+# 7. Current Core Problem
 
-This repository should focus only on the isolated prototype.
+The project has proven the runtime architecture, but visual quality is now limited primarily by technical-art assets rather than missing application features.
 
-### In scope
-- standalone app
-- rendering engine
-- debug controls
-- technical asset generation / processing
-- visual validation
+Current symptoms:
 
-### Out of scope
-- final integration into DB-Blog-Plume
-- final blog navbar and production content system
-- final blog routing / docs / article list
-- production deployment polish
+- time-of-day differences still partially read as global brightness / color changes;
+- projected light can look like a 2D light band rather than light responding to real form;
+- lamp lighting does not yet produce enough form response on hair, cloth, hands, book, cup, etc.;
+- existing Hero contains baked daylight / highlights / shadows;
+- current registered normal is still too broad and simplified;
+- masks have sometimes been overused to compensate for missing surface geometry;
+- inaccurate exterior/window masks can create visible night-time boundary artifacts.
+
+The next phase must correct this direction.
 
 ---
 
-## 7. Core functional requirements
+# 8. Current Priority Phase
 
-### 7.1 Basic app behavior
-The app must:
-- run locally
-- render the hero scene full-screen or near full-screen
-- provide a debug control panel
-- support smooth updates without full reloads during development
+## Technical Art Alignment
 
-### 7.2 Time system
-The app must support:
-- 24-hour timeline
-- manual time scrubbing
-- realtime mode using the current local time
-- smooth interpolation across time changes
+This is now the highest-priority phase.
 
-Suggested named states:
-- dawn
-- morning
-- noon
-- afternoon
-- dusk
-- night
+Do NOT prioritize feature expansion until this phase is visually accepted.
 
-At minimum, quality should be reviewed at:
+The purpose is to align the project more closely with a proper technical-art relighting pipeline while continuing to use the existing approved Hero.
+
+---
+
+# 9. Technical Art Alignment — Core Strategy
+
+The new approach is:
+
+1. keep the approved Hero image;
+2. improve registered technical textures;
+3. make all major lights use those textures;
+4. reduce reliance on ad-hoc mask/shader compensation;
+5. experimentally reduce baked-light interference;
+6. recalibrate the 24-hour lighting after the technical assets improve.
+
+The project should move toward:
+
+Hero Base
++
+Registered Surface Data
++
+Semantic Masks
++
+Dynamic Lighting
++
+Controlled Correction
++
+Post-processing
+
+instead of:
+
+Hero Base
++
+Increasingly complex 2D lighting patches.
+
+---
+
+# 10. Registered Normal Map
+
+## 10.1 Goal
+
+Create a significantly improved registered normal v2 / v3.
+
+It must remain strictly aligned to:
+
+`hero-4k-digital-art.png`
+
+Registration quality is more important than visual complexity.
+
+---
+
+## 10.2 Target Areas
+
+Improve at least the following surface groups:
+
+### Character
+
+- major bangs;
+- large front hair locks;
+- side hair masses;
+- long back hair volumes;
+- left tied hair section;
+- beret;
+- rose / large accessory volumes where useful;
+- upper-body knit garment;
+- gathered sleeves;
+- shoulder / torso volume;
+- suspender dress;
+- flower buttons if useful;
+- hands;
+- major finger volumes;
+- visible leg / skin if relevant.
+
+### Scene
+
+- open book;
+- left page;
+- right page;
+- center spine curvature;
+- coffee cup cylinder;
+- cup rim;
+- cup handle;
+- cup saucer / coaster;
+- tabletop plane;
+- chair;
+- books;
+- lamp;
+- laptop main plane;
+- large window-frame planes where useful.
+
+---
+
+## 10.3 Normal Requirements
+
+The normal texture should describe broad and medium-scale geometry.
+
+Avoid converting:
+
+- painted line art;
+- wood grain;
+- eyelashes;
+- eyebrows;
+- iris texture;
+- individual painted hair strands;
+- image noise;
+
+into deep geometric bumps.
+
+Face normals must remain especially restrained.
+
+The face should have:
+
+- soft broad curvature;
+- gentle cheek volume;
+- gentle forehead volume;
+- subtle chin direction;
+- minimal nose structure.
+
+Avoid:
+
+- deep eye sockets;
+- embossed eyelashes;
+- sharp nose ridges;
+- plastic doll appearance.
+
+---
+
+## 10.4 Technical Encoding
+
+Normal map encoding must be documented and consistent.
+
+Example convention:
+
+`RGB = normal.xyz * 0.5 + 0.5`
+
+with clearly documented axis orientation.
+
+All runtime shaders and generation scripts must use the same convention.
+
+---
+
+## 10.5 Generation Policy
+
+Preferred order:
+
+1. deterministic registered generation;
+2. carefully guided technical-art generation;
+3. AI-assisted candidate generation only when strict registration can be preserved.
+
+Any AI-generated normal map must be rejected if it:
+
+- moves geometry;
+- redraws hands;
+- changes the book;
+- changes hair silhouette;
+- changes facial alignment;
+- changes scene layout;
+- changes crop / aspect ratio.
+
+Do not accept visually impressive but misregistered technical maps.
+
+---
+
+# 11. Semantic Masks
+
+Semantic masks remain useful, but their role must be limited.
+
+Masks should answer questions such as:
+
+- where is exterior glass?
+- where is the character face?
+- where is hair?
+- where is cloth?
+- where is the desktop receiver?
+- where is the lamp emitter?
+- where should bloom be suppressed?
+- where should night exterior treatment apply?
+
+Masks should NOT be the primary method used to emulate:
+
+- hair volume;
+- cloth folds;
+- cup curvature;
+- hand volume;
+- detailed shading geometry.
+
+Those belong primarily to the normal map / surface data.
+
+---
+
+# 12. Window / Exterior Mask
+
+The exterior/window mask must be visually accurate.
+
+Current known issue:
+
+night exterior treatment has previously shown:
+
+- gaps near the window frame;
+- incorrect lower-edge coverage;
+- spill onto nearby interior objects.
+
+Requirements:
+
+- exterior mask should contain actual visible exterior glass only;
+- window frame should remain interior structure;
+- sill / table / books / flowers / pen holders must not be treated as exterior;
+- borders should match the original Hero;
+- avoid hard-coded UV cutoffs used only to hide incorrect geometry.
+
+Source-of-truth region data should be corrected instead.
+
+Debug views should make this easy to inspect.
+
+---
+
+# 13. Dynamic Lighting Architecture
+
+All major light types should eventually respond to surface orientation.
+
+## 13.1 Directional Daylight
+
+Already implemented.
+
+Continue using normal response.
+
+Recalibrate after registered normal improvement.
+
+---
+
+## 13.2 Projected Window Light
+
+Current projected-light system should evolve from:
+
+“screen-space warm band”
+
+toward:
+
+“screen-space sunlight aperture whose intensity is modulated by receiver orientation.”
+
+Projected window light may still use:
+
+- screen-space beam geometry;
+- window masks;
+- receiver masks;
+
+but final light energy should be affected by surface normal orientation.
+
+Example conceptual model:
+
+ProjectedEnergy
+×
+ReceiverMask
+×
+SurfaceResponse(normal, lightDirection)
+
+Do not simply add a colored stripe.
+
+---
+
+## 13.3 Lamp Light
+
+Lamp lighting must become a real local-light approximation.
+
+Instead of only using a Gaussian screen-space pool:
+
+LampEnergy
+×
+DistanceField
+×
+ReceiverMask
+×
+NormalResponse
+
+should influence the result.
+
+The goal is not physically exact point-light rendering.
+
+The goal is believable form lighting.
+
+At night, the following should show meaningful warm form response:
+
+- hair near the lamp;
+- right sleeve;
+- hands;
+- book pages;
+- coffee cup;
+- table surface;
+- nearby objects.
+
+---
+
+# 14. Stylized Anime Shading
+
+The project may continue using stylized broad-band shading.
+
+This is desirable.
+
+However:
+
+- stylized shading should enhance surface lighting;
+- it should not compensate for a missing normal map;
+- it should not create large arbitrary screen-space bands unrelated to form.
+
+Recommended character-specific treatment:
+
+- face: very soft response;
+- hair: stronger broad directional response;
+- cloth: moderate response;
+- environment: material-dependent response.
+
+---
+
+# 15. Baked Lighting Problem
+
+The current Hero is not a clean albedo pass.
+
+It contains baked:
+
+- highlights;
+- shadows;
+- warm reflections;
+- directional daylight.
+
+These cannot be perfectly removed with runtime shaders.
+
+This must be treated as a technical limitation.
+
+---
+
+# 16. De-light / Intrinsic Correction Experiment
+
+Before considering a full Hero redraw, perform a controlled experiment.
+
+Possible outputs:
+
+- `hero-delight-candidate.*`
+- `intrinsic-correction.*`
+- `baked-light-correction.*`
+
+The experiment may attempt to reduce:
+
+- fixed strong window highlights;
+- fixed warm directional areas;
+- fixed daylight contrast.
+
+However:
+
+- the approved Hero remains the master;
+- this is an optional runtime technical asset;
+- geometry must remain strictly registered;
+- identity must remain unchanged.
+
+---
+
+## 16.1 Rejection Criteria
+
+Reject a de-light candidate if it:
+
+- changes character geometry;
+- changes face;
+- changes hair layout;
+- changes hands;
+- changes book geometry;
+- changes room objects;
+- looks blurrier;
+- destroys illustration texture;
+- introduces AI repaint artifacts.
+
+---
+
+## 16.2 Preferred Fallback
+
+If full AI de-lighting cannot remain registered:
+
+prefer a correction texture.
+
+Concept:
+
+Base Hero
+× / +
+Registered Intrinsic Correction
+→
+More Neutral Runtime Base
+→
+Dynamic Lighting
+
+This may be less theoretically pure than a true albedo pass, but is acceptable if it preserves the approved artwork.
+
+---
+
+# 17. 24-Hour Lighting Targets
+
+The timeline must remain smooth.
+
+Important validation times:
+
+- 06:00
+- 08:00
+- 12:00
+- 17:30
+- 23:00
+
+---
+
+## 17.1 Dawn / Early Morning
+
+Target:
+
+- slightly cool / fresh room ambience;
+- low-angle daylight;
+- subtle but visible directional structure;
+- clearly distinguishable from noon even in grayscale.
+
+Avoid:
+
+- simply making noon darker;
+- excessive orange sunrise effect.
+
+---
+
+## 17.2 Noon
+
+Target:
+
+- bright;
+- clean;
+- neutral;
+- higher-angle light;
+- broad readable lighting;
+- preserve illustration quality.
+
+Noon should remain the least dramatic state.
+
+---
+
+## 17.3 Dusk
+
+Target:
+
+- strongest visible projected sunlight state;
+- warm low-angle window light;
+- visible form response on:
+  - hair;
+  - cloth;
+  - book;
+  - cup;
+  - table;
+- stronger light/shadow separation;
+- cinematic but not over-saturated.
+
+---
+
+## 17.4 Night
+
+Target:
+
+three-part structure:
+
+1. cool window / outdoor environment;
+2. darker interior ambient;
+3. warm lamp-driven local light.
+
+The character must remain readable.
+
+Lamp lighting should create actual form response rather than merely tinting a region.
+
+No daylight beam should remain.
+
+---
+
+# 18. Debug Views
+
+Maintain and extend useful debug views.
+
+At minimum:
+
+- Final
+- Base
+- Normal
+- Character Masks
+- Scene Masks
+- Overlay
+- Directional Lighting
+- Neutral Lighting
+- Projected Light Only
+- Exterior Mask
+- Shadow / Occlusion debug if relevant
+
+Recommended new debug views:
+
+- Lamp Contribution Only
+- Surface Response Only
+- Correction Texture / De-light comparison
+- Registered Normal comparison
+
+---
+
+# 19. Visual QA
+
+Every major technical-art iteration should produce fixed screenshots.
+
+Required times:
+
 - 06:00
 - 12:00
 - 17:30
 - 23:00
 
-### 7.3 Relighting
-The scene should support relighting that changes with time of day.
+At minimum compare:
 
-At minimum, implement:
-- ambient light
-- primary directional light
-- support for scene-aware relighting instead of whole-image filter hacks
-
-Preferred design:
-- daylight / window-driven light
-- optional lamp-driven warm indoor contribution
-- softer face treatment
-- controlled hair highlights
-
-The lighting should be anime-friendly, not harshly realistic.
-
-### 7.4 Debug control panel
-The prototype must include a debug panel with controls for at least:
-- realtime on/off
-- time slider
-- dawn/noon/dusk/night quick jump
-- ambient strength
-- main light strength
-- main light direction or time-driven direction
-- exposure
-- normal strength
-- animation master toggle
-- debug view selector
-
-Optional but recommended:
-- lamp light intensity
-- face lighting strength
-- hair lighting strength
-- bloom toggle / intensity
-- breathing toggle
-- blink toggle
-- steam toggle
-
-### 7.5 Debug view modes
-The prototype should support some debug views when possible:
-- final
-- base image
-- normal map
-- masks
-- lighting-only or similar helpful mode
+- Final
+- Neutral Lighting
+- Normal
+- Projected Light
+- Lamp Contribution where applicable.
 
 ---
 
-## 8. Visual feature requirements
+## 19.1 Grayscale Test
 
-### 8.1 Time-of-day visual targets
+Convert or inspect the main time states without relying on color.
 
-#### Dawn / morning
-- fresh, soft, slightly cool-to-neutral light
-- gentle overall atmosphere
-- no harsh contrast
+The time states should still differ structurally.
 
-#### Noon
-- brighter, clearer, balanced neutral light
-- scene should feel clean and readable
-- avoid washed-out flatness
+If:
 
-#### Dusk
-- warm window light should become more noticeable
-- hair edges and some surfaces may receive soft rim light
-- scene should feel especially beautiful here
+06:00
+12:00
+17:30
 
-#### Night
-- cooler outside ambience
-- warmer interior lamp contribution
-- maintain readability of character face
-- avoid crushing the image into darkness
+only differ after adding color temperature,
 
-### 8.2 Post-processing
-Recommended but should remain subtle:
-- exposure
-- tone mapping
-- mild bloom
-- gentle color grading
-
-Do NOT overdo post-processing.
-
-### 8.3 Micro-animation
-Target micro-animation features:
-- blinking
-- subtle breathing
-- very slight hair motion
-- coffee steam
-
-These must remain understated and elegant.
+the lighting system is not strong enough.
 
 ---
 
-## 9. Asset generation / processing requirements
+# 20. Current Deferred Features
 
-The project may generate technical assets derived from the main hero image.
+The following are intentionally deferred until the Technical Art Alignment phase is accepted:
 
-Potential assets include:
-- normal map
-- region masks
-- blink frames / blink overlays
-- steam sprite(s)
-- helper textures
+- blink;
+- breathing;
+- hair motion;
+- advanced particles;
+- complex parallax;
+- Blog production integration.
 
-These should be placed under a generated-assets directory.
-
-### Important asset rules
-- preserve registration where applicable
-- do not change character identity
-- do not redesign the scene
-- document generated assets and their purpose
-
-For MVP, it is acceptable to start with approximations and improve later.
+Coffee steam may remain in the code but is not a current development priority.
 
 ---
 
-## 10. Rendering / architecture expectations
+# 21. Blink
 
-Preferred technical direction:
-- Vite
-- TypeScript
-- React only for debug UI if desired
-- rendering engine separated from app framework
-- WebGL2-based rendering preferred
+Blink remains blocked by technical-art asset requirements.
 
-The renderer should eventually be portable.
+The project already determined that:
 
-A desirable later API shape:
+- Pillow;
+- NumPy;
+- OpenCV;
+
+are useful for:
+
+- eye coordinate location;
+- cropping;
+- diff;
+- alpha overlay;
+- registration validation;
+
+but are insufficient to reliably paint natural closed eyes.
+
+Future blink work requires:
+
+- registered closed-eye artwork;
+or
+- reliable local image editing.
+
+Do not create low-quality fake closed eyes merely to unblock development.
+
+---
+
+# 22. Performance
+
+Desktop remains the primary target.
+
+Requirements:
+
+- maintain stable modern desktop performance;
+- avoid unnecessary full-resolution multi-pass operations;
+- use reduced-resolution post-processing where sensible;
+- cap DPR when appropriate;
+- pause animation in hidden tabs;
+- respect `prefers-reduced-motion`.
+
+Technical-art improvements should not automatically justify large rendering-cost increases.
+
+---
+
+# 23. Architecture
+
+Keep the rendering engine framework-independent.
+
+Preferred conceptual API remains similar to:
+
 - `createLivingHero(canvas, options)`
 - `setTime(minutes)`
 - `setRealtime(enabled)`
@@ -271,98 +823,106 @@ A desirable later API shape:
 - `setReducedMotion(enabled)`
 - `destroy()`
 
----
-
-## 11. Quality constraints
-
-### 11.1 Aesthetic constraints
-Must preserve:
-- softness
-- calmness
-- elegance
-- anime illustration coherence
-
-Avoid:
-- plastic-looking face lighting
-- hard-edged incorrect shading on eyelids
-- exaggerated fake 3D motion
-- noisy artifacts
-- visual clutter
-
-### 11.2 Performance constraints
-Desktop-first.
-Should remain reasonably smooth on a modern desktop machine.
-
-Recommended:
-- avoid excessive render passes
-- consider DPR capping if needed
-- pause or reduce work when tab is hidden
-- respect `prefers-reduced-motion`
+Do not tightly bind core rendering logic to React or future Blog components.
 
 ---
 
-## 12. Documentation requirements
+# 24. Blog Integration
 
-Maintain basic documentation during development:
-- architecture notes
-- asset notes
-- generation or prompt logs
-- validation screenshots
-- known issues / next steps
+Do NOT integrate this repository into the production Blog yet.
 
-Suggested folders:
-- `docs/prompts/`
-- `docs/logs/`
-- `docs/screenshots/`
+Blog integration starts only after:
+
+- the technical-art pipeline is accepted;
+- the four main time states are visually accepted;
+- the runtime engine is considered stable enough.
 
 ---
 
-## 13. Acceptance criteria
+# 25. Engineering Quality
 
-This phase is considered successful if all of the following are true:
+After meaningful changes run:
 
-1. The prototype runs locally.
-2. The hero image is displayed correctly.
-3. Manual time scrubbing works.
-4. Realtime mode works.
-5. The scene visually changes across the day in a smooth and convincing way.
-6. The result feels more like a living scene than a static wallpaper.
-7. The character still feels like Black Sister 1.0.
-8. The visual quality at dawn / noon / dusk / night is acceptable.
-9. The implementation is documented well enough to continue development or later migrate into the Blog project.
-10. The core rendering logic is not tightly bound to the final Blog app.
+- typecheck;
+- unit tests;
+- build;
+- visual tests;
+- relevant performance tests.
 
----
+Do not lower test thresholds merely to make a change pass.
 
-## 14. Recommended implementation phases
+Do not accept a visual change only because automated tests pass.
 
-### Phase 0
-Project bootstrap and minimal full-screen display of the base hero image.
-
-### Phase 1
-Time system + debug panel + first relighting MVP.
-
-### Phase 2
-Improve anime-friendly relighting behavior.
-
-### Phase 3
-Add controlled post-processing.
-
-### Phase 4
-Add subtle micro-animation.
-
-### Phase 5
-Visual QA, screenshots, cleanup, and extraction readiness.
+Human visual review remains mandatory.
 
 ---
 
-## 15. Reference inspiration
+# 26. Documentation
 
-This project is inspired by the workflow idea seen in KumengScreen:
-- separate requirement doc
-- separate normal/blink prompt assets
-- 24h light-change target
-- base image + normal-map relighting pipeline
-- subtle character motion
+Keep technical decisions documented.
 
-However, this project must use my own character and my own approved hero artwork, and it should be implemented as an independent experimental project first.
+Recommended logs:
+
+- technical-art-alignment.md
+- normal-v2-review.md
+- lighting-normal-integration.md
+- delight-experiment.md
+- final-lighting-review.md
+
+Record:
+
+- what changed;
+- why;
+- what screenshots were compared;
+- rejected candidates;
+- known limitations.
+
+---
+
+# 27. Phase Acceptance Criteria
+
+The Technical Art Alignment phase is considered successful only if:
+
+1. a higher-quality registered normal map exists;
+2. the normal remains strictly aligned with the approved Hero;
+3. directional sunlight shows clearer surface response;
+4. projected window light responds to surface orientation;
+5. lamp light responds to surface orientation;
+6. night exterior mask no longer shows obvious boundary mistakes;
+7. 06:00 / 12:00 / 17:30 remain distinguishable in grayscale;
+8. 23:00 reads as a coherent cold-window / warm-lamp scene;
+9. the character does not look plastic or over-shaded;
+10. the result feels clearly closer to a relit anime CG rather than a static image with overlays.
+
+---
+
+# 28. Decision Gate After This Phase
+
+After this phase, perform a deliberate review.
+
+### If visual quality is good enough:
+continue with:
+- Blink;
+- Breathing;
+- Hair motion;
+- final polish;
+- Blog integration.
+
+### If visual quality is still limited mainly by baked Hero lighting:
+evaluate whether to create a dedicated clean albedo version of the Hero.
+
+Do not make that decision before completing this phase.
+
+---
+
+# 29. Final Principle
+
+The approved Hero image remains the artistic master.
+
+The goal is not to chase theoretical rendering purity.
+
+The goal is:
+
+> preserve the artwork while giving it convincing, controllable, anime-friendly dynamic lighting.
+
+Prefer a stable, registered, visually coherent solution over a technically impressive but fragile or misregistered one.

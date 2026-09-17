@@ -265,6 +265,15 @@ When implementing:
 
 Prefer many small correct steps over one huge uncontrolled step.
 
+### End-of-session commits
+
+At the user's standing request, commit each session's completed repository changes
+after the relevant validation and documentation are finished. Review the diff and
+stage only work belonging to that session; preserve unrelated user changes. Include
+updated user requirements when they are part of the delivered work. Do not create
+empty commits when there are no changes. Report the commit hash and validation
+status in the final response. Commit locally; push only when explicitly requested.
+
 ---
 
 ## Important “do not do this” rules

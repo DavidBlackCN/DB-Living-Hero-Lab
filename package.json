@@ -6,6 +6,7 @@
   "scripts": {
     "assets:generate": "node scripts/generate-scene-assets.mjs",
     "assets:normal": "python scripts/generate-registered-normal.py",
+    "assets:correction": "python scripts/generate-registered-normal.py --correction-only",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",

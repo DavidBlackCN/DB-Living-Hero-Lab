@@ -13,6 +13,9 @@ out vec4 color;
 uniform sampler2D uBase, uNormal, uMask, uSceneMask;
 uniform sampler2D uLightShaping;
 uniform sampler2D uBloomMap;
+uniform sampler2D uCorrectionMap;
+uniform bool uHasCorrection;
+uniform float uCorrection;
 uniform float uBloom, uBloomThreshold, uBloomMood;
 uniform bool uHasNormal, uHasMask, uHasSceneMask, uHasLightShaping;
 uniform vec3 uAmbient, uSun, uDirection;
@@ -27,6 +30,11 @@ float region(vec2 p, vec2 center, vec2 radius) {
 }
 vec3 linearize(vec3 c) { return mix(c/12.92, pow((c+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),c)); }
 vec3 encode(vec3 c) { return mix(c*12.92,1.055*pow(max(c,0.0),vec3(1.0/2.4))-0.055,step(vec3(0.0031308),c)); }
+// Broad wrapped diffuse for an illustration: no specular, micro-normal or
+// hard terminator. The aperture/field determines visibility, N.L orientation.
+float surfaceResponse(vec3 n, vec3 l) {
+  return .18+.82*max(dot(n,l),0.0);
+}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
   if(uView==1) { color=vec4(base,1); return; }
@@ -58,7 +66,8 @@ void main() {
   float window=smoothstep(.43,.94,uv.x);
   float receive=mix(.36,1.0,window);
   if(refined) receive *= 1.0 + hair*(uHair-1.0) + body*(uCloth-1.0);
-  vec3 light=uAmbient*uAmbientStrength+uSun*uSunStrength*diffuse*receive;
+  vec3 directional=uSun*uSunStrength*diffuse*receive;
+  vec3 light=uAmbient*uAmbientStrength+directional;
   float lampPool=exp(-dot((uv-vec2(.795,.51))/vec2(.24,.34),(uv-vec2(.795,.51))/vec2(.24,.34))*1.0);
   float lampBulb=region(uv,vec2(.80,.32),vec2(.035,.027));
   if(refined && uHasSceneMask) {
@@ -85,6 +94,7 @@ void main() {
   float receiver=max(scene.g,max(hair*.82*uHair,body*.62*uCloth));
   receiver=clamp(receiver,0.0,1.0)*(1.0-exterior)*(1.0-face);
   float projectedAmount=(refined && uHasSceneMask ? 1.0 : 0.0)*uProjected*uProjectedIntensity*uSunStrength*uProjectionEnergy*projectedBand*projectedReach*receiver;
+  projectedAmount *= surfaceResponse(normal,normalize(uDirection));
   float shadowAmount=0.0;
   if(spatial) {
     // Keep receiving light continuous across hand / page / tabletop seams.
@@ -110,7 +120,16 @@ void main() {
     shadowAmount=1.0-(1.0-dayShade)*(1.0-shape.b*.12)*(1.0-night*(1.0-shape.r)*.50);
   }
   light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
-  light+=vec3(1.0,.63,.32)*uLamp*uLampStrength*(lampPool*(spatial?1.10:.66)+lampBulb*mix(.5,1.5,night));
+  // Artwork-space lamp location with one fixed forward distance, not inferred
+  // depth or a physical shadow caster. +Y points DOWN, matching the normal map.
+  vec3 lampDirection=normalize(vec3((vec2(.797,.327)-uv)*vec2(1200.0/675.0,1.0),.28));
+  float lampSurface=surfaceResponse(normal,lampDirection);
+  lampSurface=mix(lampSurface,surfaceResponse(vec3(0,0,1),lampDirection),face*uFace*.8);
+  float lampMaterial=1.0+hair*(uHair-1.0)+body*(uCloth-1.0);
+  // Emission is separate: the luminous shade underside is never N.L shaded.
+  vec3 lampContribution=vec3(1.0,.63,.32)*uLamp*uLampStrength*
+    (lampPool*(spatial?1.45:.66)*lampSurface*lampMaterial+lampBulb*mix(.5,1.5,night));
+  light+=lampContribution;
   if(spatial) light*=1.0-shape.b*.12;
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
@@ -147,7 +166,19 @@ void main() {
     color=vec4(vec3(projectedAmount),1); return;
   }
   if(uView==12) { color=vec4(vec3(shadowAmount),1); return; }
-  vec3 lit=linearize(base)*light*exp2(uExposure);
+  if(uView==13) { color=vec4(lampContribution,1); return; }
+  if(uView==14) { color=vec4(vec3(dot(directional,vec3(.2126,.7152,.0722))*.6),1); return; }
+  // Optional scalar log-gain, applied to the original base in linear light.
+  // 128 is exactly neutral. Original Base debug always bypasses this experiment.
+  float correctionEV=uHasCorrection ? (texture(uCorrectionMap,uv).r*255.0-128.0)/254.0 : 0.0;
+  vec3 correctedBase=linearize(base)*exp2(correctionEV*uCorrection);
+  if(uView==15) { color=vec4(vec3(.5+correctionEV),1); return; }
+  if(uView==16) {
+    // Preserve an exact source display at neutral gain (including protected
+    // face/hand pixels); avoid a needless sRGB round-trip in this diagnostic.
+    color=vec4(correctionEV*uCorrection==0.0 ? base : encode(correctedBase),1); return;
+  }
+  vec3 lit=correctedBase*light*exp2(uExposure);
   if(uView==0 && uSteam > 0.5) {
     vec2 p = uv - vec2(.825,.635);
     float wave = sin(p.y*34.0 + uMotionTime*.55) * .010;

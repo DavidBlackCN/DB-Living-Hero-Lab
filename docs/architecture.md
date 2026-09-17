@@ -1,5 +1,34 @@
 # Living Hero architecture
 
+## Technical Art Alignment — current implementation
+
+This section supersedes historical defaults below. The app now uses registered
+normal v2 by default; `?normal=registered`/`v1` selects v1 and `?normal=low-frequency`
+selects the earlier SVG. Engine structure, artwork UVs and pass count are retained.
+
+Directional sunlight, projected aperture and lamp reflection all use the decoded
+normal. Projection multiplies its existing access/receiver field by N·L. Lamp
+reflection uses an aspect-correct direction toward the source lamp with a fixed
+forward distance, with emission kept separate. See [integration details](logs/normal-light-integration.md).
+
+Optional `correctionUrl` must match base dimensions. It is a grayscale signed EV
+gain map: `EV=(R*255-128)/254`, applied as `linearBase*exp2(EV*correction)` before
+lighting. The scalar gain does not displace, resample or repaint the base. Unit 6
+uses R8; absent maps use a neutral one-pixel placeholder. Opt-in texture memory
+is 105.15 MiB versus the normal 97.24 MiB. There is no added pass. `correction`
+defaults to 0 in the engine; the demo enables it only at `?correction=1` and
+provides a debug checkbox. `correctionAvailable` identifies availability.
+
+Debug `lamp` displays the raw linear lamp coefficient (before global corrections),
+`directional` displays directional luminance ×0.6, `correction` displays .5+EV,
+`correctedBase` shows the active corrected base. Original `base` bypasses all
+correction; zero correction is tested pixel-identical to an absent map.
+
+Current defaults: normal 1, face .85, hair .95, cloth .94, stylized .50, softness
+.18. Dawn has an explicit 06:00 projection key and lower-angle direction; noon
+keyframe is unchanged; dusk balances lower ambient with warm direct light.
+All preceding window geometry and contact-shadow constraints remain in force.
+
 ## Current review update — 2026-09-16
 
 The historical baseline below is retained for context. Current glass/receiver

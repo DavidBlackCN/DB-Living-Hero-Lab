@@ -5,14 +5,19 @@ const status=document.querySelector<HTMLElement>('#status')!;
 let panel: ReturnType<typeof createPanel> | undefined;
 try {
   const engine=await createLivingHero(document.querySelector<HTMLCanvasElement>('#hero')!,{
-    // Candidate stays opt-in until its source registration and look are reviewed.
-    normalUrl: new URLSearchParams(location.search).get('normal') === 'registered'
-      ? '/assets/generated/normal-registered-v1.png' : '/assets/generated/normal-low-frequency.svg',
+    // Keep both previous assets addressable for controlled same-light comparisons.
+    normalUrl: new URLSearchParams(location.search).get('normal') === 'low-frequency'
+      ? '/assets/generated/normal-low-frequency.svg'
+      : ['registered','v1'].includes(new URLSearchParams(location.search).get('normal') ?? '')
+        ? '/assets/generated/normal-registered-v1.png' : '/assets/generated/normal-registered-v2.png',
     maskUrl: '/assets/generated/character-masks.svg',
     sceneMaskUrl: '/assets/generated/scene-masks.svg',
     lightShapingUrl: '/assets/generated/light-shaping.svg',
+    correctionUrl: new URLSearchParams(location.search).get('correction') === '1'
+      ? '/assets/generated/intrinsic-correction-v1.png' : undefined,
     onUpdate: state=>panel?.update(state), onError: message=>status.textContent=message,
   });
+  engine.setSettings({correction:Number(engine.correctionAvailable)});
   panel=createPanel(document.querySelector('#debug')!,engine);
   (window as Window & { livingHero?: typeof engine }).livingHero = engine;
   panel.update(engine.getState());

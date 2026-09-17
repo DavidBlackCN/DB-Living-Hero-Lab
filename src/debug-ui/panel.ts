@@ -11,11 +11,11 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     <label for="view">调试视图</label><select id="view"><option value="final">Final · 合成画面</option><option value="base">Base · 原图对照</option><option value="normal">Normal · 低频法线</option><option value="masks">Masks · 人物遮罩</option><option value="lighting">Lighting · 光照贡献</option><option value="scene">Scene · 窗外 / 桌面 / 灯</option><option value="overlay">Overlay · 配准叠加</option></select>
     <label class="check"><input id="animation" type="checkbox" checked>动画总开关 · 时间平滑过渡</label>
     <label class="check"><input id="reduced" type="checkbox">减少动态效果</label>
-    <p class="note">手工轮廓遮罩 / 低频法线 · 仍为近似<br>含投光、Bloom、蒸汽；眨眼尚未接入。</p></div></details>`;
+    <p class="note">配准曲面 v2 / 手工遮罩 · 仍为近似<br>含投光、Bloom、蒸汽；眨眼尚未接入。</p></div></details>`;
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   for(const [key,label,min,max,value] of [
-    ['exposure','曝光 EV',-1,1,0],['ambient','环境光',0,2,1],['sun','窗光',0,2,1],['lamp','台灯',0,2,1],['normal','法线强度',0,2,1],['face','脸部保护',0,1,.8],
-    ['hair','头发受光',0,2,.85],['cloth','服装受光',0,2,.9],['night','夜间日光抑制',0,1,1],['stylized','Stylized band',0,1,.62],['softness','Band softness',0,1,.14],
+    ['exposure','曝光 EV',-1,1,0],['ambient','环境光',0,2,1],['sun','窗光',0,2,1],['lamp','台灯',0,2,1],['normal','法线强度',0,2,1],['face','脸部保护',0,1,.85],
+    ['hair','头发受光',0,2,.95],['cloth','服装受光',0,2,.94],['night','夜间日光抑制',0,1,1],['stylized','Stylized band',0,1,.50],['softness','Band softness',0,1,.18],
   ] as const) {
     const row=document.createElement('div'); row.className='slider-row';
     row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(2)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="0.01" value="${value}">`;
@@ -29,6 +29,16 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
   const view = query<HTMLSelectElement>('#view');
+  view.querySelector<HTMLOptionElement>('option[value="normal"]')!.textContent='Normal · 表面法线';
+  view.insertAdjacentHTML('beforeend', '<option value="lamp">Lamp Contribution Only</option><option value="directional">Directional Only</option>');
+  if(engine.correctionAvailable) {
+    view.insertAdjacentHTML('beforeend','<option value="correction">Correction · 增益贴图</option><option value="correctedBase">Corrected Base · 校正底图</option>');
+    const row=document.createElement('label');row.className='check';
+    row.innerHTML='<input id="correction" type="checkbox" checked> Intrinsic correction · 实验';
+    row.querySelector('input')!.checked=engine.getSettings().correction>0;
+    row.querySelector('input')!.addEventListener('change',e=>engine.setSettings({correction:Number((e.target as HTMLInputElement).checked)}));
+    query('#lighting-controls').append(row);
+  }
   view.insertAdjacentHTML('beforeend', '<option value="bright">Bright Pass</option><option value="bloom">Bloom Only</option><option value="neutral">Neutral Lighting</option><option value="projected">Projected Light Only</option><option value="exterior">Exterior Mask</option><option value="shadow">Shadow / Occlusion</option>');
   const projected = document.createElement('label');
   projected.className = 'check';

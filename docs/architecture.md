@@ -1,5 +1,29 @@
 # Living Hero architecture
 
+## Lighting / Shadow Convergence — latest calibration
+
+The current spatial lamp uses a reading pool at (.825,.735), radius (.20,.115),
+a rear/right subject pool at (.78,.49), radius (.085,.20), and a local sill pool
+at (.82,.49), radius (.13,.105). Source-authored Scene G now includes the sill,
+tools, picture frame and vase at restrained receiving weights. Exterior Scene R
+and the normal maps are unchanged. The signed rear offset and soft lamp wrap
+from Convergence 2 remain; the wider foreground tail is reduced.
+
+`Settings.shadow` (0–1, default .65) controls a lightweight shading stage inside
+the existing fragment pass. It combines B-channel registered contact strokes,
+wide normal-based dark sides and soft attenuation outside the daylight/lamp
+fields. Existing book/coaster contacts are retained in B; new detail strokes are
+clipped to their source-authored receiving surfaces. Face volume is excluded,
+face contact is capped at .025 before the strength multiplier, and total added
+attenuation is capped at .22. No extra texture or framebuffer pass is introduced.
+
+Shadow debug composes the new attenuation with existing broad daylight/night
+occlusion. It is a fixed-scale darkening amount (bright means more attenuation),
+not a shadow map. Setting shadow=0 disables the contact/volume enhancement;
+existing day/night spatial illumination remains. Lamp debug still shows the raw
+lamp coefficient before aggregate shadow/face/highlight corrections; Neutral
+shows the resulting combined lighting. See [current review](logs/lighting-shadow-convergence.md).
+
 ## Technical Art Alignment — current implementation
 
 This section supersedes historical defaults below. The app now uses registered
@@ -56,10 +80,11 @@ receivers and shadows by [desk-light-review.md](logs/desk-light-review.md).
   Hair/clothing occlude the desktop; hands are included at full receiving coverage.
   Scene B remains lamp emission.
 - Optional `lightShapingUrl` supplies a 1200×675 RGB map: R window access, G soft
-  room receiving weights, B contact occlusion. G previously exported unused
+  room receiving weights, B contact occlusion on desk, character and sill. G previously exported unused
   desktop coverage; custom maps must now use G=0 to disable room participation
-  or author registered room weights. B is still clipped to exposed desktop
-  during generation. It occupies texture unit 5;
+  or author registered room weights. Book/coaster B remains clipped to exposed
+  desktop; new B detail bands are clipped to their own receiving contours.
+  It occupies texture unit 5;
   bloom remains on unit 4. Total source texture storage is nominally 97.24 MiB.
   No rendering pass was added. Aspect ratio is validated; registration still
   requires source inspection. Existing consumers can omit this optional map.

@@ -1,10 +1,10 @@
 # Black Sister Living Hero Lab
 
-独立的 Living Hero 光影实验工程。当前完成 **Lighting Convergence 2 — Room Participation + Lamp Direction Fix（2026-09-17）**。
-按最新人工反馈重新校准房间窗光参与和右后侧台灯方向；本轮浏览器审查完成，停止开发，等待人工验收。继续使用原始 4K 插画、Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。原画 baked light 限制仍然存在。
+独立的 Living Hero 光影实验工程。当前完成 **Lighting / Shadow Convergence（2026-09-17）**。
+本轮收拢右后侧灯池、补齐灯下窗台接收区，并加入可控的接触遮挡和柔和体积暗面。停止开发，等待人工验收。继续使用原始 4K 插画、Vite + TypeScript + WebGL2；debug UI 为原生 DOM，核心引擎独立。原画 baked light 限制仍然存在。
 
-本轮验收入口：[房间参与、夜灯方向及四时段对照](docs/screenshots/lighting-convergence-2/README.md)。
-实现、验证和限制见 [Lighting Convergence 2 记录](docs/logs/lighting-convergence-2.md)；[1.5 记录](docs/logs/lighting-convergence.md)及[第一轮记录](docs/logs/technical-art-alignment.md)保留历史过程。
+本轮验收入口：[黄昏、夜景前后及阴影开关对照](docs/screenshots/lighting-shadow-convergence/README.md)。
+实现、验证和限制见 [Lighting / Shadow 记录](docs/logs/lighting-shadow-convergence.md)；[Convergence 2 记录](docs/logs/lighting-convergence-2.md)保留历史过程。
 测试截图、实验预览、性能采样 JSON 和运行日志均为本地产物，不提交到 GitHub；图片链接需在本地生成后查看。原始插画和运行所需技术贴图继续纳入版本管理。
 
 普通 `/` 默认展示 v2；`/?normal=registered`（或 `v1`）保留 v1；`/?normal=low-frequency` 保留低频对照。`npm run assets:normal` 重建 v2，`npm run assets:normal -- --version v1` 重建 v1。曲面为手工近似，自动检查通过不等于最终艺术验收。
@@ -45,6 +45,7 @@ npm run test:visual
 - Realtime：读取电脑本地时间；大数字为当前渲染时间，小数字为目标时间。
 - Dawn / Noon / Dusk / Night：06:00 / 12:00 / 17:30 / 23:00。
 - 曝光、环境光、窗光、台灯、法线强度、脸部保护可独立调整。
+- 柔和阴影 / 接触遮挡：默认 0.65，设为 0 可关闭本轮接触与体积暗面层；沿用 Shadow / Occlusion、Lamp 和 Neutral 调试视图。
 - 新增头发／服装受光、夜间日光抑制；关闭「区域光照增强」可对照一版效果。
 - Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查；Neutral、Projected Light Only、Exterior Mask、Shadow / Occlusion 用于隔离检查光、玻璃边界和暗部。
 - 动画开关当前控制时间平滑过渡；减少动态效果会立即跳到目标时间，默认尊重系统偏好。

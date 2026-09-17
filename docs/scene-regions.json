@@ -39,6 +39,20 @@
   "bookContact": "M627 538 L720 579 C780 558 819 538 848 551 L860 549 C875 532 900 534 941 533 L941 536 C900 537 877 535 861 552 L848 554 C819 541 780 561 720 582 L626 541 Z",
   "cupContact": "M938 536 Q985 547 1040 535 L1041 543 Q982 555 937 542 Z",
   "laptop": "M914 631 L1200 553 V675 H998 L915 651 Q899 641 914 631 Z",
+  "lampSill": "M871 318 L1200 373 V409 L885 350 Z",
+  "contactDetails": [
+    { "name": "fringe-face", "receiver": "face", "width": 3, "weight": 0.28, "path": "M671 161 C686 150 698 156 711 161 C728 172 742 181 756 172 L771 173" },
+    { "name": "side-lock-face", "receiver": "face", "width": 3, "weight": 0.25, "path": "M672 178 C670 197 677 220 690 234" },
+    { "name": "chin-neck", "receiver": "cloth", "width": 4, "weight": 0.70, "path": "M681 242 C698 259 719 268 741 257" },
+    { "name": "left-strap", "receiver": "cloth", "width": 3, "weight": 0.65, "path": "M621 302 L609 377 L602 425" },
+    { "name": "right-strap", "receiver": "cloth", "width": 3, "weight": 0.65, "path": "M746 332 L744 387 L738 433" },
+    { "name": "left-hand-page", "receiver": "book", "width": 3, "weight": 0.65, "path": "M632 523 L647 532 L660 534 M678 533 L691 535 L699 528" },
+    { "name": "right-hand-page", "receiver": "book", "width": 3, "weight": 0.65, "path": "M891 503 L908 515 L926 520 L938 513" },
+    { "name": "tools-foot", "receiver": "lampSill", "width": 4, "weight": 0.70, "path": "M943 358 Q972 362 1005 358" },
+    { "name": "frame-foot", "receiver": "lampSill", "width": 4, "weight": 0.55, "path": "M1006 360 L1067 372" },
+    { "name": "vase-foot", "receiver": "lampSill", "width": 4, "weight": 0.65, "path": "M1138 402 Q1163 407 1193 401" },
+    { "name": "chair-drape", "receiver": "chair", "width": 4, "weight": 0.70, "path": "M362 334 L371 389 M367 399 L382 486" }
+  ],
   "windowAccess": { "fromX": 350, "toX": 1110, "minimum": 0.12, "maximum": 1.0 },
   "roomParticipation": {
     "note": "Soft receiving weights, not new volume/depth or exterior boundaries. G of existing light-shaping map; silhouettes are excluded by existing source contours.",

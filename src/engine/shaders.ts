@@ -16,6 +16,7 @@ uniform sampler2D uBloomMap;
 uniform sampler2D uCorrectionMap;
 uniform bool uHasCorrection;
 uniform float uCorrection;
+uniform float uShadow;
 uniform float uBloom, uBloomThreshold, uBloomMood;
 uniform bool uHasNormal, uHasMask, uHasSceneMask, uHasLightShaping;
 uniform vec3 uAmbient, uSun, uDirection;
@@ -129,15 +130,17 @@ void main() {
     vec3 room=uAmbient*uAmbientStrength*mix(.42,.80,shape.r);
     vec3 cool=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
     light=mix(light,room+cool,night*(1.0-exterior));
-    vec2 deskDelta=(uv-vec2(.795,.765))/vec2(.21,.145);
-    vec2 subjectDelta=(uv-vec2(.78,.53))/vec2(.09,.22);
+    vec2 deskDelta=(uv-vec2(.825,.735))/vec2(.20,.115);
+    vec2 subjectDelta=(uv-vec2(.78,.49))/vec2(.085,.20);
+    vec2 sillDelta=(uv-vec2(.82,.49))/vec2(.13,.105);
     // The table behind the arm must not cut a bright triangle into the sleeve.
     // Apply the same smooth local lamp field to foreground surfaces instead.
     float lampReceiver=max(scene.g,max(hair*.85,body*.90));
     float deskPool=exp(-dot(deskDelta,deskDelta))*lampReceiver;
     float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65+face*.16);
-    lampPool=(deskPool*1.35+subjectPool*1.25+lampPool*.10)*(1.0-exterior);
-    shadowAmount=1.0-(1.0-dayShade)*(1.0-shape.b*.12)*(1.0-night*(1.0-shape.r)*.50);
+    float sillPool=exp(-dot(sillDelta,sillDelta))*scene.g;
+    lampPool=(deskPool*1.45+subjectPool*1.55+sillPool+lampPool*.06)*(1.0-exterior);
+    shadowAmount=1.0-(1.0-dayShade)*(1.0-night*(1.0-shape.r)*.50);
   }
   light+=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
   // +Z points toward the viewer: the lamp is behind the figure, not a camera-side
@@ -152,7 +155,23 @@ void main() {
   vec3 lampContribution=vec3(1.0,.63,.32)*uLamp*uLampStrength*
     (lampPool*(spatial?1.45:.66)*lampSurface*lampMaterial+lampBulb*mix(.5,1.5,night));
   light+=lampContribution;
-  if(spatial) light*=1.0-shape.b*.12;
+  if(spatial) {
+    // B contains source-registered contact bands, never displaced silhouettes.
+    // Turned surfaces lose a little fill, with wide transitions and no face volume.
+    float material=clamp(hair*.85+body*.75+scene.g*.55,0.0,1.0)*(1.0-face)*(1.0-exterior);
+    float daylight=clamp(dot(uSun,vec3(.2126,.7152,.0722))*2.0*uSunStrength,0.0,1.0);
+    float darkDay=1.0-smoothstep(.10,.75,dot(normal,normalize(uDirection)));
+    float darkLamp=1.0-smoothstep(-.35,.50,dot(normal,lampDirection));
+    float volume=mix(daylight*darkDay, darkLamp,night)*material*.10;
+    float unlitDay=(1.0-projectedBand*projectedReach)*daylight*uProjected;
+    float unlitLamp=1.0-clamp(lampPool,0.0,1.0);
+    float occluded=mix(unlitDay,unlitLamp,night)*material*.045;
+    float contact=shape.b*.18*(1.0-exterior);
+    contact=mix(contact,min(contact,.025),face);
+    float attenuation=clamp(uShadow*(contact+volume+occluded),0.0,.22);
+    light*=1.0-attenuation;
+    shadowAmount=1.0-(1.0-shadowAmount)*(1.0-attenuation);
+  }
   // Preserve expression and avoid chromatic/plastic shading on the face.
   vec3 safeLight=max(light,vec3(.60,.51,.46));
   if(refined) {

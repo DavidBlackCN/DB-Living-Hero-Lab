@@ -12,7 +12,7 @@ REGIONS = ROOT / "docs/blink-regions.json"
 CROP = ROOT / "work/blink/source/hero-eye-context-open.png"
 PREVIEW = ROOT / "work/blink/generated/hero-eye-context-debug-preview.png"
 NOTES = ROOT / "work/blink/notes/blink-review.md"
-DEFAULT = {"x": 1980, "y": 540, "width": 570, "height": 290}
+DEFAULT = {"x": 1940, "y": 390, "width": 700, "height": 470}
 
 
 def valid_box(region, size):
@@ -107,11 +107,10 @@ def main():
 脚本已重新读取输出，验证尺寸、像素模式及所有像素字节与原图裁切一致。
 
 `hero-eye-context-debug-preview.png` 仅供人工检查裁切位置，不进入运行时。
-双眼框沿用现有候选坐标，不代表最终分割结果。
+双眼框仅用于调试显示，仍非最终 Blink coverage mask。
 
-人工验收记录（当前源图与现有坐标）：裁切上边界截断了画面左侧眼睛上部，
-未完整保留双眼和眉毛；现有双眼候选框偏低。按本次指定坐标原样输出，
-未擅自调整。后续作为编辑目标前，需要确认此上下文范围是否足够。
+人工验收状态：本轮使用第二版人工校准候选坐标，等待再次人工验收。
+debugCrop 是本轮主要生图输入候选，目标是保留完整双眼、眉眼、鼻梁及附近刘海上下文。
 
 本次仓库验证：`npm run build`、`npm run typecheck` 均通过。
 

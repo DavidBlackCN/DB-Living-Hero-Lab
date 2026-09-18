@@ -4,22 +4,22 @@
     "height": 2160
   },
   "leftEye": {
-    "x": 2080,
-    "y": 625,
+    "x": 2160,
+    "y": 455,
     "width": 190,
-    "height": 125
+    "height": 145
   },
   "rightEye": {
-    "x": 2310,
-    "y": 620,
+    "x": 2370,
+    "y": 525,
     "width": 190,
-    "height": 125
+    "height": 145
   },
   "debugCrop": {
-    "x": 1980,
-    "y": 540,
-    "width": 570,
-    "height": 290
+    "x": 1940,
+    "y": 390,
+    "width": 700,
+    "height": 470
   },
-  "method": "manual candidate placement; eye masks are intentionally conservative"
+  "method": "第二版人工校准候选；debugCrop 为生图输入候选，等待再次人工验收；eye boxes 仅用于调试显示，仍非最终 Blink coverage mask"
 }

@@ -1,5 +1,7 @@
 # Black Sister Living Hero Lab
 
+最终局部收口（2026-09-18）：补齐刘海间露出额头的 face-safe 权重，软化误用的头发法线响应，保留发丝阴影与夜晚亮度。[修改记录](docs/logs/face-finish.md) · [四时刻脸部与全图对照](docs/screenshots/face-finish/README.md)。本轮仅修改局部 shader，原图、技术贴图及主要光场不变；自检建议冻结。
+
 最新一轮：**Code-only Lighting Salvage（2026-09-18）**。拆开灯具发光、近场、桌面和人物受光，收小桌面尾部，补前躯干/书架遮光与杯底接触；清晨改为更清冷的低角度光。保留 noon/dusk、窗区与原图，correction 默认关闭。[本轮记录与性能结果](docs/logs/code-only-lighting-salvage.md) · [四时段及前后对照](docs/screenshots/code-only-salvage/README.md)。建议人工验收后冻结光照核心，本轮未进入动画。以下为历史记录。
 
 最新一轮（2026-09-18）：先完成 [KumengScreen 源码拆解](docs/logs/kumeng-lighting-analysis.md)，再将环境光、窗光、投光、台灯反射与发光分开合成；补强接触遮挡、体块暗面和左侧空间响应。[实现与验证记录](docs/logs/light-layer-review.md) · [四时刻截图和同亮度对照](docs/screenshots/light-layer-review/README.md)。本地 49 项视觉检查通过；高 DPR 软件渲染有额外开销，真实 GPU 性能待验证。以下为历史更新。

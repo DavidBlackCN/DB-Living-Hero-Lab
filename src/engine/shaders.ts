@@ -39,6 +39,20 @@ vec3 encode(vec3 c) { return mix(c*12.92,1.055*pow(max(c,0.0),vec3(1.0/2.4))-0.0
 float surfaceResponse(vec3 n, vec3 l) {
   return .18+.82*max(dot(n,l),0.0);
 }
+// The coarse face mask starts below the fringe. Exposed forehead slivers above
+// it otherwise inherit hair normals/occlusion and meet the protected cheek at
+// a hard brightness step. Extend lighting safety only over source skin here;
+// these soft bounds are in the artwork's 1200x675 reference coordinates.
+float foreheadSafety(vec2 p, vec3 pigment) {
+  vec2 at=p*vec2(1200.0,675.0);
+  float area=smoothstep(661.0,674.0,at.x)*(1.0-smoothstep(788.0,800.0,at.x))*
+    smoothstep(110.0,128.0,at.y)*(1.0-smoothstep(177.0,190.0,at.y));
+  // Bright peach skin has a higher G and B/G ratio than the adjacent brown hair.
+  // A broad pigment transition preserves lashes, brows and painted fringe shade.
+  float skin=smoothstep(.66,.82,pigment.g)*
+    smoothstep(.78,.90,pigment.b/max(pigment.g,.001));
+  return area*skin;
+}
 ${lightLayers}
 ${lampFields}
 void main() {
@@ -58,6 +72,9 @@ void main() {
   float body = region(uv,vec2(.551,.585),vec2(.195,.24));
   float hair = region(uv,vec2(.605,.37),vec2(.185,.36))*(1.0-face)*(1.0-body);
   if(uHasMask && refined) { vec3 masks=texture(uMask,uv).rgb; face=masks.r; hair=masks.g; body=masks.b; }
+  float forehead=refined && uHasMask ? foreheadSafety(uv,base)*(1.0-face) : 0.0;
+  face+=forehead; // Soft union: overlapping feathered edges must not form a dip.
+  hair=max(hair-forehead,0.0); // Transfer coverage, rather than double-count skin.
   vec2 f=(uv-vec2(.608,.292))/vec2(.074,.107);
   vec2 h=(uv-vec2(.605,.37))/vec2(.185,.36);
   vec3 normal=normalize(vec3(f*.20*face+h*.22*hair,1.0));
@@ -66,6 +83,9 @@ void main() {
   normal=normalize(mix(normal,vec3(0.0,-.50,.866),table));
   if(uHasNormal && refined) normal=normalize(texture(uNormal,uv).rgb*2.0-1.0);
   normal=normalize(mix(vec3(0,0,1),normal,uNormalStrength));
+  // Only newly protected skin loses the erroneous hair-ribbon normal. Retain
+  // a quarter of its local orientation; lower face and actual hair are unchanged.
+  normal=normalize(mix(normal,vec3(0,0,1),forehead*.75*uFace));
   float diffuse=.35+.65*max(dot(normal,normalize(uDirection)),0.0);
   float broad=smoothstep(.38-uSoftness,.62+uSoftness,dot(normal,normalize(uDirection)));
   diffuse=mix(diffuse,mix(.48,1.0,broad),uStylized);

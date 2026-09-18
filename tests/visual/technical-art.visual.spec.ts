@@ -39,7 +39,9 @@ test('each light uses surface orientation, with a protected face and exterior', 
   const result=await page.evaluate(async()=>{
     const h=window.livingHero;h.setReducedMotion(true);h.setAnimation(false);h.setSteam(false);
     h.setSettings({bloom:0});
-    const points={hair:[849,312],sleeve:[815,393],hand:[676,509],book:[793,521],cupLeft:[968,478],cupRight:[1023,478],desk:[1050,505],face:[727,195],glass:[1100,100],bulb:[955,224]};
+    // The compact lamp illuminates the right hand. The old left-hand point is
+    // now deliberately outside its field; test exclusion as well as response.
+    const points={hair:[849,312],sleeve:[815,393],hand:[914,499],leftHand:[676,509],book:[793,521],cupLeft:[968,478],cupRight:[1023,478],desk:[1050,505],face:[727,195],glass:[1100,100],bulb:[955,224]};
     async function sample(view:DebugView,normal:number,minutes:number){
       h.setDebugView(view);h.setTime(minutes);h.setSettings({normal});
       return new Promise<Record<string,number>>(resolve=>requestAnimationFrame(()=>{
@@ -61,6 +63,7 @@ test('each light uses surface orientation, with a protected face and exterior', 
     expect(Math.abs(result.lamp[1][name]-result.lamp[0][name]),`lamp ${name} must respond to normals`).toBeGreaterThan(.004);
   }
   expect(Math.abs(result.lamp[1].hand-result.lamp[0].hand),'restrained hand orientation').toBeGreaterThan(.002);
+  expect(result.lamp[0].leftHand).toBe(0);expect(result.lamp[1].leftHand).toBe(0);
   expect(Math.abs(result.lamp[1].face-result.lamp[0].face)).toBeLessThan(.012);
   for(const s of [...result.projected,...result.lamp])expect(s.glass).toBe(0);
   expect(result.lamp[0].bulb).toBe(result.lamp[1].bulb);

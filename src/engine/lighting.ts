@@ -3,7 +3,7 @@ import { wrapTime } from './timeline';
 const keys = [
   { time: 0, ambient: [0.18, 0.20, 0.24], sun: [0, 0, 0], lamp: 0.72 },
   { time: 300, ambient: [0.33, 0.39, 0.51], sun: [0.09, 0.13, 0.19], lamp: 0.50 },
-  { time: 360, ambient: [0.48, 0.55, 0.65], sun: [0.49, 0.46, 0.40], lamp: 0.12 },
+  { time: 360, ambient: [0.46, 0.54, 0.65], sun: [0.46, 0.49, 0.53], lamp: 0.12 },
   { time: 540, ambient: [0.75, 0.77, 0.79], sun: [0.35, 0.34, 0.31], lamp: 0.02 },
   { time: 720, ambient: [0.80, 0.81, 0.82], sun: [0.32, 0.31, 0.29], lamp: 0.0 },
   { time: 930, ambient: [0.76, 0.72, 0.66], sun: [0.40, 0.30, 0.20], lamp: 0.04 },

@@ -1,5 +1,10 @@
 # Technical assets
 
+Salvage pass: `contactDetails.cup-coaster` adds one narrow registered cup-bottom
+arc to existing B contact data, clipped to the cup/coaster receiver. The runtime
+lamp-field and scene-visibility changes reuse all other maps unchanged. No new
+technical asset is loaded. [Details](../../../docs/logs/code-only-lighting-salvage.md).
+
 Latest contact update (2026-09-18): B-channel detail contacts combine a tight
 per-path stroke and a faint wider penumbra, both clipped to the same receiver.
 `docs/scene-regions.json` owns `contactPenumbra` (widthScale 2.2, feather 4.5,

@@ -4,11 +4,13 @@ import type { DebugView, Settings } from '../../src/engine/renderer';
 import { visualRoot } from './review-output';
 
 // Artwork-located patches, not generated mask contours or shader coordinates.
+// Book now samples the right page: left-page illumination is intentionally
+// reduced by the salvage pass and separately bounded in salvage.visual.spec.ts.
 const boxes = {
   wall: [180,180,330,380], shelf: [50,200,112,370], foreground: [50,500,175,620],
   face: [704,182,751,224], chest: [650,320,715,405],
   hair: [854,310,889,383], sleeve: [808,373,838,450],
-  book: [736,518,809,540], cup: [970,460,1025,498], glass: [1080,80,1140,180],
+  book: [855,515,882,533], cup: [970,460,1025,498], glass: [1080,80,1140,180],
 };
 
 async function sample(page: Page, minutes: number, view: DebugView, patch: Partial<Settings> = {}) {

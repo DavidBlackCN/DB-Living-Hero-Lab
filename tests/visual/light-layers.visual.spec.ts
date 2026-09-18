@@ -4,6 +4,7 @@ import type { DebugView, Settings } from '../../src/engine/renderer';
 import { visualRoot } from './review-output';
 
 const points={wall:[250,300],chair:[350,360],plant:[150,560],
+  shelf:[65,250],blanket:[352,455],rearTable:[440,300],windowObjects:[1050,320],
   hair:[849,312],sleeve:[815,393],cupLeft:[968,478],cupRight:[1023,478],
   strap:[609,377],openCloth:[635,377],bulb:[955,224],face:[728,210],glass:[1100,100]};
 async function sample(page:Page,view:DebugView,minutes:number,settings:Partial<Settings>={}) {
@@ -44,7 +45,7 @@ test('environment fill follows orientation and contact while lamp emission stays
 
 test('whole-room fill changes color and form layers stay independent of exposure',async({page})=>{
   const dawn=await sample(page,'ambient',360),dusk=await sample(page,'ambient',1050);
-  for(const name of ['wall','chair','plant']) {
+  for(const name of ['wall','chair','plant','shelf','blanket','rearTable','windowObjects']) {
     expect(dawn[name][2]/dawn[name][0]).toBeGreaterThan(dusk[name][2]/dusk[name][0]+.05);
     expect(dawn[name]).not.toEqual(dusk[name]);
   }

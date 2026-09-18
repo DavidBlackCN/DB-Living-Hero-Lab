@@ -1,5 +1,16 @@
 # Living Hero architecture
 
+## Current: code-only salvage (2026-09-18)
+
+`lamp-fields.ts` owns compact near/desk/character receiving fields; Scene B remains
+the emitter. Near illumination has a broad underside/bounce response, independent
+of directional desk/character response. Contact, normal form and semantic scene
+visibility are distinct levels in the same scene pass. `sceneVisibility` excludes
+part of the rear beam from front torso and shelf recesses without shifting masks.
+Projected debug now reports the visible contribution. Lamp Fields maps R/G/B to
+near/desk/character with white emission. No render target or texture is added.
+See [salvage decisions and measurements](logs/code-only-lighting-salvage.md).
+
 ## Current: incident light layers (2026-09-18)
 
 `light-layers.ts` contains the logical ambient/window/projection/lamp/emission

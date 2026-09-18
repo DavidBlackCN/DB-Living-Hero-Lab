@@ -14,11 +14,21 @@ float softFormBand(float facing, float softness) {
   return smoothstep(.46-edge,.46+edge,facing);
 }
 float lightLuminance(vec3 v) { return dot(v,vec3(.2126,.7152,.0722)); }
+// Layer 3: semantic source visibility, independent of contact B and N.L form.
+// The figure's front and deep shelf recesses cannot receive a full rear beam.
+// Soft masks stay on their own surfaces; no offset silhouettes or page shadows.
+vec3 sceneVisibility(vec2 p, float body, vec3 shape, float protection) {
+  float torso=body*(1.0-smoothstep(.59,.745,p.x))*
+    (1.0-smoothstep(.60,.73,p.y));
+  float recess=(1.0-smoothstep(.07,.115,p.x))*shape.g;
+  float enclosure=clamp(torso+recess,0.0,1.0)*protection;
+  return vec3(1.0)-enclosure*vec3(.16,.42,.58)*uShadow;
+}
 
 LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
     float face, float hair, float body, float night, float receiver,
     float aperture, float receive, vec3 directional, vec3 projection,
-    vec3 lampReflection, vec3 emission, vec3 lampDirection) {
+    vec3 lampReflection, vec3 emission) {
   LightLayers result;
   float indoor=1.0-scene.r;
   // The room participates even outside an authored bright receiving patch.
@@ -39,6 +49,11 @@ LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
   // same key color. Their sky access is weaker; bounce never becomes a beam.
   vec3 wallBounce=uSun*uSunStrength*roomEnclosure*.10*skyFacing;
   vec3 daylightFill=skyFill+wallBounce;
+  // Broad environment orientation remains active outside projected beams.
+  // It redistributes existing fill; it never raises global ambient.
+  float environmentFacing=clamp(dot(normal,normalize(vec3(uDirection.xy*.45,.85))),0.0,1.0);
+  float environmentShade=shape.g*protection*(1.0-environmentFacing)*.18;
+  daylightFill*=1.0-environmentShade;
   float directForm=mix(.12,1.0,band);
   vec3 window=uSun*uSunStrength*receive*directForm;
   window=mix(directional,window,style);
@@ -54,25 +69,21 @@ LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
   float ambientOcclusion=clamp(uShadow*(contact*.48+
     surface*(1.0-shape.r)*.13*protection),0.0,.42);
   float directVisibility=1.0-clamp(uShadow*contact*.62,0.0,.42);
+  vec3 sourceVisibility=sceneVisibility(uv,body,shape,protection);
   vec3 nightFill=uAmbient*uAmbientStrength*mix(.38,.80,shape.r);
   vec3 skySpill=vec3(.055,.095,.17)*shape.r*(.35+hair*.4+body*.15)*uAmbientStrength;
   // Hemisphere response is shared by all materials, including chair/foreground.
   nightFill*=mix(vec3(1),mix(vec3(.72,.80,.94),vec3(1),skyFacing),style);
   result.ambient=mix(daylightFill*(1.0-apertureShade),nightFill+skySpill,night*indoor);
   result.ambient*=1.0-ambientOcclusion;
-  result.window=window*(1.0-night*indoor)*(1.0-apertureShade)*directVisibility;
-  result.projection=projection*directVisibility;
+  result.window=window*(1.0-night*indoor)*(1.0-apertureShade)*directVisibility*sourceVisibility.r;
+  result.projection=projection*directVisibility*sourceVisibility.g;
 
   // Wide area lamp response supplies lit / turning / back-facing surfaces.
   // N.L modulates the existing registered pool, so this cannot light the face
   // or create a camera-side fill outside the pool's visibility.
-  float lampFacing=dot(normal,lampDirection);
-  float lampBand=smoothstep(-.40,.40,lampFacing);
-  float wrapped=.08+.92*clamp((lampFacing+.70)/1.70,0.0,1.0);
-  float lampForm=mix(wrapped,mix(.10,.90,lampBand),style*.70);
-  float formRatio=lampForm/max(wrapped,.001);
   float lampVisibility=1.0-clamp(uShadow*contact*.70,0.0,.46);
-  result.lamp=lampReflection*formRatio*lampVisibility;
+  result.lamp=lampReflection*lampVisibility*sourceVisibility.b;
   result.emission=emission;
 
   // Energy removed by visibility, independent of surface pigment/exposure.
@@ -80,7 +91,7 @@ LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
   result.occlusion=0.0;
   if(uView==12) {
     vec3 openLight=mix(daylightFill,nightFill+skySpill,night*indoor)+
-      window*(1.0-night*indoor)+projection+lampReflection*formRatio;
+      window*(1.0-night*indoor)+projection+lampReflection;
     vec3 visible=result.ambient+result.window+result.projection+result.lamp;
     float openEnergy=lightLuminance(openLight);
     result.occlusion=openEnergy>.0001 ? clamp(1.0-lightLuminance(visible)/openEnergy,0.0,1.0) : 0.0;

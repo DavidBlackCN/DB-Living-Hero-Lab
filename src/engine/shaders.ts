@@ -1,4 +1,5 @@
 import { lightLayers } from './light-layers';
+import { lampFields } from './lamp-fields';
 
 export const vertex = `#version 300 es
 precision highp float;
@@ -38,12 +39,8 @@ vec3 encode(vec3 c) { return mix(c*12.92,1.055*pow(max(c,0.0),vec3(1.0/2.4))-0.0
 float surfaceResponse(vec3 n, vec3 l) {
   return .18+.82*max(dot(n,l),0.0);
 }
-// Wide diffuse wrap preserves turning surfaces under a rear-side area lamp.
-// A hard max(N.L,0) would flatten every back-facing surface to the same floor.
-float lampResponse(vec3 n, vec3 l) {
-  return .08+.92*clamp((dot(n,l)+.70)/1.70,0.0,1.0);
-}
 ${lightLayers}
+${lampFields}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
   if(uView==1) { color=vec4(base,1); return; }
@@ -77,11 +74,8 @@ void main() {
   if(refined) receive *= 1.0 + hair*(uHair-1.0) + body*(uCloth-1.0);
   vec3 directional=uSun*uSunStrength*diffuse*receive;
   vec3 light=uAmbient*uAmbientStrength+directional;
-  float lampPool=exp(-dot((uv-vec2(.795,.51))/vec2(.24,.34),(uv-vec2(.795,.51))/vec2(.24,.34))*1.0);
   float lampBulb=region(uv,vec2(.80,.32),vec2(.035,.027));
   if(refined && uHasSceneMask) {
-    // Window panes receive no indoor lamp spill. Desk has its own receiving area.
-    lampPool *= (1.0-exterior) * mix(.7,1.0,scene.g);
     lampBulb = scene.b;
   }
   float dusk=smoothstep(780.0,1050.0,uMinutes);
@@ -120,34 +114,34 @@ void main() {
       roomBand*roomReach*shape.g*.65*(1.0-exterior)*(1.0-face)*surfaceResponse(normal,normalize(uDirection));
   }
   float shadowAmount=0.0;
-  if(spatial) {
-    vec2 deskDelta=(uv-vec2(.825,.735))/vec2(.20,.115);
-    vec2 subjectDelta=(uv-vec2(.752,.49))/vec2(.092,.21);
-    vec2 sillDelta=(uv-vec2(.82,.515))/vec2(.13,.10);
-    // The table behind the arm must not cut a bright triangle into the sleeve.
-    // Apply the same smooth local lamp field to foreground surfaces instead.
-    float lampReceiver=max(scene.g,max(hair*.85,body*.90));
-    float deskPool=exp(-dot(deskDelta,deskDelta))*lampReceiver;
-    // Right shoulder / trailing hair see the rear lamp; the front torso and face
-    // are shielded by the figure itself. Smooth visibility, not a painted rim.
-    float rearVisibility=smoothstep(.62,.74,uv.x)*(1.0-face);
-    float subjectPool=exp(-dot(subjectDelta,subjectDelta))*(hair*.75+body*.65)*rearVisibility;
-    float sillPool=exp(-dot(sillDelta,sillDelta))*scene.g;
-    lampPool=(deskPool*1.45+subjectPool*1.55+sillPool*1.65+lampPool*.025)*(1.0-exterior);
-  }
   vec3 projectionContribution=mix(vec3(1),vec3(1.0,.92,.80),dusk)*projectedAmount;
   light+=projectionContribution;
   // +Z points toward the viewer: the lamp is behind the figure, not a camera-side
   // fill. Keep a small wrapped response for soft reflected visibility. The desk
   // pool compensates for its upward-facing receiving plane, not the front torso.
   vec3 lampDirection=normalize(vec3((vec2(.797,.327)-uv)*vec2(1200.0/675.0,1.0),spatial?-.08:.28));
-  float lampSurface=spatial?lampResponse(normal,lampDirection):surfaceResponse(normal,lampDirection);
-  float lampFace=spatial?lampResponse(vec3(0,0,1),lampDirection):surfaceResponse(vec3(0,0,1),lampDirection);
-  lampSurface=mix(lampSurface,lampFace,face*uFace*.8);
   float lampMaterial=1.0+hair*(uHair-1.0)+body*(uCloth-1.0);
   // Emission is separate: the luminous shade underside is never N.L shaded.
-  vec3 lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*
-    lampPool*(spatial?1.45:.66)*lampSurface*lampMaterial;
+  vec3 lampReflection=vec3(0);
+  LampFields fields=LampFields(0.0,0.0,0.0);
+  if(spatial) {
+    fields=lampFieldsAt(uv,scene,hair,body,face);
+    float form=lampFormResponse(dot(normal,lampDirection),clamp(uStylized,0.0,1.0)*(1.0-face));
+    // Near-field objects see the wide luminous underside plus local bounce.
+    // Desktop and character keep a directional response to the rear source.
+    float nearResponse=mix(.45,1.0,form);
+    float energy=fields.nearField*1.75*nearResponse+
+      fields.desk*2.05*form+fields.character*2.40*form*lampMaterial;
+    lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*energy;
+  } else {
+    // Legacy comparison only: keep its exponential out of the spatial path.
+    vec2 legacyDelta=(uv-vec2(.795,.51))/vec2(.24,.34);
+    float pool=exp(-dot(legacyDelta,legacyDelta));
+    if(refined && uHasSceneMask) pool*=(1.0-exterior)*mix(.7,1.0,scene.g);
+    float response=mix(surfaceResponse(normal,lampDirection),
+      surfaceResponse(vec3(0,0,1),lampDirection),face*uFace*.8);
+    lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*pool*.66*response*lampMaterial;
+  }
   vec3 lampEmission=vec3(1.0,.63,.32)*uLamp*uLampStrength*lampBulb*mix(.5,1.5,night);
   vec3 lampContribution=lampReflection+lampEmission;
   vec3 ambientContribution=uAmbient*uAmbientStrength;
@@ -155,7 +149,7 @@ void main() {
   if(spatial) {
     LightLayers layers=roomLightLayers(normal,scene,shape,face,hair,body,night,
       receiver,projectedBand*projectedReach,receive,directional,projectionContribution,
-      lampReflection,lampEmission,lampDirection);
+      lampReflection,lampEmission);
     ambientContribution=layers.ambient;
     directional=layers.window;
     projectionContribution=layers.projection;
@@ -195,7 +189,7 @@ void main() {
     color=vec4(vec3(value*.6),1); return;
   }
   if(uView==10) {
-    color=vec4(vec3(projectedAmount),1); return;
+    color=vec4(vec3(lightLuminance(projectionContribution)),1); return;
   }
   if(uView==12) { color=vec4(vec3(shadowAmount),1); return; }
   if(uView==13) { color=vec4(lampContribution,1); return; }
@@ -206,6 +200,8 @@ void main() {
     color=vec4(vec3(form),1); return;
   }
   if(uView==19) { color=vec4(vec3(shape.b),1); return; }
+  // R near field, G desk, B character; emitter white. Raw receiving fields.
+  if(uView==20) { color=vec4(vec3(fields.nearField,fields.desk,fields.character)+vec3(lampBulb),1); return; }
   if(uView==14) { color=vec4(vec3(dot(directional,vec3(.2126,.7152,.0722))*.6),1); return; }
   // Optional scalar log-gain, applied to the original base in linear light.
   // 128 is exactly neutral. Original Base debug always bypasses this experiment.

@@ -3,7 +3,7 @@ import { lightingAt, projectedLightAt } from './lighting';
 import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 import { createBloom } from './postprocessing';
-export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact';
+export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact' | 'lampFields';
 export interface Settings { shadow: number; correction: number; exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
 export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
 export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
@@ -88,7 +88,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform1f(loc('uProjected'),settings.projected);
     gl.uniform1f(loc('uCorrection'),settings.correction);
     for(const [key,name] of Object.entries({shadow:'uShadow',exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement',stylized:'uStylized',softness:'uSoftness',projectedIntensity:'uProjectedIntensity',projectedSoftness:'uProjectedSoftness',bloom:'uBloom',bloomThreshold:'uBloomThreshold',bloomRadius:'uBloomRadius'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
-    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected','exterior','shadow','lamp','directional','correction','correctedBase','ambient','form','contact'].indexOf(view));
+    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected','exterior','shadow','lamp','directional','correction','correctedBase','ambient','form','contact','lampFields'].indexOf(view));
     const bloomActive=(view==='final'&&settings.bloom>0)||view==='bright'||view==='bloom';
     if(bloomActive) {
       post.begin(vw,vh);

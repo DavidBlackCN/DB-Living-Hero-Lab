@@ -26,7 +26,7 @@ vec3 sceneVisibility(vec2 p, float body, vec3 shape, float protection) {
 }
 
 LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
-    float face, float hair, float body, float night, float receiver,
+    float face, float hand, float hair, float body, float night, float receiver,
     float aperture, float receive, vec3 directional, vec3 projection,
     vec3 lampReflection, vec3 emission) {
   LightLayers result;
@@ -66,6 +66,9 @@ LightLayers roomLightLayers(vec3 normal, vec3 scene, vec3 shape,
   // visibility have separate budgets; emission is never contact-darkened.
   float contact=shape.b*indoor;
   contact=mix(contact,min(contact,.045),face);
+  // Hand contact is authored on the receiving page. Do not let its feather
+  // become internal finger occlusion when it meets the skin silhouette.
+  contact=mix(contact,min(contact,.035),hand);
   float ambientOcclusion=clamp(uShadow*(contact*.48+
     surface*(1.0-shape.r)*.13*protection),0.0,.42);
   float directVisibility=1.0-clamp(uShadow*contact*.62,0.0,.42);

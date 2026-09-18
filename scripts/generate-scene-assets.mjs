@@ -17,7 +17,7 @@ execFileSync('python', [fileURLToPath(new URL('./generate-flower-occlusion.py', 
 const flowerData = (await readFile(new URL('window-flower-occlusion.png', output))).toString('base64');
 
 const masks = `${header}<defs>${feather}</defs><rect width="1200" height="675" fill="black"/>
-<g filter="url(#soft)">${path('hair', '#00ff00')}${path('cloth', '#0000ff')}${path('bodice', '#0000ff')}${path('face', '#ff0000')}${path('handLeft', '#000000')}${path('handRight', '#000000')}</g></svg>`;
+<g filter="url(#soft)">${path('hair', '#00ff00')}${path('cloth', '#0000ff')}${path('bodice', '#0000ff')}${path('face', '#ff0000')}${path('handLeft', '#000000')}${path('handRight', '#ffffff')}</g></svg>`;
 
 // Right glass retains native edge coverage. Only the source's defocused left
 // lower edge gets an inward alpha transition, clipped by the glass geometry.

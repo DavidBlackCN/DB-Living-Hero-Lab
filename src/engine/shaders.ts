@@ -71,7 +71,14 @@ void main() {
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
   float body = region(uv,vec2(.551,.585),vec2(.195,.24));
   float hair = region(uv,vec2(.605,.37),vec2(.185,.36))*(1.0-face)*(1.0-body);
-  if(uHasMask && refined) { vec3 masks=texture(uMask,uv).rgb; face=masks.r; hair=masks.g; body=masks.b; }
+  float hand=0.0;
+  if(uHasMask && refined) {
+    vec3 masks=texture(uMask,uv).rgb;
+    // White is reserved for the screen-right hand. Subtract it from the three
+    // material channels so its soft semantic edge never becomes face/hair/cloth.
+    hand=min(masks.r,min(masks.g,masks.b));
+    face=max(masks.r-hand,0.0);hair=max(masks.g-hand,0.0);body=max(masks.b-hand,0.0);
+  }
   float forehead=refined && uHasMask ? foreheadSafety(uv,base)*(1.0-face) : 0.0;
   face+=forehead; // Soft union: overlapping feathered edges must not form a dip.
   hair=max(hair-forehead,0.0); // Transfer coverage, rather than double-count skin.
@@ -83,6 +90,11 @@ void main() {
   normal=normalize(mix(normal,vec3(0.0,-.50,.866),table));
   if(uHasNormal && refined) normal=normalize(texture(uNormal,uv).rgb*2.0-1.0);
   normal=normalize(mix(vec3(0,0,1),normal,uNormalStrength));
+  // Skin-safe hand normal: retain one broad palm orientation but suppress the
+  // three authored per-finger ribbon facets that become visible under the rear lamp.
+  vec2 hp=(uv-vec2(.754,.726))/vec2(.055,.050);
+  vec3 broadHand=normalize(vec3(hp.x*.07,-.08+hp.y*.035,1.0));
+  normal=normalize(mix(normal,broadHand,hand*.82));
   // Only newly protected skin loses the erroneous hair-ribbon normal. Retain
   // a quarter of its local orientation; lower face and actual hair are unchanged.
   normal=normalize(mix(normal,vec3(0,0,1),forehead*.75*uFace));
@@ -147,6 +159,9 @@ void main() {
   if(spatial) {
     fields=lampFieldsAt(uv,scene,hair,body,face);
     float form=lampFormResponse(dot(normal,lampDirection),clamp(uStylized,0.0,1.0)*(1.0-face));
+    // Skin uses a wider, lower-contrast turning band than cloth/hair/desk.
+    float handForm=.58+.42*smoothstep(-.65,.55,dot(normal,lampDirection));
+    form=mix(form,handForm,hand*.82);
     // Near-field objects see the wide luminous underside plus local bounce.
     // Desktop and character keep a directional response to the rear source.
     float nearResponse=mix(.45,1.0,form);
@@ -157,8 +172,8 @@ void main() {
     // painted shadow. Compact support, receiver gating and lamp energy keep
     // this a local reflection, not a skin brightness floor or new emitter.
     float handBounce=boundedField(uv*vec2(1200,675),vec2(889,489),vec2(76,57));
-    float bounceReceiver=max(scene.g,body*.85)*(1.0-exterior)*(1.0-face)*(1.0-hair);
-    energy+=handBounce*bounceReceiver*.24*night*(1.0-form*.65);
+    float bounceReceiver=max(hand,max(scene.g,body*.85)*.35)*(1.0-exterior)*(1.0-face)*(1.0-hair);
+    energy+=handBounce*bounceReceiver*.20*night*(1.0-form*.55);
     lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*energy;
   } else {
     // Legacy comparison only: keep its exponential out of the spatial path.
@@ -174,7 +189,7 @@ void main() {
   vec3 ambientContribution=uAmbient*uAmbientStrength;
   light+=lampContribution;
   if(spatial) {
-    LightLayers layers=roomLightLayers(normal,scene,shape,face,hair,body,night,
+    LightLayers layers=roomLightLayers(normal,scene,shape,face,hand,hair,body,night,
       receiver,projectedBand*projectedReach,receive,directional,projectionContribution,
       lampReflection,lampEmission);
     ambientContribution=layers.ambient;
@@ -201,7 +216,7 @@ void main() {
     light *= 1.0 - night*.15*highlight*(1.0-exterior)*(1.0-face);
   }
   if(uView==2) { color=vec4(normal*.5+.5,1); return; }
-  if(uView==3) { color=vec4(face,hair,body,1); return; }
+  if(uView==3) { color=vec4(vec3(face,hair,body)+vec3(hand),1); return; }
   if(uView==4) { color=vec4(encode(light*.6),1); return; }
   if(uView==5) { color=vec4(scene,1); return; }
   if(uView==6) {
@@ -224,6 +239,8 @@ void main() {
   if(uView==18) {
     float form=mix(softFormBand(dot(normal,normalize(uDirection)),uSoftness),
       smoothstep(-.40,.40,dot(normal,lampDirection)),night);
+    float handForm=.58+.42*smoothstep(-.65,.55,dot(normal,lampDirection));
+    form=mix(form,handForm,hand*.82*night);
     color=vec4(vec3(form),1); return;
   }
   if(uView==19) { color=vec4(vec3(shape.b),1); return; }

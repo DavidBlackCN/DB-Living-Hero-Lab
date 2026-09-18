@@ -141,13 +141,8 @@
     {
       "name": "hand-right",
       "region": "handRight",
-      "normal": [0,-0.1,0.995],
-      "ellipsoid": {"center":[905,490],"radius":[40,30],"strength":[0.18,0.11]},
-      "ribbons": [
-        {"points":[[896,472],[914,480],[918,494],[908,510]],"width":6,"strength":0.22},
-        {"points":[[907,478],[923,487],[930,497],[919,515]],"width":5.5,"strength":0.21},
-        {"points":[[917,485],[930,495],[938,506],[931,513]],"width":4.5,"strength":0.18}
-      ]
+      "normal": [0,-0.08,0.997],
+      "ellipsoid": {"center":[905,490],"radius":[42,32],"strength":[0.09,0.05]}
     },
     {
       "name": "beret",

@@ -152,6 +152,13 @@ void main() {
     float nearResponse=mix(.45,1.0,form);
     float energy=fields.nearField*1.75*nearResponse+
       fields.desk*2.05*form+fields.character*2.40*form*lampMaterial;
+    // Screen-right hand, cuff and adjoining page share weak reflected desk
+    // light. The inferred rear-facing normals otherwise double the artwork's
+    // painted shadow. Compact support, receiver gating and lamp energy keep
+    // this a local reflection, not a skin brightness floor or new emitter.
+    float handBounce=boundedField(uv*vec2(1200,675),vec2(889,489),vec2(76,57));
+    float bounceReceiver=max(scene.g,body*.85)*(1.0-exterior)*(1.0-face)*(1.0-hair);
+    energy+=handBounce*bounceReceiver*.24*night*(1.0-form*.65);
     lampReflection=vec3(1.0,.63,.32)*uLamp*uLampStrength*energy;
   } else {
     // Legacy comparison only: keep its exponential out of the spatial path.

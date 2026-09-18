@@ -46,7 +46,7 @@
     { "name": "left-strap", "receiver": "cloth", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M621 302 L609 377 L602 425" },
     { "name": "right-strap", "receiver": "cloth", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M746 332 L744 387 L738 433" },
     { "name": "left-hand-page", "receiver": "book", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M632 523 L647 532 L660 534 M678 533 L691 535 L699 528" },
-    { "name": "right-hand-page", "receiver": "book", "width": 3, "feather": 1.25, "weight": 0.65, "path": "M891 503 L908 515 L926 520 L938 513" },
+    { "name": "right-hand-page", "receiver": "book", "width": 1.8, "feather": 0.85, "weight": 0.48, "path": "M891 503 L908 515 L926 520 L938 513" },
     { "name": "cup-coaster", "receiver": "cup", "width": 2.5, "feather": 1.1, "weight": 0.55, "path": "M949 516 Q980 535 1026 522" },
     { "name": "tools-foot", "receiver": "lampSill", "width": 4, "feather": 1.25, "weight": 0.70, "path": "M943 358 Q972 362 1005 358" },
     { "name": "frame-foot", "receiver": "lampSill", "width": 4, "feather": 1.25, "weight": 0.55, "path": "M1006 360 L1067 372" },

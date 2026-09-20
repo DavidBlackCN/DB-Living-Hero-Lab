@@ -7,7 +7,7 @@ import { BlinkController, type BlinkPhase } from './animation';
 import { BreathingClock } from './breathing';
 export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact' | 'lampFields' | 'breathingWeight';
 export interface Settings { breathingStrength: number; breathingCycle: number; shadow: number; correction: number; exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
-export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; blink: boolean; blinkPhase: BlinkPhase; breathing: boolean; breathingPhase: number; view: DebugView }
+export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; blink: boolean; blinkPhase: BlinkPhase; breathing: boolean; breathingPhase: number; breathingDisplacement: number; breathingStatus: string; view: DebugView }
 export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
@@ -70,7 +70,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   let post: ReturnType<typeof createBloom>;
   try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
   const timeline = new Timeline(options.time ?? 720);
-  const settings: Settings = { breathingStrength: 1.8, breathingCycle: 5.4, shadow: .65, correction: 0, exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.85, hair: 0.95, cloth: 0.94, night: 1, refinement: 1, stylized: 0.50, softness: 0.18, projected: 1, projectedIntensity: 0.42, projectedSoftness: 0.22, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
+  const settings: Settings = { breathingStrength: 2, breathingCycle: 5.4, shadow: .65, correction: 0, exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.85, hair: 0.95, cloth: 0.94, night: 1, refinement: 1, stylized: 0.50, softness: 0.18, projected: 1, projectedIntensity: 0.42, projectedSoftness: 0.22, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
   const blinkController = new BlinkController();
@@ -80,7 +80,9 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   let blink = !!assets.blink;
   const blinkAllowed = () => blink && animation && !reducedMotion && !!assets.blink;
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;
-  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, blink, blinkPhase: blinkController.phase, breathing, breathingPhase: breathingClock.phase, view });
+  const breathingDisplacement = () => breathingAllowed()?breathingClock.amount*settings.breathingStrength:0;
+  const breathingStatus = () => destroyed?'Destroyed':lost?'Context lost':!breathing?'Off':document.hidden?'Hidden':!animation?'Animation off':reducedMotion?'Reduced motion':!assets.mask?'No mask':settings.refinement<=.5?'Refinement off':settings.breathingStrength===0?'Strength zero':'Running';
+  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, blink, blinkPhase: blinkController.phase, breathing, breathingPhase: breathingClock.phase, breathingDisplacement: breathingDisplacement(), breathingStatus: breathingStatus(), view });
   function render(now = performance.now()) {
     gl.useProgram(program);
     const dpr = Math.min(devicePixelRatio || 1,1.5);
@@ -99,7 +101,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform3fv(loc('uAmbient'),light.ambient); gl.uniform3fv(loc('uSun'),light.sun); gl.uniform3fv(loc('uDirection'),light.direction);
     gl.uniform1f(loc('uLamp'),light.lamp);
     gl.uniform1f(loc('uMotionTime'), now / 1000);
-    gl.uniform1f(loc('uBreathingAmount'),breathingAllowed()?breathingClock.amount*settings.breathingStrength:0);
+    gl.uniform1f(loc('uBreathingAmount'),breathingDisplacement());
     gl.uniform1f(loc('uSteam'), Number(steam && animation && !reducedMotion));
     gl.uniform1i(loc('uBlinkPhase'),blinkAllowed() ? ['open','half','closed'].indexOf(blinkController.phase) : 0);
     gl.uniform1f(loc('uNight'),light.night);
@@ -170,7 +172,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
         const k=key as keyof Settings;
         if (!(k in settings)) continue;
         if(k==='breathingStrength' || k==='breathingCycle') {
-          settings[k]=Math.max(k==='breathingCycle'?5:0,Math.min(k==='breathingCycle'?6:2,value));
+          settings[k]=Math.max(k==='breathingCycle'?5:0,Math.min(k==='breathingCycle'?6:3,value));
           breathingClock.reset(); continue;
         }
         settings[k]=Math.max(k==='exposure'?-1:k==='bloomThreshold'?.4:0,Math.min(['face','night','refinement','correction','shadow'].includes(k)?1:k==='bloomThreshold'?1:2,value));

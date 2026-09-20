@@ -14,6 +14,8 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     <button id="trigger-blink" type="button">触发眨眼</button> <output id="blink-phase">open</output>
     <label class="check"><input id="breathing" type="checkbox">Breathing · Experimental</label>
     <div id="breathing-controls"></div>
+    <label>Breathing <output id="breathing-status">Off</output></label>
+    <label>Displacement <output id="breathing-displacement">0.00 px</output></label>
     <label class="check"><input id="reduced" type="checkbox">减少动态效果</label>
     </div></details>`;
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
@@ -36,7 +38,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   const view = query<HTMLSelectElement>('#view');
   view.insertAdjacentHTML('beforeend','<option value="breathingWeight">Breathing Weight</option>');
   query<HTMLInputElement>('#breathing').addEventListener('change',event=>engine.setBreathing((event.target as HTMLInputElement).checked));
-  for(const [key,label,min,max,step] of [['breathingStrength','Strength (source px)',0,2,.1],['breathingCycle','Cycle (s)',5,6,.1]] as const) {
+  for(const [key,label,min,max,step] of [['breathingStrength','Strength (source px)',0,3,.1],['breathingCycle','Cycle (s)',5,6,.1]] as const) {
     const row=document.createElement('div'); row.className='slider-row';
     const value=engine.getSettings()[key];
     row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(1)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${value}">`;
@@ -104,6 +106,9 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     query<HTMLInputElement>('#animation').checked=state.animation;
     query<HTMLInputElement>('#blink').checked=state.blink;
     query<HTMLInputElement>('#breathing').checked=state.breathing;
+    query('#breathing-status').textContent=state.breathingStatus;
+    query('#breathing-displacement').textContent=`${state.breathingDisplacement.toFixed(2)} px`;
+    query('#breathing-displacement').title='Peak local displacement in original artwork pixels';
     query<HTMLButtonElement>('#trigger-blink').disabled=!state.blink || !state.animation || state.reducedMotion;
     query('#blink-phase').textContent=state.blinkPhase;
   }, destroy() { window.clearInterval(statsTimer); root.replaceChildren(); } };

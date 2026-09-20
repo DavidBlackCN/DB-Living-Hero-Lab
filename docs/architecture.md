@@ -14,7 +14,7 @@ they do not authorize changes to the accepted light fields or technical maps.
 
 `breathing.ts` contains a timer-free phase accumulator and a compact GLSL influence
 function. `setBreathing` defaults to false. `setSettings` accepts
-`breathingStrength` (0-2 original-art pixels, default 1.8) and `breathingCycle`
+`breathingStrength` (0-3 original-art pixels, default 2) and `breathingCycle`
 (5-6 seconds, default 5.4). `getState` reports the requested switch and phase.
 The existing renderer tick drives a cosine-eased neutral -> peak -> neutral lift.
 Steam keeps its original wall-clock `uMotionTime`; Breathing uses a separate
@@ -22,7 +22,7 @@ phase uniform fed by the same scheduler so hidden elapsed time is never consumed
 Motion gates reset deformation to neutral; visibility/context loss pauses it.
 
 Support is an ellipse centered at (681,380), radii (72,60), in 1200 x 675 artwork
-coordinates, multiplied by squared radial falloff, inset cloth-only semantics and
+coordinates, multiplied by a smoothstep radial falloff with a broad interior, inset cloth-only semantics and
 a smooth x=645..662 exclusion for the dangling front lock. It lies entirely in
 the garment interior, below neck/shoulders and above waist/hands/book. Missing
 character masks or disabled refinement make Breathing neutral rather than guessing.
@@ -34,6 +34,11 @@ screen UV. The small warp transports existing normals rather than reconstructing
 3D surface orientation. Original Base remains static; Breathing Weight shows
 the spatial envelope independently of animation phase. No texture/pass/framebuffer
 or GPU asset memory is added. [Prototype record](logs/breathing-prototype.md).
+Following the first human visibility report, the support stays unchanged but the
+interior falloff is less suppressive. State now includes `breathingStatus` and
+`breathingDisplacement` (peak current source-pixel displacement before spatial
+weight); the panel exposes both. This distinguishes blocked animation from
+subpixel movement. See [visibility follow-up](logs/breathing-visibility.md).
 
 ## Current: registered Blink (2026-09-20)
 

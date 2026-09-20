@@ -116,7 +116,7 @@ test('motion gates, hidden clock, controls and destroy',async({page})=>{
     await page.evaluate(g=>window.livingHero[g](g!=='setReducedMotion'),gate);await page.clock.runFor(1000);
   }
   await page.evaluate(()=>{window.livingHero.setSettings({breathingStrength:99,breathingCycle:-2});});
-  expect(await page.evaluate(()=>{const s=window.livingHero.getSettings();return [s.breathingStrength,s.breathingCycle];})).toEqual([2,5]);
+  expect(await page.evaluate(()=>{const s=window.livingHero.getSettings();return [s.breathingStrength,s.breathingCycle];})).toEqual([3,5]);
   await page.evaluate(()=>window.livingHero.setSettings({breathingStrength:0}));expect(await frame(page)).toBe(off);
   await page.evaluate(()=>window.livingHero.destroy());await page.clock.runFor(6000);
   expect(await page.evaluate(()=>window.livingHero.getState().breathingPhase)).toBe(0);
@@ -175,4 +175,32 @@ test('native registration, protected closeups, Bloom and debug controls',async({
   expect(await page.evaluate(()=>window.livingHero.getState().breathing)).toBe(false);
   await page.locator('#breathingStrength').fill('1.5');await page.locator('#breathingCycle').fill('6');
   expect(await page.evaluate(()=>{const s=window.livingHero.getSettings();return [s.breathingStrength,s.breathingCycle];})).toEqual([1.5,6]);
+});
+
+test('checkbox starts real-time motion and reports disabled conditions',async({page})=>{
+  await page.setViewportSize({width:1440,height:900});
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/');await page.waitForFunction(()=>!!window.livingHero);
+  await page.locator('#blink').uncheck();await page.locator('#steam').uncheck();
+  await page.locator('#breathing').check();
+  await expect(page.locator('#breathing-status')).toHaveText('Running');
+  await expect.poll(()=>page.evaluate(()=>window.livingHero.getState().breathingDisplacement),{timeout:5000}).toBeGreaterThan(1.5);
+  await expect(page.locator('#breathing-displacement')).not.toHaveText('0.00 px');
+  const sample=await page.evaluate(()=>{
+    const h=window.livingHero,gl=document.querySelector<HTMLCanvasElement>('#hero')!.getContext('webgl2')!;
+    const program=gl.getParameter(gl.CURRENT_PROGRAM) as WebGLProgram;
+    return {phase:h.getState().breathingPhase,amount:gl.getUniform(program,gl.getUniformLocation(program,'uBreathingAmount')),
+      screenPeak:h.getSettings().breathingStrength*Math.min(innerWidth/3840,innerHeight/2160)};
+  });
+  expect(sample.amount).toBeGreaterThan(1.5);expect(sample.screenPeak).toBe(.75);
+  await page.locator('#refinement').uncheck();
+  await expect(page.locator('#breathing-status')).toHaveText('Refinement off');
+  await expect(page.locator('#breathing-displacement')).toHaveText('0.00 px');
+  await page.locator('#refinement').check();await page.locator('#reduced').check();
+  await expect(page.locator('#breathing-status')).toHaveText('Reduced motion');
+  await page.locator('#reduced').uncheck();await page.locator('#animation').uncheck();
+  await expect(page.locator('#breathing-status')).toHaveText('Animation off');
+  await page.locator('#animation').check();await page.locator('#breathingStrength').fill('0');
+  await expect(page.locator('#breathing-status')).toHaveText('Strength zero');
+  await page.locator('#breathing').uncheck();await expect(page.locator('#breathing-status')).toHaveText('Off');
 });

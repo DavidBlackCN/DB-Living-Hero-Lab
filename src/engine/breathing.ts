@@ -28,12 +28,14 @@ float breathingWeight(vec2 p) {
   vec2 q=(at-vec2(681.0,380.0))/vec2(72.0,60.0);
   float r2=dot(q,q);
   if(r2>=1.0) return 0.0;
-  // Inset semantic support by 10 source pixels, beyond the 2 px travel cap.
+  // Inset semantic support by 10 source pixels, beyond the 3 px travel cap.
   vec2 inset=vec2(10.0)/uArtworkSize;
   float cloth=min(breathingCloth(p),min(min(breathingCloth(p+vec2(inset.x,0)),
     breathingCloth(p-vec2(inset.x,0))),min(breathingCloth(p+vec2(0,inset.y)),
     breathingCloth(p-vec2(0,inset.y)))));
   // The coarse cloth mask paints over a dangling front lock. Stay right of it.
-  return (1.0-r2)*(1.0-r2)*cloth*smoothstep(645.0,662.0,at.x);
+  // Retain a broad interior response; the former squared falloff made nearly
+  // all visible motion subpixel after downsampling. Boundary/support stay fixed.
+  return (1.0-smoothstep(.15,1.0,r2))*cloth*smoothstep(645.0,662.0,at.x);
 }
 `;

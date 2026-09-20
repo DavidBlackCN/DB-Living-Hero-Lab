@@ -89,6 +89,7 @@ npm run test:visual
 - Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查；Neutral、Projected Light Only、Exterior Mask、Shadow / Occlusion 用于隔离检查光、玻璃边界和暗部。
 - 动画总开关控制时间过渡及 Blink / Steam / Breathing；减少动态效果禁用微动画并立即跳到目标时间，默认尊重系统偏好。
 - Breathing 默认关闭，可用开关及 Strength / Cycle 调节；仍待人工 A/B 验收。
+- Breathing 默认强度 2 原图像素，可调至 3；状态与实时位移显示是否运行。它只影响胸前衣物内部，在缩小的整图上仍很轻微。
 - 点击面板标题可收起面板。完整保留原图，非 16:9 屏幕出现留边。
 
 ## 文件结构与说明

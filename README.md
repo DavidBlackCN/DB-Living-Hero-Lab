@@ -1,5 +1,18 @@
 # Black Sister Living Hero Lab
 
+## 当前状态
+
+当前阶段：**Micro Animation / Living Scene Convergence**。Lighting 为
+**FROZEN / ACCEPTED**；Bloom、Coffee Steam 已实现；Blink 已通过人工实机验收，
+为 **IMPLEMENTED / ACCEPTED / FROZEN**。本轮仅实验默认关闭的 Code-only Breathing，
+标记 **EXPERIMENTAL / awaiting human acceptance**。Hair Motion、复杂视差和高级粒子
+保持 optional / deferred；引擎冻结后才迁移到 DB-Blog-Plume。
+实现及 A/B 检查见 [Breathing 记录](docs/logs/breathing-prototype.md)。
+
+## 历史阶段摘要
+
+以下带日期摘要保留各轮当时状态，不代表重新打开已冻结功能。
+
 Blink runtime (2026-09-20): approved Half/Closed crops now drive a registered
 160 ms blink before relighting. Lighting remains frozen. The debug panel adds
 Blink enable, manual trigger and phase status. Reduced motion and animation-off
@@ -74,7 +87,8 @@ npm run test:visual
 - 柔和阴影 / 接触遮挡：默认 0.65，设为 0 关闭接触和局部环境遮挡；体块响应由法线、Stylized 和柔和度控制。Shadow / Occlusion 显示入射光的遮挡比例；Ambient Fill Only、Form Light Bands、Contact Visibility 分别检查环境光、体块和接触数据。
 - 新增头发／服装受光、夜间日光抑制；关闭「区域光照增强」可对照一版效果。
 - Final / Base / Normal / Masks / Lighting / Scene / Overlay 视图用于对照与配准检查；Neutral、Projected Light Only、Exterior Mask、Shadow / Occlusion 用于隔离检查光、玻璃边界和暗部。
-- 动画开关当前控制时间平滑过渡；减少动态效果会立即跳到目标时间，默认尊重系统偏好。
+- 动画总开关控制时间过渡及 Blink / Steam / Breathing；减少动态效果禁用微动画并立即跳到目标时间，默认尊重系统偏好。
+- Breathing 默认关闭，可用开关及 Strength / Cycle 调节；仍待人工 A/B 验收。
 - 点击面板标题可收起面板。完整保留原图，非 16:9 屏幕出现留边。
 
 ## 文件结构与说明
@@ -94,4 +108,4 @@ docs/screenshots/ dawn / noon / dusk / night 实际浏览器截图
 
 当前默认加载人物遮罩、场景遮罩、空间遮挡三个 SVG，以及配准 normal v2 PNG。轮廓源文件在 `docs/scene-regions.json`，执行 `npm run assets:generate` 重建 SVG；`npm run assets:normal` 从 `docs/normal-surfaces.json` 重建 v2，然后刷新页面。重新生成需要 Python 3 + Pillow + NumPy（`python -m pip install Pillow numpy`）；运行应用和 build 不需要 Python。细发丝、花枝与透明物体仍是近似分割。也可通过 `normalUrl` / `maskUrl` / `sceneMaskUrl` 替换为同尺寸精修贴图；`lightShapingUrl` 接受相同比例、准确配准的较低分辨率数据图。
 
-玻璃轮廓直接按原图边界栅格化；左玻璃下缘有匹配原图虚焦的局部过渡，Scene / Overlay / Final / Exterior Mask 使用一致覆盖值。时段投光配合背光压暗和轻微的书本／杯垫接触阴影；夜景分为冷色窗外、暖色台灯光池和暗室。投光和台灯均响应表面法线，无接收面高度依据的整轮廓平移投影仍被排除。Bloom、蒸汽保留，本轮未扩展其他动效。v2 曲面依然是人工近似，原图已有日照与阴影无法完全消除；可选 correction 也不等于恢复 albedo。当前停在光照验收阶段，尚未迁移到 Blog。
+玻璃边界、投光、台灯、法线和 face-safe 均为已验收冻结实现。Bloom、蒸汽和 Blink 已完成，当前只实验 Breathing。v2 曲面仍为近似，原图已有日照与阴影无法完全消除；可选 correction 不等于恢复 albedo。尚未迁移到 Blog。

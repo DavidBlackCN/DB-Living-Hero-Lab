@@ -2,6 +2,24 @@
 
 ## Project identity
 
+## Current phase (2026-09-20)
+
+- Lighting / Shadow / registered normal / masks: FROZEN / ACCEPTED.
+- Bloom and Coffee Steam: IMPLEMENTED.
+- Blink: IMPLEMENTED / ACCEPTED / FROZEN, including human desktop acceptance.
+- Current phase: Micro Animation / Living Scene Convergence.
+- Current experiment: Code-only Breathing Prototype, default OFF,
+  EXPERIMENTAL / awaiting human acceptance. No new image assets or render passes.
+- Hair Motion, Complex Parallax and Advanced particles remain optional/deferred.
+  Consider hair only after Blink + Breathing review if the scene still feels stiff.
+- Final destination: DB-Blog-Plume only after Living Hero Engine freeze.
+
+The phase-1 deliverables and priority lists below are historical design constraints,
+not permission to reopen accepted lighting or Blink. Preserve frozen coefficients,
+technical maps, Blink assets/timing and source artwork. This session only synchronizes
+current documentation and experiments with internally bounded garment deformation.
+Do not stage `WORK.md` or any changes under `work/` in this session's commit.
+
 This repository is an isolated R&D sandbox for a “Living Hero” homepage background system.
 
 Primary goal:

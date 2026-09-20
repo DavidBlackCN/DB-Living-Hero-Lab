@@ -18,7 +18,7 @@ The project should turn one approved anime-style hero illustration into a living
 - warm local lamp lighting;
 - controlled bloom;
 - subtle atmospheric motion;
-- future blink / breathing / hair motion;
+- accepted blink, experimental breathing, optional/deferred hair motion;
 - debug tools for visual validation.
 
 The key visual target is not merely:
@@ -148,6 +148,13 @@ The best effect should feel subtle when viewed moment-to-moment, while still pro
 
 The project is no longer in bootstrap stage.
 
+Current phase: **Micro Animation / Living Scene Convergence**.
+Lighting (including Shadow, registered normal v2, masks, window and lamp fields)
+is **FROZEN / ACCEPTED**. Bloom and Coffee Steam are **IMPLEMENTED**.
+Blink is **IMPLEMENTED / ACCEPTED / FROZEN**, including human desktop acceptance.
+Current experiment: **Code-only Breathing Prototype**, default OFF,
+**EXPERIMENTAL / awaiting human acceptance**, not an accepted/frozen feature.
+
 Existing systems include:
 
 - Vite + TypeScript application;
@@ -167,6 +174,8 @@ Existing systems include:
 - warm lamp contribution;
 - bloom;
 - coffee steam;
+- accepted registered Half/Closed Blink overlays and controller;
+- reduced-motion and background-tab pause;
 - multiple debug views;
 - Playwright visual QA;
 - performance / GPU diagnostics;
@@ -177,15 +186,21 @@ Existing systems include:
 The project also contains:
 
 - `normal-low-frequency.svg`
-- optional `normal-registered-v1.png`
+- comparison `normal-registered-v1.png`;
+- default `normal-registered-v2.png` (accepted and frozen).
 
-The registered normal v1 is a candidate, not final production-quality technical art.
+The registered normal v1 is a historical comparison, not the current default.
 
 The AI-generated full normal-map attempt was rejected because it changed geometry / registration.
 
 ---
 
-# 7. Current Core Problem
+# 7. Historical Technical-Art Problem (Completed)
+
+The symptoms and strategies in sections 7 and 9-19 describe completed technical-art
+and lighting phases. They are retained as architecture constraints and historical
+design background, not current development priorities or requests for recalibration.
+The accepted baked-light limitation remains; do not reopen frozen lighting.
 
 The project has proven the runtime architecture, but visual quality is now limited primarily by technical-art assets rather than missing application features.
 
@@ -199,19 +214,22 @@ Current symptoms:
 - masks have sometimes been overused to compensate for missing surface geometry;
 - inaccurate exterior/window masks can create visible night-time boundary artifacts.
 
-The next phase must correct this direction.
+The completed technical-art/lighting phase addressed this direction.
 
 ---
 
 # 8. Current Priority Phase
 
-## Technical Art Alignment
+## Micro Animation / Living Scene Convergence
 
-This is now the highest-priority phase.
-
-Do NOT prioritize feature expansion until this phase is visually accepted.
-
-The purpose is to align the project more closely with a proper technical-art relighting pipeline while continuing to use the existing approved Hero.
+Technical Art Alignment and Lighting are complete and frozen; Blink is accepted
+and frozen. The only current experiment is Code-only Breathing, default OFF.
+Constrain smooth 1-2 source-pixel deformation to upper-torso garment interiors;
+keep face, Blink crop, neck, hands, hair, silhouette, book and environment fixed.
+Registered pigment/normal/material samples must move together while screen-space
+light geometry stays fixed. Reuse the renderer scheduler, respect motion gates,
+pause hidden time and add no texture, framebuffer, pass or image asset.
+Human A/B acceptance is required before deciding whether to enable it by default.
 
 ---
 
@@ -750,46 +768,26 @@ the lighting system is not strong enough.
 
 # 20. Current Deferred Features
 
-The following are intentionally deferred until the Technical Art Alignment phase is accepted:
+The following remain optional/deferred:
 
-- blink;
-- breathing;
-- hair motion;
+- hair motion (only consider after Blink + Breathing acceptance if still needed);
 - advanced particles;
 - complex parallax;
 - Blog production integration.
 
-Coffee steam may remain in the code but is not a current development priority.
+Coffee Steam and Bloom are implemented; Blink is accepted/frozen, not deferred.
+Breathing is the current experimental candidate, awaiting human acceptance.
 
 ---
 
 # 21. Blink
 
-Blink remains blocked by technical-art asset requirements.
-
-The project already determined that:
-
-- Pillow;
-- NumPy;
-- OpenCV;
-
-are useful for:
-
-- eye coordinate location;
-- cropping;
-- diff;
-- alpha overlay;
-- registration validation;
-
-but are insufficient to reliably paint natural closed eyes.
-
-Future blink work requires:
-
-- registered closed-eye artwork;
-or
-- reliable local image editing.
-
-Do not create low-quality fake closed eyes merely to unblock development.
+**IMPLEMENTED / ACCEPTED / FROZEN**, with human desktop acceptance.
+Approved Half/Closed straight-alpha overlays are 700 x 470, registered at
+x=1940, y=390 in the 3840 x 2160 Hero. They replace pigment before relighting.
+Open -> Half -> Closed -> Half -> Open lasts 160 ms, with randomized 2.8-5.5 s idle.
+Animation-off/reduced-motion restore Open; hidden tabs pause; destroy cleans up.
+Do not regenerate artwork, extract overlays again or change accepted timing.
 
 ---
 
@@ -821,6 +819,7 @@ Preferred conceptual API remains similar to:
 - `setRealtime(enabled)`
 - `setDebugView(mode)`
 - `setReducedMotion(enabled)`
+- `setBreathing(enabled)` (experimental, default false)
 - `destroy()`
 
 Do not tightly bind core rendering logic to React or future Blog components.
@@ -830,6 +829,8 @@ Do not tightly bind core rendering logic to React or future Blog components.
 # 24. Blog Integration
 
 Do NOT integrate this repository into the production Blog yet.
+
+The final destination is **DB-Blog-Plume**, after Living Hero Engine freeze.
 
 Blog integration starts only after:
 
@@ -879,7 +880,9 @@ Record:
 
 ---
 
-# 27. Phase Acceptance Criteria
+# 27. Historical Technical-Art Acceptance Criteria
+
+This phase is completed/frozen. Retain these requirements as regression constraints.
 
 The Technical Art Alignment phase is considered successful only if:
 
@@ -898,20 +901,12 @@ The Technical Art Alignment phase is considered successful only if:
 
 # 28. Decision Gate After This Phase
 
-After this phase, perform a deliberate review.
-
-### If visual quality is good enough:
-continue with:
-- Blink;
-- Breathing;
-- Hair motion;
-- final polish;
-- Blog integration.
-
-### If visual quality is still limited mainly by baked Hero lighting:
-evaluate whether to create a dedicated clean albedo version of the Hero.
-
-Do not make that decision before completing this phase.
+Review the default-OFF Breathing prototype alongside accepted Blink on real hardware.
+Keep it optional or reject it if the movement is distracting or breaks registration.
+Do not mark Breathing ACCEPTED/FROZEN before human approval. Hair Motion remains
+optional/deferred and is not part of this experiment. After Living Scene acceptance,
+freeze the engine, then plan migration into DB-Blog-Plume as a separate task.
+The baked-light limitation is accepted; no albedo redraw is authorized here.
 
 ---
 
@@ -927,7 +922,7 @@ The goal is:
 
 Prefer a stable, registered, visually coherent solution over a technically impressive but fragile or misregistered one.
 
-## 30. Current session scope — 2026-09-17
+## 30. Historical session scope — 2026-09-17
 
 Converge only the Hero lighting foundation: independently maintainable hand-authored
 glass bounds; contact/form shadows; rear-right lamp visibility, sill and right-desk
@@ -936,3 +931,13 @@ Inspect the running baseline before changes and deliver 06:00 / 12:00 / 17:30 /
 23:00 captures, explicit self-checks and remaining limitations. No blink rendering,
 new character animation, UI rearrangement, base replacement, architecture rewrite
 or large dependencies. Keep runtime cost controlled and commit validated work locally.
+
+## 31. Current session scope - 2026-09-20
+
+Synchronize current-status documents, then implement only the low-risk Code-only
+Breathing Prototype described above. Preserve historical logs/captures. Verify
+OFF against the accepted shader at dawn/noon/dusk/night, region isolation, registered
+sampling, Blink compatibility and all motion/lifecycle gates. Run typecheck, unit
+tests, build and a full visual regression before a scoped local commit. Exclude
+the temporary WORK.md and all work/ changes from this session's commit. Stop at
+EXPERIMENTAL / awaiting human acceptance; no Hair Motion or Blog migration.

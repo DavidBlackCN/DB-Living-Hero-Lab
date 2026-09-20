@@ -1,5 +1,6 @@
 import { lightLayers } from './light-layers';
 import { lampFields } from './lamp-fields';
+import { breathingShader } from './breathing';
 
 export const vertex = `#version 300 es
 precision highp float;
@@ -58,10 +59,17 @@ float foreheadSafety(vec2 p, vec3 pigment) {
 }
 ${lightLayers}
 ${lampFields}
+${breathingShader}
 void main() {
-  vec3 base = texture(uBase,uv).rgb;
+  vec2 materialUV=uv;
+  if(uBreathingAmount>0.0 || uView==21) {
+    float weight=breathingWeight(uv);
+    if(uView==21) { color=vec4(vec3(weight),1); return; }
+    materialUV.y+=uBreathingAmount*weight/uArtworkSize.y;
+  }
+  vec3 base = texture(uBase,materialUV).rgb;
   vec3 sourceBase = base;
-  if(uView==1) { color=vec4(base,1); return; }
+  if(uView==1) { color=vec4(texture(uBase,uv).rgb,1); return; }
   // Registered pigment replacement, before every existing relighting stage.
   // Original Base stays an untouched diagnostic; Open skips sampling entirely.
   if(uBlinkPhase>0) {
@@ -80,13 +88,15 @@ void main() {
   float night = refined ? uNight*uNightStrength : 0.0;
   bool spatial=refined && uHasLightShaping && uHasSceneMask;
   vec3 shape=spatial ? texture(uLightShaping,uv).rgb : vec3(1,0,0);
+  // Garment-attached contact data follows pigment; world access/fill stay fixed.
+  if(spatial && uBreathingAmount>0.0) shape.b=texture(uLightShaping,materialUV).b;
   // All positions use the original artwork's top-left UV coordinates.
   float face = region(uv,vec2(.608,.292),vec2(.074,.107));
   float body = region(uv,vec2(.551,.585),vec2(.195,.24));
   float hair = region(uv,vec2(.605,.37),vec2(.185,.36))*(1.0-face)*(1.0-body);
   float hand=0.0;
   if(uHasMask && refined) {
-    vec3 masks=texture(uMask,uv).rgb;
+    vec3 masks=texture(uMask,materialUV).rgb;
     // White is reserved for the screen-right hand. Subtract it from the three
     // material channels so its soft semantic edge never becomes face/hair/cloth.
     hand=min(masks.r,min(masks.g,masks.b));
@@ -101,7 +111,7 @@ void main() {
   // Table and window have distinct, broad orientation responses.
   float table=smoothstep(.70,.85,uv.y)*smoothstep(.39,.58,uv.x);
   normal=normalize(mix(normal,vec3(0.0,-.50,.866),table));
-  if(uHasNormal && refined) normal=normalize(texture(uNormal,uv).rgb*2.0-1.0);
+  if(uHasNormal && refined) normal=normalize(texture(uNormal,materialUV).rgb*2.0-1.0);
   normal=normalize(mix(vec3(0,0,1),normal,uNormalStrength));
   // Skin-safe hand normal: retain one broad palm orientation but suppress the
   // three authored per-finger ribbon facets that become visible under the rear lamp.
@@ -262,7 +272,7 @@ void main() {
   if(uView==14) { color=vec4(vec3(dot(directional,vec3(.2126,.7152,.0722))*.6),1); return; }
   // Optional scalar log-gain, applied to the original base in linear light.
   // 128 is exactly neutral. Original Base debug always bypasses this experiment.
-  float correctionEV=uHasCorrection ? (texture(uCorrectionMap,uv).r*255.0-128.0)/254.0 : 0.0;
+  float correctionEV=uHasCorrection ? (texture(uCorrectionMap,materialUV).r*255.0-128.0)/254.0 : 0.0;
   vec3 correctedBase=linearize(base)*exp2(correctionEV*uCorrection);
   if(uView==15) { color=vec4(vec3(.5+correctionEV),1); return; }
   if(uView==16) {

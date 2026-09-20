@@ -1,5 +1,40 @@
 # Living Hero architecture
 
+## Current phase: Micro Animation / Living Scene Convergence
+
+Lighting is FROZEN / ACCEPTED. Bloom and Coffee Steam are IMPLEMENTED.
+Blink is IMPLEMENTED / ACCEPTED / FROZEN, including human desktop acceptance.
+Code-only Breathing is the current default-OFF experiment, EXPERIMENTAL / awaiting
+human acceptance. Hair Motion, Complex Parallax and Advanced particles remain
+optional/deferred. Migrate into DB-Blog-Plume only after Living Hero Engine freeze.
+The dated lighting calibration sections below retain historical design context;
+they do not authorize changes to the accepted light fields or technical maps.
+
+## Experimental Breathing
+
+`breathing.ts` contains a timer-free phase accumulator and a compact GLSL influence
+function. `setBreathing` defaults to false. `setSettings` accepts
+`breathingStrength` (0-2 original-art pixels, default 1.8) and `breathingCycle`
+(5-6 seconds, default 5.4). `getState` reports the requested switch and phase.
+The existing renderer tick drives a cosine-eased neutral -> peak -> neutral lift.
+Steam keeps its original wall-clock `uMotionTime`; Breathing uses a separate
+phase uniform fed by the same scheduler so hidden elapsed time is never consumed.
+Motion gates reset deformation to neutral; visibility/context loss pauses it.
+
+Support is an ellipse centered at (681,380), radii (72,60), in 1200 x 675 artwork
+coordinates, multiplied by squared radial falloff, inset cloth-only semantics and
+a smooth x=645..662 exclusion for the dangling front lock. It lies entirely in
+the garment interior, below neck/shoulders and above waist/hands/book. Missing
+character masks or disabled refinement make Breathing neutral rather than guessing.
+
+Pigment, normal, character semantics, optional correction and garment contact
+(light-shaping B only) sample the same deformed material UV. Scene geometry,
+light-shaping R/G, lamp/window positions and all frozen coefficients remain in
+screen UV. The small warp transports existing normals rather than reconstructing
+3D surface orientation. Original Base remains static; Breathing Weight shows
+the spatial envelope independently of animation phase. No texture/pass/framebuffer
+or GPU asset memory is added. [Prototype record](logs/breathing-prototype.md).
+
 ## Current: registered Blink (2026-09-20)
 
 `animation.ts` owns the timer-free BlinkController and metadata validation.
@@ -164,8 +199,8 @@ receivers and shadows by [desk-light-review.md](logs/desk-light-review.md).
 - Neutral is fixed-scale grayscale luminance (×0.6); Projected is raw projection.
 - Exterior Mask shows exact scene R; Shadow / Occlusion shows the combined
   authored darkening fields, not a physical visibility or depth buffer.
-- Blink remains a dormant contract; [the registered-asset workflow](logs/blink-registered-plan.md)
-  describes the future pre-relighting composition seam without a current branch.
+- The former dormant Blink contract is now the accepted registered implementation
+  documented above; its earlier [asset plan](logs/blink-registered-plan.md) is historical.
 
 The baseline sections below describe Phase 1, retained for the comparison path. **The current app loads the Phase 2 maps and uses the refinements documented at the end of this file by default.**
 
@@ -178,7 +213,7 @@ The baseline sections below describe Phase 1, retained for the comparison path. 
 - `src/engine/lighting.ts`: periodic smoothstep keyframes for linear RGB ambient, window light, warm lamp; window-side light direction varies with time.
 - `src/engine/shaders.ts`: full-screen triangle, registered analytic normals/masks, relighting and highlight shoulder.
 - `src/engine/assets.ts`: base and optional normal/mask loading plus dimension validation.
-- `src/engine/animation.ts`: contracts and validation for future registered micro-animation assets; blink is intentionally disabled until an exact closed-eye asset exists.
+- `src/engine/animation.ts`: accepted Blink controller and registered metadata validation.
 - `src/engine/postprocessing.ts`: quarter-resolution bloom targets and separable blur passes.
 
 ## Rendering
@@ -216,7 +251,7 @@ Normal RGB is data encoded from [-1,1] to [0,1], +X right, +Y down, +Z toward vi
 
 Manual times settle over a short exponential transition; midnight takes the short path. Realtime reads `Date` in the local timezone, then uses the same interpolation. When settled, manual mode stops requesting frames; realtime polls at one second. Background visibility cancels frame and polling callbacks, and foreground resumes from the current local clock. ResizeObserver wakes a redraw.
 
-`prefers-reduced-motion` is read at initialization and observed for changes. Reduced motion or disabling the animation master skips interpolation. The master also controls the first micro-animation, procedural coffee steam. Steam is Final-view-only, independently toggleable, and disabled by reduced motion or a hidden tab. Blink has a registered-asset contract in `animation.ts`, but remains disabled until an exact closed-eye asset exists. Breathing, hair motion and bloom are not implemented yet.
+`prefers-reduced-motion` is read at initialization and observed for changes. Reduced motion or disabling the animation master skips interpolation and disables micro-animation. Steam is Final-view-only and independently toggleable. Blink is accepted and implemented in `animation.ts`; Bloom is implemented in `postprocessing.ts`. Breathing is the default-OFF experimental candidate; Hair Motion remains deferred. Hidden tabs pause the shared scheduler.
 
 `destroy()` removes observers/listeners, cancels callbacks and deletes GPU resources. On context loss, the app pauses rendering; when the browser reports restoration, the app performs a full page reload so no invalid WebGL objects are reused. This is a safe recovery path; no-refresh resource reconstruction remains a later improvement. On initialization failure, a static CSS image is shown with the error and without working lighting controls.
 

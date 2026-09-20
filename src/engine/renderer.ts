@@ -4,9 +4,10 @@ import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 import { createBloom } from './postprocessing';
 import { BlinkController, type BlinkPhase } from './animation';
-export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact' | 'lampFields';
-export interface Settings { shadow: number; correction: number; exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
-export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; blink: boolean; blinkPhase: BlinkPhase; view: DebugView }
+import { BreathingClock } from './breathing';
+export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact' | 'lampFields' | 'breathingWeight';
+export interface Settings { breathingStrength: number; breathingCycle: number; shadow: number; correction: number; exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
+export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; blink: boolean; blinkPhase: BlinkPhase; breathing: boolean; breathingPhase: number; view: DebugView }
 export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
@@ -62,20 +63,24 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   gl.uniform1i(loc('uBloomMap'),4);
   gl.uniform1i(loc('uCorrectionMap'),6);
   gl.uniform1i(loc('uHasCorrection'),Number(!!assets.correction));
+  gl.uniform2f(loc('uArtworkSize'),assets.base.width,assets.base.height);
   gl.uniform1i(loc('uBlinkHalf'),7); gl.uniform1i(loc('uBlinkClosed'),8);
   const crop=assets.blink?.metadata.crop;
   gl.uniform4f(loc('uBlinkCrop'),(crop?.x??0)/assets.base.width,(crop?.y??0)/assets.base.height,(crop?.width??1)/assets.base.width,(crop?.height??1)/assets.base.height);
   let post: ReturnType<typeof createBloom>;
   try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
   const timeline = new Timeline(options.time ?? 720);
-  const settings: Settings = { shadow: .65, correction: 0, exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.85, hair: 0.95, cloth: 0.94, night: 1, refinement: 1, stylized: 0.50, softness: 0.18, projected: 1, projectedIntensity: 0.42, projectedSoftness: 0.22, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
+  const settings: Settings = { breathingStrength: 1.8, breathingCycle: 5.4, shadow: .65, correction: 0, exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.85, hair: 0.95, cloth: 0.94, night: 1, refinement: 1, stylized: 0.50, softness: 0.18, projected: 1, projectedIntensity: 0.42, projectedSoftness: 0.22, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
   const blinkController = new BlinkController();
+  const breathingClock = new BreathingClock();
+  let breathing = false;
+  const breathingAllowed = () => breathing && animation && !reducedMotion && settings.breathingStrength>0 && !!assets.mask && settings.refinement>.5;
   let blink = !!assets.blink;
   const blinkAllowed = () => blink && animation && !reducedMotion && !!assets.blink;
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;
-  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, blink, blinkPhase: blinkController.phase, view });
+  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, blink, blinkPhase: blinkController.phase, breathing, breathingPhase: breathingClock.phase, view });
   function render(now = performance.now()) {
     gl.useProgram(program);
     const dpr = Math.min(devicePixelRatio || 1,1.5);
@@ -94,6 +99,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform3fv(loc('uAmbient'),light.ambient); gl.uniform3fv(loc('uSun'),light.sun); gl.uniform3fv(loc('uDirection'),light.direction);
     gl.uniform1f(loc('uLamp'),light.lamp);
     gl.uniform1f(loc('uMotionTime'), now / 1000);
+    gl.uniform1f(loc('uBreathingAmount'),breathingAllowed()?breathingClock.amount*settings.breathingStrength:0);
     gl.uniform1f(loc('uSteam'), Number(steam && animation && !reducedMotion));
     gl.uniform1i(loc('uBlinkPhase'),blinkAllowed() ? ['open','half','closed'].indexOf(blinkController.phase) : 0);
     gl.uniform1f(loc('uNight'),light.night);
@@ -101,7 +107,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform1f(loc('uProjected'),settings.projected);
     gl.uniform1f(loc('uCorrection'),settings.correction);
     for(const [key,name] of Object.entries({shadow:'uShadow',exposure:'uExposure',ambient:'uAmbientStrength',sun:'uSunStrength',lamp:'uLampStrength',normal:'uNormalStrength',face:'uFace',hair:'uHair',cloth:'uCloth',night:'uNightStrength',refinement:'uRefinement',stylized:'uStylized',softness:'uSoftness',projectedIntensity:'uProjectedIntensity',projectedSoftness:'uProjectedSoftness',bloom:'uBloom',bloomThreshold:'uBloomThreshold',bloomRadius:'uBloomRadius'})) gl.uniform1f(loc(name),settings[key as keyof Settings]);
-    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected','exterior','shadow','lamp','directional','correction','correctedBase','ambient','form','contact','lampFields'].indexOf(view));
+    gl.uniform1i(loc('uView'),['final','base','normal','masks','lighting','scene','overlay','bright','bloom','neutral','projected','exterior','shadow','lamp','directional','correction','correctedBase','ambient','form','contact','lampFields','breathingWeight'].indexOf(view));
     const bloomActive=(view==='final'&&settings.bloom>0)||view==='bright'||view==='bloom';
     if(bloomActive) {
       post.begin(vw,vh);
@@ -118,9 +124,11 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     timeline.update(Math.max(0,Math.min((now-previous)/1000,.1)),reducedMotion||!animation); previous=now;
     const lastPhase=blinkController.phase;
     if(blinkAllowed()) blinkController.update(now);
+    if(breathingAllowed()) breathingClock.update(now,settings.breathingCycle);
+    else breathingClock.reset();
     render(now);
     if(lastPhase!==blinkController.phase || now-lastNotify>80 || timeline.minutes===timeline.target) { options.onUpdate?.(state()); lastNotify=now; }
-    if(timeline.minutes!==timeline.target || (blinkAllowed() && blinkController.active)) frame=requestAnimationFrame(tick);
+    if(timeline.minutes!==timeline.target || (blinkAllowed() && blinkController.active) || breathingAllowed()) frame=requestAnimationFrame(tick);
     else {
       const steamActive=steam && animation && !reducedMotion;
       const delay=Math.min(steamActive?33:Infinity,timeline.realtime?1000:Infinity,blinkAllowed()?blinkController.delay:Infinity);
@@ -128,9 +136,9 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     }
   }
   function wake() { clearTimeout(timer); if(!destroyed&&!lost&&!document.hidden&&!frame) { previous=performance.now(); frame=requestAnimationFrame(tick); } }
-  function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); wake(); }
-  function motion() { reducedMotion=media.matches; blinkController.reset(); wake(); }
-  function contextLost(event: Event) { event.preventDefault(); lost=true; cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); options.onError?.('WebGL 上下文已丢失，请重新加载页面恢复。'); }
+  function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); breathingClock.pause(); wake(); }
+  function motion() { reducedMotion=media.matches; blinkController.reset(); breathingClock.reset(); wake(); }
+  function contextLost(event: Event) { event.preventDefault(); lost=true; cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); breathingClock.pause(); options.onError?.('WebGL 上下文已丢失，请重新加载页面恢复。'); }
   function contextRestored() {
     // GPU objects are invalid after loss. A full page restart is the safe
     // recovery until resource construction is split into a reusable factory.
@@ -146,8 +154,9 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     blinkAvailable: !!assets.blink,
     setTime(minutes: number) { timeline.setTime(minutes); wake(); },
     setRealtime(enabled: boolean) { timeline.realtime=enabled; wake(); },
-    setReducedMotion(enabled: boolean) { reducedMotion=enabled; if(enabled) blinkController.reset(); wake(); },
-    setAnimation(enabled: boolean) { animation=enabled; if(!enabled) blinkController.reset(); wake(); },
+    setReducedMotion(enabled: boolean) { reducedMotion=enabled; if(enabled) { blinkController.reset(); breathingClock.reset(); } wake(); },
+    setAnimation(enabled: boolean) { animation=enabled; if(!enabled) { blinkController.reset(); breathingClock.reset(); } wake(); },
+    setBreathing(enabled: boolean) { breathing=enabled; breathingClock.reset(); wake(); },
     setBlink(enabled: boolean) { blink=enabled && !!assets.blink; blinkController.reset(); wake(); },
     triggerBlink() {
       if(destroyed || lost || document.hidden || !blinkAllowed()) return false;
@@ -160,6 +169,10 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
         if(!Number.isFinite(value)) continue;
         const k=key as keyof Settings;
         if (!(k in settings)) continue;
+        if(k==='breathingStrength' || k==='breathingCycle') {
+          settings[k]=Math.max(k==='breathingCycle'?5:0,Math.min(k==='breathingCycle'?6:2,value));
+          breathingClock.reset(); continue;
+        }
         settings[k]=Math.max(k==='exposure'?-1:k==='bloomThreshold'?.4:0,Math.min(['face','night','refinement','correction','shadow'].includes(k)?1:k==='bloomThreshold'?1:2,value));
       }
       wake();
@@ -173,7 +186,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
       const sourceBytes=[assets.base,assets.normal,assets.mask,assets.sceneMask,assets.lightShaping].reduce((sum,map)=>sum+(map?map.width*map.height*3:3),0)+(assets.correction?assets.correction.width*assets.correction.height:1)+[assets.blink?.half,assets.blink?.closed].reduce((sum,map)=>sum+(map?map.width*map.height*4:4),0);
       return { dpr, canvasWidth, canvasHeight, artworkWidth: assets.base.width, artworkHeight: assets.base.height, sourceTextureMiB: Number((sourceBytes/1048576).toFixed(2)), bloomWidth: bloomSize.width, bloomHeight: bloomSize.height, bloomTextureMiB: Number((bloomSize.width*bloomSize.height*4*3/1048576).toFixed(2)), contextLost: lost };
     },
-    destroy() { if(destroyed)return; destroyed=true; blinkController.reset(); cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
+    destroy() { if(destroyed)return; destroyed=true; blinkController.reset(); breathingClock.reset(); cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
   };
 }
 export type LivingHero = Awaited<ReturnType<typeof createLivingHero>>;

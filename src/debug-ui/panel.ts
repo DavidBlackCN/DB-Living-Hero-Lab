@@ -12,6 +12,8 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     <label class="check"><input id="animation" type="checkbox" checked>动画总开关 · 时间平滑过渡</label>
     <label class="check"><input id="blink" type="checkbox" checked>Blink</label>
     <button id="trigger-blink" type="button">触发眨眼</button> <output id="blink-phase">open</output>
+    <label class="check"><input id="breathing" type="checkbox">Breathing · Experimental</label>
+    <div id="breathing-controls"></div>
     <label class="check"><input id="reduced" type="checkbox">减少动态效果</label>
     </div></details>`;
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
@@ -32,6 +34,15 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
   root.querySelectorAll<HTMLButtonElement>('[data-time]').forEach(button=>button.addEventListener('click',()=>{ engine.setTime(Number(button.dataset.time)); time.value=button.dataset.time!; realtime.checked=false; }));
   query<HTMLSelectElement>('#view').addEventListener('change',event=>engine.setDebugView((event.target as HTMLSelectElement).value as DebugView));
   const view = query<HTMLSelectElement>('#view');
+  view.insertAdjacentHTML('beforeend','<option value="breathingWeight">Breathing Weight</option>');
+  query<HTMLInputElement>('#breathing').addEventListener('change',event=>engine.setBreathing((event.target as HTMLInputElement).checked));
+  for(const [key,label,min,max,step] of [['breathingStrength','Strength (source px)',0,2,.1],['breathingCycle','Cycle (s)',5,6,.1]] as const) {
+    const row=document.createElement('div'); row.className='slider-row';
+    const value=engine.getSettings()[key];
+    row.innerHTML=`<label for="${key}">${label}<output>${value.toFixed(1)}</output></label><input id="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${value}">`;
+    row.querySelector('input')!.addEventListener('input',event=>{const v=Number((event.target as HTMLInputElement).value);row.querySelector('output')!.value=v.toFixed(1);engine.setSettings({[key]:v});});
+    query('#breathing-controls').append(row);
+  }
   view.insertAdjacentHTML('beforeend', '<option value="ambient">Ambient Fill Only</option><option value="form">Form Light Bands</option><option value="contact">Contact Visibility</option>');
   view.insertAdjacentHTML('beforeend', '<option value="lampFields">Lamp Fields (R near / G desk / B character)</option>');
   view.querySelector<HTMLOptionElement>('option[value="normal"]')!.textContent='Normal · 表面法线';
@@ -92,6 +103,7 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     query<HTMLInputElement>('#reduced').checked=state.reducedMotion;
     query<HTMLInputElement>('#animation').checked=state.animation;
     query<HTMLInputElement>('#blink').checked=state.blink;
+    query<HTMLInputElement>('#breathing').checked=state.breathing;
     query<HTMLButtonElement>('#trigger-blink').disabled=!state.blink || !state.animation || state.reducedMotion;
     query('#blink-phase').textContent=state.blinkPhase;
   }, destroy() { window.clearInterval(statsTimer); root.replaceChildren(); } };

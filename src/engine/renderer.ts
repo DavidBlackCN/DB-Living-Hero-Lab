@@ -3,9 +3,10 @@ import { lightingAt, projectedLightAt } from './lighting';
 import { Timeline } from './timeline';
 import { vertex, fragment } from './shaders';
 import { createBloom } from './postprocessing';
+import { BlinkController, type BlinkPhase } from './animation';
 export type DebugView = 'final' | 'base' | 'normal' | 'masks' | 'lighting' | 'scene' | 'overlay' | 'bright' | 'bloom' | 'neutral' | 'projected' | 'exterior' | 'shadow' | 'lamp' | 'directional' | 'correction' | 'correctedBase' | 'ambient' | 'form' | 'contact' | 'lampFields';
 export interface Settings { shadow: number; correction: number; exposure: number; ambient: number; sun: number; lamp: number; normal: number; face: number; hair: number; cloth: number; night: number; refinement: number; stylized: number; softness: number; projected: number; projectedIntensity: number; projectedSoftness: number; bloom: number; bloomThreshold: number; bloomRadius: number }
-export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; view: DebugView }
+export interface HeroState { minutes: number; target: number; realtime: boolean; reducedMotion: boolean; animation: boolean; steam: boolean; blink: boolean; blinkPhase: BlinkPhase; view: DebugView }
 export interface HeroStats { dpr: number; canvasWidth: number; canvasHeight: number; artworkWidth: number; artworkHeight: number; sourceTextureMiB: number; bloomWidth: number; bloomHeight: number; bloomTextureMiB: number; contextLost: boolean }
 export interface HeroOptions extends AssetOptions { time?: number; onUpdate?: (state: HeroState) => void; onError?: (message: string) => void }
 export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroOptions = {}) {
@@ -26,7 +27,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) ?? 'Shader link failed');
     gl.useProgram(program);
-    [assets.base, assets.normal, assets.mask, assets.sceneMask, assets.lightShaping, assets.correction].forEach((image, i) => {
+    [assets.base, assets.normal, assets.mask, assets.sceneMask, assets.lightShaping, assets.correction, assets.blink?.half, assets.blink?.closed].forEach((image, i) => {
       const texture = gl.createTexture()!; textures.push(texture);
       gl.activeTexture(gl.TEXTURE0+(i>=4?i+1:i)); gl.bindTexture(gl.TEXTURE_2D,texture);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
@@ -35,7 +36,12 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
       // None of the scene maps use alpha. RGB8 avoids allocating an unused
       // fourth channel for the four 4K maps and smaller light-shaping map.
-      if(i===5) {
+      if(i>=6) {
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+        if(image) gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,image);
+        else gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));
+      }
+      else if(i===5) {
         if(image) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,gl.RED,gl.UNSIGNED_BYTE,image);
         else gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,1,1,0,gl.RED,gl.UNSIGNED_BYTE,new Uint8Array([128]));
       }
@@ -56,14 +62,20 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   gl.uniform1i(loc('uBloomMap'),4);
   gl.uniform1i(loc('uCorrectionMap'),6);
   gl.uniform1i(loc('uHasCorrection'),Number(!!assets.correction));
+  gl.uniform1i(loc('uBlinkHalf'),7); gl.uniform1i(loc('uBlinkClosed'),8);
+  const crop=assets.blink?.metadata.crop;
+  gl.uniform4f(loc('uBlinkCrop'),(crop?.x??0)/assets.base.width,(crop?.y??0)/assets.base.height,(crop?.width??1)/assets.base.width,(crop?.height??1)/assets.base.height);
   let post: ReturnType<typeof createBloom>;
   try { post=createBloom(gl); } catch(error) { cleanup(); throw error; }
   const timeline = new Timeline(options.time ?? 720);
   const settings: Settings = { shadow: .65, correction: 0, exposure: 0, ambient: 1, sun: 1, lamp: 1, normal: 1, face: 0.85, hair: 0.95, cloth: 0.94, night: 1, refinement: 1, stylized: 0.50, softness: 0.18, projected: 1, projectedIntensity: 0.42, projectedSoftness: 0.22, bloom: 0.22, bloomThreshold: 0.82, bloomRadius: 1 };
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = media.matches, animation = true, steam = true, view: DebugView = 'final';
+  const blinkController = new BlinkController();
+  let blink = !!assets.blink;
+  const blinkAllowed = () => blink && animation && !reducedMotion && !!assets.blink;
   let frame = 0, timer = 0, destroyed = false, lost = false, previous = performance.now(), lastNotify = -Infinity;
-  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, view });
+  const state = (): HeroState => ({ minutes: timeline.minutes, target: timeline.target, realtime: timeline.realtime, reducedMotion, animation, steam, blink, blinkPhase: blinkController.phase, view });
   function render(now = performance.now()) {
     gl.useProgram(program);
     const dpr = Math.min(devicePixelRatio || 1,1.5);
@@ -83,6 +95,7 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
     gl.uniform1f(loc('uLamp'),light.lamp);
     gl.uniform1f(loc('uMotionTime'), now / 1000);
     gl.uniform1f(loc('uSteam'), Number(steam && animation && !reducedMotion));
+    gl.uniform1i(loc('uBlinkPhase'),blinkAllowed() ? ['open','half','closed'].indexOf(blinkController.phase) : 0);
     gl.uniform1f(loc('uNight'),light.night);
     gl.uniform1f(loc('uBloomMood'),.12+.88*Math.max(light.night,light.lamp));
     gl.uniform1f(loc('uProjected'),settings.projected);
@@ -103,15 +116,21 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   function tick(now: number) {
     frame=0; if(destroyed||lost||document.hidden) return;
     timeline.update(Math.max(0,Math.min((now-previous)/1000,.1)),reducedMotion||!animation); previous=now;
+    const lastPhase=blinkController.phase;
+    if(blinkAllowed()) blinkController.update(now);
     render(now);
-    if(now-lastNotify>80 || timeline.minutes===timeline.target) { options.onUpdate?.(state()); lastNotify=now; }
-    if(timeline.minutes!==timeline.target) frame=requestAnimationFrame(tick);
-    else if(timeline.realtime || (steam && animation && !reducedMotion)) timer=window.setTimeout(wake, steam ? 33 : 1000);
+    if(lastPhase!==blinkController.phase || now-lastNotify>80 || timeline.minutes===timeline.target) { options.onUpdate?.(state()); lastNotify=now; }
+    if(timeline.minutes!==timeline.target || (blinkAllowed() && blinkController.active)) frame=requestAnimationFrame(tick);
+    else {
+      const steamActive=steam && animation && !reducedMotion;
+      const delay=Math.min(steamActive?33:Infinity,timeline.realtime?1000:Infinity,blinkAllowed()?blinkController.delay:Infinity);
+      if(Number.isFinite(delay)) timer=window.setTimeout(wake,delay);
+    }
   }
   function wake() { clearTimeout(timer); if(!destroyed&&!lost&&!document.hidden&&!frame) { previous=performance.now(); frame=requestAnimationFrame(tick); } }
-  function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; wake(); }
-  function motion() { reducedMotion=media.matches; wake(); }
-  function contextLost(event: Event) { event.preventDefault(); lost=true; cancelAnimationFrame(frame); clearTimeout(timer); frame=0; options.onError?.('WebGL 上下文已丢失，请重新加载页面恢复。'); }
+  function visibility() { cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); wake(); }
+  function motion() { reducedMotion=media.matches; blinkController.reset(); wake(); }
+  function contextLost(event: Event) { event.preventDefault(); lost=true; cancelAnimationFrame(frame); clearTimeout(timer); frame=0; blinkController.pause(); options.onError?.('WebGL 上下文已丢失，请重新加载页面恢复。'); }
   function contextRestored() {
     // GPU objects are invalid after loss. A full page restart is the safe
     // recovery until resource construction is split into a reusable factory.
@@ -124,10 +143,16 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
   wake();
   return {
     correctionAvailable: !!assets.correction,
+    blinkAvailable: !!assets.blink,
     setTime(minutes: number) { timeline.setTime(minutes); wake(); },
     setRealtime(enabled: boolean) { timeline.realtime=enabled; wake(); },
-    setReducedMotion(enabled: boolean) { reducedMotion=enabled; wake(); },
-    setAnimation(enabled: boolean) { animation=enabled; wake(); },
+    setReducedMotion(enabled: boolean) { reducedMotion=enabled; if(enabled) blinkController.reset(); wake(); },
+    setAnimation(enabled: boolean) { animation=enabled; if(!enabled) blinkController.reset(); wake(); },
+    setBlink(enabled: boolean) { blink=enabled && !!assets.blink; blinkController.reset(); wake(); },
+    triggerBlink() {
+      if(destroyed || lost || document.hidden || !blinkAllowed()) return false;
+      const started=blinkController.trigger(performance.now()); wake(); return started;
+    },
     setSteam(enabled: boolean) { steam=enabled; wake(); },
     setDebugView(mode: DebugView) { view=mode; wake(); },
     setSettings(patch: Partial<Settings>) {
@@ -145,10 +170,10 @@ export async function createLivingHero(canvas: HTMLCanvasElement, options: HeroO
       const dpr=Math.min(devicePixelRatio||1,1.5);
       const canvasWidth=Math.max(1,Math.round(canvas.clientWidth*dpr)), canvasHeight=Math.max(1,Math.round(canvas.clientHeight*dpr));
       const bloomSize=post.getSize();
-      const sourceBytes=[assets.base,assets.normal,assets.mask,assets.sceneMask,assets.lightShaping].reduce((sum,map)=>sum+(map?map.width*map.height*3:3),0)+(assets.correction?assets.correction.width*assets.correction.height:1);
+      const sourceBytes=[assets.base,assets.normal,assets.mask,assets.sceneMask,assets.lightShaping].reduce((sum,map)=>sum+(map?map.width*map.height*3:3),0)+(assets.correction?assets.correction.width*assets.correction.height:1)+[assets.blink?.half,assets.blink?.closed].reduce((sum,map)=>sum+(map?map.width*map.height*4:4),0);
       return { dpr, canvasWidth, canvasHeight, artworkWidth: assets.base.width, artworkHeight: assets.base.height, sourceTextureMiB: Number((sourceBytes/1048576).toFixed(2)), bloomWidth: bloomSize.width, bloomHeight: bloomSize.height, bloomTextureMiB: Number((bloomSize.width*bloomSize.height*4*3/1048576).toFixed(2)), contextLost: lost };
     },
-    destroy() { if(destroyed)return; destroyed=true; cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
+    destroy() { if(destroyed)return; destroyed=true; blinkController.reset(); cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); media.removeEventListener('change',motion); canvas.removeEventListener('webglcontextlost',contextLost); canvas.removeEventListener('webglcontextrestored',contextRestored); post.destroy(); cleanup(); },
   };
 }
 export type LivingHero = Awaited<ReturnType<typeof createLivingHero>>;

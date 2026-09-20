@@ -1,5 +1,15 @@
 # Black Sister Living Hero Lab
 
+Blink runtime (2026-09-20): approved Half/Closed crops now drive a registered
+160 ms blink before relighting. Lighting remains frozen. The debug panel adds
+Blink enable, manual trigger and phase status. Reduced motion and animation-off
+restore Open; background tabs pause. See [integration notes](docs/logs/blink-runtime.md).
+Rebuild the two local RGBA textures and metadata with
+`python scripts/prepare-blink-assets.py` (Pillow + NumPy). Runtime files live in
+`public/assets/generated/blink/`; approved inputs stay in `work/blink/approved/`.
+Original Base remains the untouched source comparison. Historical updates below
+describe earlier phases, including their then-unimplemented animation status.
+
 Lighting Engine status (2026-09-18): **FROZEN — accepted with baked-light limitation**.
 The final screen-right hand-safe pass removes registered-normal finger facets
 without changing the accepted scene light field. See the

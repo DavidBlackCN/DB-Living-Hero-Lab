@@ -58,7 +58,7 @@ test('runtime GPU stats expose quarter-resolution bloom targets', async ({ page 
   const stats = await page.evaluate(() => (window as unknown as { livingHero: { getStats: () => Record<string, number | boolean> } }).livingHero.getStats());
   expect(stats.artworkWidth).toBe(3840);
   expect(stats.artworkHeight).toBe(2160);
-  expect(stats.sourceTextureMiB).toBe(97.24);
+  expect(stats.sourceTextureMiB).toBe(99.75);
   expect(stats.contextLost).toBe(false);
 });
 

@@ -155,7 +155,7 @@ test('optional intrinsic correction preserves original, identity regions and exa
   });
   expect(data.size).toEqual([3840,2160]);expect(data.min).toBeGreaterThanOrEqual(64);expect(data.max).toBeLessThanOrEqual(167);
   expect(data.min).toBeLessThan(115);expect(data.max).toBeGreaterThan(140);
-  expect(data.protected).toEqual([128,128,128,128,128]);expect(data.stats.sourceTextureMiB).toBe(105.15);
+  expect(data.protected).toEqual([128,128,128,128,128]);expect(data.stats.sourceTextureMiB).toBe(107.66);
   await mkdir(`${visualRoot}/alignment`,{recursive:true});
   for(const [name,minutes] of [['dawn',360],['noon',720],['dusk',1050],['night',1380]] as const){
     const off=await frame('final',0,minutes),on=await frame('final',1,minutes);

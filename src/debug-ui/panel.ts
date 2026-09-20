@@ -10,8 +10,10 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     <div id="lighting-controls"></div>
     <label for="view">调试视图</label><select id="view"><option value="final">Final · 合成画面</option><option value="base">Base · 原图对照</option><option value="normal">Normal · 低频法线</option><option value="masks">Masks · 人物遮罩</option><option value="lighting">Lighting · 光照贡献</option><option value="scene">Scene · 窗外 / 桌面 / 灯</option><option value="overlay">Overlay · 配准叠加</option></select>
     <label class="check"><input id="animation" type="checkbox" checked>动画总开关 · 时间平滑过渡</label>
+    <label class="check"><input id="blink" type="checkbox" checked>Blink</label>
+    <button id="trigger-blink" type="button">触发眨眼</button> <output id="blink-phase">open</output>
     <label class="check"><input id="reduced" type="checkbox">减少动态效果</label>
-    <p class="note">配准曲面 v2 / 手工遮罩 · 仍为近似<br>含投光、Bloom、蒸汽；眨眼尚未接入。</p></div></details>`;
+    </div></details>`;
   const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   for(const [key,label,min,max,value] of [
     ['exposure','曝光 EV',-1,1,0],['ambient','环境光',0,2,1],['sun','窗光',0,2,1],['lamp','台灯',0,2,1],['normal','法线强度',0,2,1],['face','脸部保护',0,1,.85],
@@ -72,10 +74,13 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     query('#lighting-controls').append(row);
   }
   query<HTMLInputElement>('#animation').addEventListener('change',event=>engine.setAnimation((event.target as HTMLInputElement).checked));
+  query<HTMLInputElement>('#blink').disabled=!engine.blinkAvailable;
+  query<HTMLInputElement>('#blink').addEventListener('change',event=>engine.setBlink((event.target as HTMLInputElement).checked));
+  query<HTMLButtonElement>('#trigger-blink').addEventListener('click',()=>engine.triggerBlink());
   query<HTMLInputElement>('#reduced').addEventListener('change',event=>engine.setReducedMotion((event.target as HTMLInputElement).checked));
   const stats=document.createElement('p'); stats.className='note'; stats.id='gpu-stats';
   query('.controls').append(stats);
-  const updateStats=()=>{ const s=engine.getStats(); stats.textContent=`GPU ${s.canvasWidth}×${s.canvasHeight} · RGB textures ${s.sourceTextureMiB} MiB · Bloom ${s.bloomWidth}×${s.bloomHeight} (${s.bloomTextureMiB} MiB)`; };
+  const updateStats=()=>{ const s=engine.getStats(); stats.textContent=`GPU ${s.canvasWidth}×${s.canvasHeight} · Textures ${s.sourceTextureMiB} MiB · Bloom ${s.bloomWidth}×${s.bloomHeight} (${s.bloomTextureMiB} MiB)`; };
   updateStats();
   const statsTimer=window.setInterval(updateStats,1000);
   return { update(state: HeroState) {
@@ -85,5 +90,9 @@ export function createPanel(root: HTMLElement, engine: LivingHero) {
     if(document.activeElement!==time) time.value=String(Math.round(state.target));
     query('#target').textContent=Number(time.value)===1440?'24:00':formatTime(state.target);
     query<HTMLInputElement>('#reduced').checked=state.reducedMotion;
+    query<HTMLInputElement>('#animation').checked=state.animation;
+    query<HTMLInputElement>('#blink').checked=state.blink;
+    query<HTMLButtonElement>('#trigger-blink').disabled=!state.blink || !state.animation || state.reducedMotion;
+    query('#blink-phase').textContent=state.blinkPhase;
   }, destroy() { window.clearInterval(statsTimer); root.replaceChildren(); } };
 }

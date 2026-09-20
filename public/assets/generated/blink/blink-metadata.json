@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 3840,
+    "height": 2160
+  },
+  "crop": {
+    "x": 1940,
+    "y": 390,
+    "width": 700,
+    "height": 470
+  },
+  "alpha": "straight",
+  "colorSpace": "srgb",
+  "semantics": "Replace base RGB using coverage alpha before relighting; zero alpha preserves source.",
+  "states": {
+    "half": "blink-half-overlay.png",
+    "closed": "blink-closed-overlay.png"
+  },
+  "sources": {
+    "work/blink/source/hero-eye-context-open.png": "e3c8f92420084c76381c9bac10a8a40d9d392f2bee0264193b249513e5643947",
+    "work/blink/approved/blink-half-approved.png": "d53475dd7fa2e555fc8c93ddfda0c38c538b07196a8dd2ec46981e3da95cab67",
+    "work/blink/approved/blink-closed-approved.png": "a0560b2c5f89c4be2845f90ff32175c5a59d51890ddb9111fe57009070a9f973"
+  }
+}

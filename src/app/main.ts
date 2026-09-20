@@ -13,6 +13,7 @@ try {
     maskUrl: '/assets/generated/character-masks.svg',
     sceneMaskUrl: '/assets/generated/scene-masks.svg',
     lightShapingUrl: '/assets/generated/light-shaping.svg',
+    blinkMetadataUrl: '/assets/generated/blink/blink-metadata.json',
     correctionUrl: new URLSearchParams(location.search).get('correction') === '1'
       ? '/assets/generated/intrinsic-correction-v1.png' : undefined,
     onUpdate: state=>panel?.update(state), onError: message=>status.textContent=message,

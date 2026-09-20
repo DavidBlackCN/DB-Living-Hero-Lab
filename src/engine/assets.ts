@@ -1,4 +1,5 @@
-export interface AssetOptions { baseUrl?: string; normalUrl?: string; maskUrl?: string; sceneMaskUrl?: string; lightShapingUrl?: string; correctionUrl?: string }
+import { validateBlinkMetadata } from './animation';
+export interface AssetOptions { baseUrl?: string; normalUrl?: string; maskUrl?: string; sceneMaskUrl?: string; lightShapingUrl?: string; correctionUrl?: string; blinkMetadataUrl?: string }
 export async function loadImage(url: string) {
   const image = new Image(); image.src = url;
   try { await image.decode(); } catch { throw new Error(`无法加载素材：${url}`); }
@@ -17,5 +18,24 @@ export async function loadAssets(options: AssetOptions) {
     if (map && (map.width !== base.width || map.height !== base.height)) throw new Error('辅助资产必须与原图尺寸一致');
   }
   if(lightShaping && lightShaping.width*base.height !== lightShaping.height*base.width) throw new Error('空间遮挡图必须与原图保持相同比例和配准');
-  return { base, normal, mask, sceneMask, lightShaping, correction };
+  const blink = options.blinkMetadataUrl ? await loadBlink(options.blinkMetadataUrl, base.width, base.height) : undefined;
+  return { base, normal, mask, sceneMask, lightShaping, correction, blink };
+}
+
+async function loadBlink(url: string, width: number, height: number) {
+  const metadataUrl = new URL(url, document.baseURI);
+  const response = await fetch(metadataUrl);
+  if (!response.ok) throw new Error(`Cannot load Blink metadata: ${response.status}`);
+  const metadata: unknown = await response.json();
+  validateBlinkMetadata(metadata, width, height);
+  const [half, closed] = await Promise.all([
+    loadImage(new URL(metadata.states.half, metadataUrl).href),
+    loadImage(new URL(metadata.states.closed, metadataUrl).href),
+  ]);
+  for (const image of [half, closed]) {
+    if (image.width !== metadata.crop.width || image.height !== metadata.crop.height) {
+      throw new Error('Blink overlay dimensions do not match registered crop');
+    }
+  }
+  return { metadata, half, closed };
 }

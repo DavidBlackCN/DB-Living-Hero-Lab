@@ -1,5 +1,29 @@
 # Living Hero architecture
 
+## Current: registered Blink (2026-09-20)
+
+`animation.ts` owns the timer-free BlinkController and metadata validation.
+`blinkMetadataUrl` is optional for portable engine consumers; the demo supplies
+the approved 700 x 470 overlays. RGBA8 textures occupy units 7/8 (2.51 MiB total).
+Metadata defines canvas dimensions, top-left crop registration, straight alpha,
+sRGB and relative state paths. Loading rejects incompatible dimensions/bounds.
+
+The fragment shader replaces base pigment within that crop before correction,
+linearization, relighting and bloom extraction. Pigment-dependent light
+classification (forehead protection and baked highlight suppression) deliberately
+keeps reading the original source, preserving the frozen normal/light fields.
+Original Base bypasses Blink. No light coefficients, masks, normals or passes change.
+
+The renderer advances the controller on its existing clock: Half 40 ms, Closed
+70 ms, Half 50 ms, Open; idle waits are randomized to 2800-5500 ms. Only active
+blinks request animation frames; idle scheduling shares the existing timeout with
+steam/realtime. `setBlink` and `triggerBlink` are the only new operations;
+`blinkAvailable`, `getState().blink` and `blinkPhase` expose status. Animation-off
+or reduced motion resets Open, visibility loss pauses the controller's clock,
+and destroy cancels the shared scheduler and deletes both textures.
+See [asset/validation notes](logs/blink-runtime.md). Older dormant-contract
+descriptions below are historical.
+
 ## Current: code-only salvage (2026-09-18)
 
 `lamp-fields.ts` owns compact near/desk/character receiving fields; Scene B remains

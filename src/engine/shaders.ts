@@ -17,6 +17,9 @@ uniform sampler2D uBase, uNormal, uMask, uSceneMask;
 uniform sampler2D uLightShaping;
 uniform sampler2D uBloomMap;
 uniform sampler2D uCorrectionMap;
+uniform sampler2D uBlinkHalf, uBlinkClosed;
+uniform vec4 uBlinkCrop;
+uniform int uBlinkPhase;
 uniform bool uHasCorrection;
 uniform float uCorrection;
 uniform float uShadow;
@@ -57,7 +60,17 @@ ${lightLayers}
 ${lampFields}
 void main() {
   vec3 base = texture(uBase,uv).rgb;
+  vec3 sourceBase = base;
   if(uView==1) { color=vec4(base,1); return; }
+  // Registered pigment replacement, before every existing relighting stage.
+  // Original Base stays an untouched diagnostic; Open skips sampling entirely.
+  if(uBlinkPhase>0) {
+    vec2 local=(uv-uBlinkCrop.xy)/uBlinkCrop.zw;
+    if(all(greaterThanEqual(local,vec2(0))) && all(lessThan(local,vec2(1)))) {
+      vec4 blink=uBlinkPhase==1 ? texture(uBlinkHalf,local) : texture(uBlinkClosed,local);
+      base=mix(base,blink.rgb,blink.a);
+    }
+  }
   bool refined = uRefinement > .5;
   vec3 scene = uHasSceneMask && refined ? texture(uSceneMask,uv).rgb : vec3(0);
   // Source-authored glass geometry has native subpixel antialiasing, no erosion.
@@ -79,7 +92,7 @@ void main() {
     hand=min(masks.r,min(masks.g,masks.b));
     face=max(masks.r-hand,0.0);hair=max(masks.g-hand,0.0);body=max(masks.b-hand,0.0);
   }
-  float forehead=refined && uHasMask ? foreheadSafety(uv,base)*(1.0-face) : 0.0;
+  float forehead=refined && uHasMask ? foreheadSafety(uv,sourceBase)*(1.0-face) : 0.0;
   face+=forehead; // Soft union: overlapping feathered edges must not form a dip.
   hair=max(hair-forehead,0.0); // Transfer coverage, rather than double-count skin.
   vec2 f=(uv-vec2(.608,.292))/vec2(.074,.107);
@@ -212,7 +225,7 @@ void main() {
     // Region-specific suppression of the source illustration's baked daytime highlights.
     // This cannot reconstruct hidden shadow detail or remove shadows from the artwork.
     light=mix(light,vec3(.10,.16,.27)*uAmbientStrength,exterior*night);
-    float highlight = smoothstep(.45,.95,dot(base,vec3(.2126,.7152,.0722)));
+    float highlight = smoothstep(.45,.95,dot(sourceBase,vec3(.2126,.7152,.0722)));
     light *= 1.0 - night*.15*highlight*(1.0-exterior)*(1.0-face);
   }
   if(uView==2) { color=vec4(normal*.5+.5,1); return; }

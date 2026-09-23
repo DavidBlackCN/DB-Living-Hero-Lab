@@ -13,3 +13,5 @@ Blink v1 与整图生成重试 v2 的差异均遍布全画面，整图路线已�
 Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。
 
 Normal 技术 v1 用 `scripts/generate_normal.py` 对 Base 亮度做 3 px / 16 px 模糊、梯度计算和单位向量编码，生成完全同尺寸、逐像素注册的 RGB 图；约定 R 向右、G 向下、B 朝向观察者。`HeroCanvas` 验证 Normal 尺寸并加载第二张 WebGL 纹理。Debug 的 Normal map 显示原始编码，Test Light 以角度滑杆改变方向，着色器对 Base 施加小幅相对亮度响应；默认 Base 视图不受影响。测试视图隐藏 Blink，避免局部眼图与测试光照混合。此资产是管线与方向验证用的浅浮雕法线；亮度边缘会混入原画阴影，不应直接视为最终物理表面结构。Runtime Lighting 还需人工修正面部、头发、衣料等语义区域，确定光照范围／色温／遮挡，并做桌面与移动端性能和观感验收。
+
+Normal v2 在 `scripts/generate_normal_v2.py` 离线生成，以冻结 Base 和 v1 为输入：先平滑并衰减 v1 高频，再用少量内存中的多边形与颜色条件提示修正脸／皮肤、两侧发量、衣物、石柱／栏杆及天空。输出仍是单张与 Base 严格注册的 RGB PNG，页面配置已从 v1 指向 v2；没有引入运行时 Masks、正式 24h 光照或新的动画模块。详见 [`validation/NORMAL_V2_VALIDATION.md`](validation/NORMAL_V2_VALIDATION.md)。该 v2 仍是候选，细发束、人物遮挡和背景建筑的语义方向需要继续人工校正，不可直接冻结为最终 Runtime Lighting 法线。

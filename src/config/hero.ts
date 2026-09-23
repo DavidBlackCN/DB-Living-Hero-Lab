@@ -20,7 +20,7 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
     closedMs: 115,
   },
   normal: {
-    url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v1.png`,
+    url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v2.png`,
     testStrength: 0.65,
   },
   dprCap: 2,

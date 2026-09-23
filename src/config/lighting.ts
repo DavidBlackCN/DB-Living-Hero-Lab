@@ -55,26 +55,26 @@ export const lightingModelConfig: LightingModelConfig = {
   duskAzimuth: 145,
   nightElevationDegrees: 18,
   dayElevationDegrees: 64,
-  nightExposureStops: 0.48,
-  dawnExposureStops: 0.02,
-  dayExposureStops: 0,
-  duskExposureStops: 0.02,
+  dawnExposureStops: 0.12,
+  dayExposureStops: -0.28,
+  duskExposureStops: -0.08,
+  nightExposureStops: 0.18,
   nightKeyIntensity: 0.28,
-  dayKeyIntensity: 0.92,
+  dayKeyIntensity: 0.82,
   twilightKeyBoost: 0.58,
-  nightAmbientIntensity: 0.25,
-  dayAmbientIntensity: 0.58,
-  twilightAmbientBoost: 0.20,
+  nightAmbientIntensity: 0.19,
+  dayAmbientIntensity: 0.50,
+  twilightAmbientBoost: 0.26,
   nightColor: { key: [0.60, 0.73, 1], ambient: [0.28, 0.34, 0.58] },
-  dayColor: { key: [1, 0.96, 0.88], ambient: [0.60, 0.70, 0.90] },
-  dawnColor: { key: [1, 0.58, 0.36], ambient: [0.52, 0.43, 0.68] },
-  duskColor: { key: [1, 0.40, 0.22], ambient: [0.38, 0.42, 0.72] },
+  dayColor: { key: [1, 0.98, 0.94], ambient: [0.60, 0.70, 0.88] },
+  dawnColor: { key: [1, 0.72, 0.54], ambient: [0.44, 0.53, 0.72] },
+  duskColor: { key: [1, 0.43, 0.20], ambient: [0.34, 0.46, 0.76] },
   diffuseWrap: 0.08,
   diffuseThreshold: 0.52,
   diffuseSoftness: 0.24,
-  bandStrength: 0.48,
-  bandThreshold: 0.68,
-  bandSoftness: 0.24,
+  bandStrength: 0.34,
+  bandThreshold: 0.66,
+  bandSoftness: 0.32,
   relightStrength: 0.90,
 }
 
@@ -134,13 +134,23 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     y: Math.sin(azimuthRadians) * Math.cos(elevationRadians),
     z: Math.sin(elevationRadians),
   }
-  const twilightKey = mixColor(lightingModelConfig.dawnColor.key, lightingModelConfig.duskColor.key, duskSide)
-  const twilightAmbient = mixColor(lightingModelConfig.dawnColor.ambient, lightingModelConfig.duskColor.ambient, duskSide)
-  const keyColor = mixColor(mixColor(lightingModelConfig.nightColor.key, lightingModelConfig.dayColor.key, daylight), twilightKey, warmth)
-  const ambientColor = mixColor(mixColor(lightingModelConfig.nightColor.ambient, lightingModelConfig.dayColor.ambient, daylight), twilightAmbient, warmth)
-  const dawnExposure = mix(lightingModelConfig.nightExposureStops, lightingModelConfig.dawnExposureStops, warmth)
-  const duskExposure = mix(lightingModelConfig.nightExposureStops, lightingModelConfig.duskExposureStops, warmth)
-  const exposureStops = mix(mix(dawnExposure, duskExposure, duskSide), lightingModelConfig.dayExposureStops, daylight)
+  const dawnWeight = warmth * (1 - duskSide)
+  const duskWeight = warmth * duskSide
+  const keyColor = mixColor(
+    mixColor(lightingModelConfig.nightColor.key, lightingModelConfig.dayColor.key, daylight),
+    mixColor(lightingModelConfig.dawnColor.key, lightingModelConfig.duskColor.key, duskSide),
+    warmth,
+  )
+  const ambientColor = mixColor(
+    mixColor(lightingModelConfig.nightColor.ambient, lightingModelConfig.dayColor.ambient, daylight),
+    mixColor(lightingModelConfig.dawnColor.ambient, lightingModelConfig.duskColor.ambient, duskSide),
+    warmth,
+  )
+  const exposureStops = mix(
+    mix(mix(lightingModelConfig.nightExposureStops, lightingModelConfig.dawnExposureStops, dawnWeight), lightingModelConfig.duskExposureStops, duskWeight),
+    lightingModelConfig.dayExposureStops,
+    daylight,
+  )
   const twilightEnergy = warmth * (1 - daylight)
 
   return {
@@ -149,7 +159,7 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     relightStrength: lightingModelConfig.relightStrength,
     direction,
     intensity: mix(lightingModelConfig.nightKeyIntensity, lightingModelConfig.dayKeyIntensity, daylight)
-      + twilightEnergy * lightingModelConfig.twilightKeyBoost,
+      + dawnWeight * lightingModelConfig.twilightKeyBoost + duskWeight * lightingModelConfig.twilightKeyBoost,
     color: colorChannels(keyColor),
     ambientIntensity: mix(lightingModelConfig.nightAmbientIntensity, lightingModelConfig.dayAmbientIntensity, daylight)
       + twilightEnergy * lightingModelConfig.twilightAmbientBoost,
@@ -157,7 +167,11 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     diffuseWrap: lightingModelConfig.diffuseWrap,
     diffuseThreshold: lightingModelConfig.diffuseThreshold,
     diffuseSoftness: lightingModelConfig.diffuseSoftness,
-    bandStrength: lightingModelConfig.bandStrength,
+    bandStrength: mix(
+      mix(lightingModelConfig.bandStrength * 0.55, lightingModelConfig.bandStrength, daylight),
+      lightingModelConfig.bandStrength * 1.12,
+      warmth,
+    ),
     bandThreshold: lightingModelConfig.bandThreshold,
     bandSoftness: lightingModelConfig.bandSoftness,
     daylight,

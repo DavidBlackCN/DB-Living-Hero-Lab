@@ -33,4 +33,4 @@ Direction components are normalized in the shader; azimuth / elevation are shown
 
 ## Acceptance Boundary
 
-These values are initial static calibration candidates, not approved art direction. Night uses reduced exposure together with a distinct Normal-driven key direction and diffuse response; exposure is not intended as a standalone darken/blue treatment. Review face readability, hair grouping, clothing volume, architecture, and overall restraint in the four page captures. Do not begin R2B 24-hour interpolation until the user approves these keyframes.
+The R2A engineering implementation passed, but its four-period visual calibration did not pass human review: Dawn / Noon / Dusk structural differences were too small and Night read primarily as an overall darkening. These presets are superseded as a runtime model by R2A.1, which introduces continuous Normal-driven relighting and manual time calibration. Do not begin R2B 24-hour playback or add post processing until the user accepts R2A.1.

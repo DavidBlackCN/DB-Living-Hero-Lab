@@ -19,6 +19,7 @@ export interface RGBColor {
 export interface LightingState {
   enabled: boolean
   exposure: number
+  relightStrength: number
   direction: { x: number; y: number; z: number }
   intensity: number
   color: RGBColor
@@ -27,6 +28,9 @@ export interface LightingState {
   diffuseWrap: number
   diffuseThreshold: number
   diffuseSoftness: number
+  bandStrength: number
+  bandThreshold: number
+  bandSoftness: number
 }
 
 export interface Point {

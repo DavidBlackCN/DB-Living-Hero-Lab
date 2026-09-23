@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLightingTime, lightingPresets } from '../config/lighting'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
 const props = defineProps<{
@@ -8,7 +9,7 @@ const props = defineProps<{
   quality: QualityPreset
   renderView: RenderView
   lighting: LightingState
-  lightingPreset: LightingPresetId
+  lightingMinutes: number
   showBounds: boolean
   showGrid: boolean
   frameTime: number | null
@@ -27,6 +28,7 @@ const emit = defineEmits<{
   (e: 'update:renderView', value: RenderView): void
   (e: 'update:lighting', value: LightingState): void
   (e: 'selectLightingPreset', value: LightingPresetId): void
+  (e: 'selectLightingTime', value: number): void
   (e: 'update:showBounds', value: boolean): void
   (e: 'update:showGrid', value: boolean): void
   (e: 'update:blinkEnabled', value: boolean): void
@@ -86,15 +88,24 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     </label>
     <details class="lighting-controls" open>
       <summary>Runtime Lighting</summary>
-      <div class="lighting-presets" role="group" aria-label="Time-of-day lighting presets">
-        <button v-for="preset in ['dawn', 'noon', 'dusk', 'night'] as const" :key="preset" type="button"
-          :class="{ active: lightingPreset === preset }" :aria-pressed="lightingPreset === preset"
-          @click="emit('selectLightingPreset', preset)">{{ preset }}</button>
+      <label class="range-control time-control"><span>24H Preview <output>{{ formatLightingTime(lightingMinutes) }}</output></span>
+        <input type="range" min="0" max="1440" step="1" :value="lightingMinutes"
+          :aria-valuetext="formatLightingTime(lightingMinutes)"
+          @input="emit('selectLightingTime', Number(($event.target as HTMLInputElement).value))" />
+        <div class="time-ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+      </label>
+      <div class="lighting-time-shortcuts" role="group" aria-label="Time calibration points">
+        <button v-for="preset in Object.values(lightingPresets)" :key="preset.id" type="button"
+          :aria-pressed="lightingMinutes === preset.minutes" @click="emit('selectLightingPreset', preset.id)">{{ preset.label }}</button>
       </div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
       <label class="range-control">Exposure {{ lighting.exposure.toFixed(2) }}
         <input type="range" min="0.65" max="1.1" step="0.01" :value="lighting.exposure"
           @input="updateLighting({ exposure: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label class="range-control">Relight {{ lighting.relightStrength.toFixed(2) }}
+        <input type="range" min="0" max="1" step="0.01" :value="lighting.relightStrength"
+          @input="updateLighting({ relightStrength: Number(($event.target as HTMLInputElement).value) })" />
       </label>
       <label class="range-control">Direction {{ directionAngle(lighting.direction) }}°
         <input type="range" min="0" max="359" step="1" :value="directionAngle(lighting.direction)"
@@ -105,11 +116,11 @@ function withDirection(angle: number, elevation: number): LightingState['directi
           @input="updateLighting({ direction: withDirection(directionAngle(lighting.direction), Number(($event.target as HTMLInputElement).value)) })" />
       </label>
       <label class="range-control">Key light {{ lighting.intensity.toFixed(2) }}
-        <input type="range" min="0" max="0.6" step="0.01" :value="lighting.intensity"
+        <input type="range" min="0" max="1.2" step="0.01" :value="lighting.intensity"
           @input="updateLighting({ intensity: Number(($event.target as HTMLInputElement).value) })" />
       </label>
       <label class="range-control">Ambient {{ lighting.ambientIntensity.toFixed(3) }}
-        <input type="range" min="0" max="0.15" step="0.005" :value="lighting.ambientIntensity"
+        <input type="range" min="0" max="0.8" step="0.005" :value="lighting.ambientIntensity"
           @input="updateLighting({ ambientIntensity: Number(($event.target as HTMLInputElement).value) })" />
       </label>
       <label>Key color <input type="color" :value="rgbToHex(lighting.color)" @input="updateLighting({ color: hexToRgb(($event.target as HTMLInputElement).value) })" /></label>

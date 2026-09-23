@@ -5,7 +5,7 @@ import BlinkLayer from './BlinkLayer.vue'
 import HeroCanvas from './HeroCanvas.vue'
 import LeavesLayer from './LeavesLayer.vue'
 import { heroConfig } from '../config/hero'
-import { createLightingState } from '../config/lighting'
+import { createLightingStateForTime } from '../config/lighting'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { useStaticRendering } from '../engine/quality/policy'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView } from '../engine/types'
@@ -17,8 +17,8 @@ const rendererError = ref('')
 const fit = ref<FitMode>('auto')
 const quality = ref<QualityPreset>('auto')
 const renderView = ref<RenderView>('base')
-const lightingPreset = ref<LightingPresetId>('noon')
-const lighting = ref<LightingState>(createLightingState(lightingPreset.value))
+const lightingMinutes = ref(720)
+const lighting = ref<LightingState>(createLightingStateForTime(lightingMinutes.value))
 const showBounds = ref(false)
 const showGrid = ref(false)
 const blinkEnabled = ref(true)
@@ -60,8 +60,13 @@ function onRendererReady(): void {
 }
 
 function selectLightingPreset(preset: LightingPresetId): void {
-  lightingPreset.value = preset
-  lighting.value = createLightingState(preset)
+  const minutes = { dawn: 390, noon: 720, dusk: 1050, night: 1320 }[preset]
+  selectLightingTime(minutes)
+}
+
+function selectLightingTime(minutes: number): void {
+  lightingMinutes.value = Math.max(0, Math.min(1440, Math.round(minutes)))
+  lighting.value = createLightingStateForTime(lightingMinutes.value)
 }
 
 onMounted(() => {
@@ -90,7 +95,8 @@ onBeforeUnmount(() => {
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
-      v-model:lighting="lighting" :lighting-preset="lightingPreset" @select-lighting-preset="selectLightingPreset"
+      v-model:lighting="lighting" :lighting-minutes="lightingMinutes" @select-lighting-preset="selectLightingPreset"
+      @select-lighting-time="selectLightingTime"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"

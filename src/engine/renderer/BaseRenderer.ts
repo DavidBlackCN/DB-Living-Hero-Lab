@@ -26,6 +26,7 @@ export class BaseRenderer {
   private viewLocation: WebGLUniformLocation
   private lightingEnabledLocation: WebGLUniformLocation
   private exposureLocation: WebGLUniformLocation
+  private relightStrengthLocation: WebGLUniformLocation
   private lightLocation: WebGLUniformLocation
   private lightIntensityLocation: WebGLUniformLocation
   private lightColorLocation: WebGLUniformLocation
@@ -34,6 +35,9 @@ export class BaseRenderer {
   private diffuseWrapLocation: WebGLUniformLocation
   private diffuseThresholdLocation: WebGLUniformLocation
   private diffuseSoftnessLocation: WebGLUniformLocation
+  private bandStrengthLocation: WebGLUniformLocation
+  private bandThresholdLocation: WebGLUniformLocation
+  private bandSoftnessLocation: WebGLUniformLocation
   private disposed = false
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement) {
@@ -64,6 +68,7 @@ export class BaseRenderer {
       light: gl.getUniformLocation(program, 'u_lightDirection'),
       lightingEnabled: gl.getUniformLocation(program, 'u_lightingEnabled'),
       exposure: gl.getUniformLocation(program, 'u_exposure'),
+      relightStrength: gl.getUniformLocation(program, 'u_relightStrength'),
       lightIntensity: gl.getUniformLocation(program, 'u_lightIntensity'),
       lightColor: gl.getUniformLocation(program, 'u_lightColor'),
       ambientIntensity: gl.getUniformLocation(program, 'u_ambientIntensity'),
@@ -71,6 +76,9 @@ export class BaseRenderer {
       diffuseWrap: gl.getUniformLocation(program, 'u_diffuseWrap'),
       diffuseThreshold: gl.getUniformLocation(program, 'u_diffuseThreshold'),
       diffuseSoftness: gl.getUniformLocation(program, 'u_diffuseSoftness'),
+      bandStrength: gl.getUniformLocation(program, 'u_bandStrength'),
+      bandThreshold: gl.getUniformLocation(program, 'u_bandThreshold'),
+      bandSoftness: gl.getUniformLocation(program, 'u_bandSoftness'),
     }
     if (!buffer || !texture || !normalTexture || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
@@ -80,6 +88,7 @@ export class BaseRenderer {
     this.viewLocation = viewLocation
     this.lightingEnabledLocation = locations.lightingEnabled!
     this.exposureLocation = locations.exposure!
+    this.relightStrengthLocation = locations.relightStrength!
     this.lightLocation = locations.light!
     this.lightIntensityLocation = locations.lightIntensity!
     this.lightColorLocation = locations.lightColor!
@@ -88,6 +97,9 @@ export class BaseRenderer {
     this.diffuseWrapLocation = locations.diffuseWrap!
     this.diffuseThresholdLocation = locations.diffuseThreshold!
     this.diffuseSoftnessLocation = locations.diffuseSoftness!
+    this.bandStrengthLocation = locations.bandStrength!
+    this.bandThresholdLocation = locations.bandThreshold!
+    this.bandSoftnessLocation = locations.bandSoftness!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -134,6 +146,7 @@ export class BaseRenderer {
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
     gl.uniform1f(this.exposureLocation, lighting.exposure)
+    gl.uniform1f(this.relightStrengthLocation, lighting.relightStrength)
     gl.uniform3f(this.lightLocation, lighting.direction.x, lighting.direction.y, lighting.direction.z)
     gl.uniform1f(this.lightIntensityLocation, lighting.enabled ? lighting.intensity : 0)
     gl.uniform3f(this.lightColorLocation, lighting.color.r, lighting.color.g, lighting.color.b)
@@ -142,6 +155,9 @@ export class BaseRenderer {
     gl.uniform1f(this.diffuseWrapLocation, lighting.diffuseWrap)
     gl.uniform1f(this.diffuseThresholdLocation, lighting.diffuseThreshold)
     gl.uniform1f(this.diffuseSoftnessLocation, lighting.diffuseSoftness)
+    gl.uniform1f(this.bandStrengthLocation, lighting.bandStrength)
+    gl.uniform1f(this.bandThresholdLocation, lighting.bandThreshold)
+    gl.uniform1f(this.bandSoftnessLocation, lighting.bandSoftness)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')

@@ -7,7 +7,25 @@ export interface ArtworkSpec {
 
 export type FitMode = 'auto' | 'cover' | 'contain'
 export type QualityPreset = 'auto' | 'static' | 'balanced'
-export type NormalView = 'base' | 'normal' | 'test-light'
+export type RenderView = 'base' | 'normal' | 'lit'
+
+export interface RGBColor {
+  r: number
+  g: number
+  b: number
+}
+
+export interface LightingState {
+  enabled: boolean
+  direction: { x: number; y: number; z: number }
+  intensity: number
+  color: RGBColor
+  ambientIntensity: number
+  ambientColor: RGBColor
+  diffuseWrap: number
+  diffuseThreshold: number
+  diffuseSoftness: number
+}
 
 export interface Point {
   x: number

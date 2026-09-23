@@ -1,7 +1,7 @@
 import vertexSource from '../../shaders/hero.vert.glsl?raw'
 import fragmentSource from '../../shaders/hero.frag.glsl?raw'
 import type { ArtworkLayout } from '../coordinates/artwork'
-import type { NormalView } from '../types'
+import type { LightingState, RenderView } from '../types'
 
 function compile(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type)
@@ -24,8 +24,15 @@ export class BaseRenderer {
   private normalTexture: WebGLTexture
   private rectLocation: WebGLUniformLocation
   private viewLocation: WebGLUniformLocation
+  private lightingEnabledLocation: WebGLUniformLocation
   private lightLocation: WebGLUniformLocation
-  private strengthLocation: WebGLUniformLocation
+  private lightIntensityLocation: WebGLUniformLocation
+  private lightColorLocation: WebGLUniformLocation
+  private ambientIntensityLocation: WebGLUniformLocation
+  private ambientColorLocation: WebGLUniformLocation
+  private diffuseWrapLocation: WebGLUniformLocation
+  private diffuseThresholdLocation: WebGLUniformLocation
+  private diffuseSoftnessLocation: WebGLUniformLocation
   private disposed = false
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement) {
@@ -52,16 +59,32 @@ export class BaseRenderer {
     const normalTexture = gl.createTexture()
     const rectLocation = gl.getUniformLocation(program, 'u_rect')
     const viewLocation = gl.getUniformLocation(program, 'u_view')
-    const lightLocation = gl.getUniformLocation(program, 'u_lightDirection')
-    const strengthLocation = gl.getUniformLocation(program, 'u_testStrength')
-    if (!buffer || !texture || !normalTexture || !rectLocation || !viewLocation || !lightLocation || !strengthLocation) throw new Error('Could not allocate WebGL resources')
+    const locations = {
+      light: gl.getUniformLocation(program, 'u_lightDirection'),
+      lightingEnabled: gl.getUniformLocation(program, 'u_lightingEnabled'),
+      lightIntensity: gl.getUniformLocation(program, 'u_lightIntensity'),
+      lightColor: gl.getUniformLocation(program, 'u_lightColor'),
+      ambientIntensity: gl.getUniformLocation(program, 'u_ambientIntensity'),
+      ambientColor: gl.getUniformLocation(program, 'u_ambientColor'),
+      diffuseWrap: gl.getUniformLocation(program, 'u_diffuseWrap'),
+      diffuseThreshold: gl.getUniformLocation(program, 'u_diffuseThreshold'),
+      diffuseSoftness: gl.getUniformLocation(program, 'u_diffuseSoftness'),
+    }
+    if (!buffer || !texture || !normalTexture || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
     this.texture = texture
     this.normalTexture = normalTexture
     this.rectLocation = rectLocation
     this.viewLocation = viewLocation
-    this.lightLocation = lightLocation
-    this.strengthLocation = strengthLocation
+    this.lightingEnabledLocation = locations.lightingEnabled!
+    this.lightLocation = locations.light!
+    this.lightIntensityLocation = locations.lightIntensity!
+    this.lightColorLocation = locations.lightColor!
+    this.ambientIntensityLocation = locations.ambientIntensity!
+    this.ambientColorLocation = locations.ambientColor!
+    this.diffuseWrapLocation = locations.diffuseWrap!
+    this.diffuseThresholdLocation = locations.diffuseThreshold!
+    this.diffuseSoftnessLocation = locations.diffuseSoftness!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -86,7 +109,7 @@ export class BaseRenderer {
     gl.uniform1i(gl.getUniformLocation(program, 'u_normal'), 1)
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: NormalView, lightAngle: number, testStrength: number): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -105,10 +128,16 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.texture)
     gl.activeTexture(gl.TEXTURE1)
     gl.bindTexture(gl.TEXTURE_2D, this.normalTexture)
-    gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'test-light' ? 2 : 0)
-    const radians = lightAngle * Math.PI / 180
-    gl.uniform2f(this.lightLocation, Math.cos(radians), Math.sin(radians))
-    gl.uniform1f(this.strengthLocation, testStrength)
+    gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
+    gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
+    gl.uniform3f(this.lightLocation, lighting.direction.x, lighting.direction.y, lighting.direction.z)
+    gl.uniform1f(this.lightIntensityLocation, lighting.enabled ? lighting.intensity : 0)
+    gl.uniform3f(this.lightColorLocation, lighting.color.r, lighting.color.g, lighting.color.b)
+    gl.uniform1f(this.ambientIntensityLocation, lighting.ambientIntensity)
+    gl.uniform3f(this.ambientColorLocation, lighting.ambientColor.r, lighting.ambientColor.g, lighting.ambientColor.b)
+    gl.uniform1f(this.diffuseWrapLocation, lighting.diffuseWrap)
+    gl.uniform1f(this.diffuseThresholdLocation, lighting.diffuseThreshold)
+    gl.uniform1f(this.diffuseSoftnessLocation, lighting.diffuseSoftness)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')

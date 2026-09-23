@@ -1,8 +1,8 @@
-import type { ArtworkSpec } from '../engine/types'
+import type { ArtworkSpec, LightingState } from '../engine/types'
 import type { LeafConfig } from '../engine/animation/LeafField'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string; testStrength: number }; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; lighting: LightingState; dprCap: number; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -21,7 +21,17 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
   },
   normal: {
     url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v3.png`,
-    testStrength: 0.65,
+  },
+  lighting: {
+    enabled: true,
+    direction: { x: 0.38, y: -0.42, z: 0.82 },
+    intensity: 0.35,
+    color: { r: 1, g: 0.91, b: 0.81 },
+    ambientIntensity: 0.045,
+    ambientColor: { r: 0.78, g: 0.84, b: 1 },
+    diffuseWrap: 0.22,
+    diffuseThreshold: 0.85,
+    diffuseSoftness: 0.08,
   },
   dprCap: 2,
   leaves: {

@@ -3,9 +3,9 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { loadImage } from '../engine/assets/loadImage'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { BaseRenderer } from '../engine/renderer/BaseRenderer'
-import type { ArtworkSpec, FitMode, NormalView } from '../engine/types'
+import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; normalView: NormalView; lightAngle: number; testStrength: number; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; renderView: RenderView; lighting: LightingState; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -19,7 +19,7 @@ function draw(): void {
   if (bounds.width < 1 || bounds.height < 1) return
   try {
     const start = performance.now()
-    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.normalView, props.lightAngle, props.testStrength)
+    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -76,8 +76,8 @@ onMounted(() => {
 
 watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
-watch(() => props.normalView, draw)
-watch(() => props.lightAngle, draw)
+watch(() => props.renderView, draw)
+watch(() => props.lighting, draw, { deep: true })
 
 onBeforeUnmount(() => {
   mounted = false

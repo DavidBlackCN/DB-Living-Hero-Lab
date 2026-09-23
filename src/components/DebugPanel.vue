@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { FitMode, NormalView, QualityPreset } from '../engine/types'
+import type { FitMode, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
-defineProps<{
+const props = defineProps<{
   rendererEnabled: boolean
   rendererStatus: string
   fit: FitMode
   quality: QualityPreset
-  normalView: NormalView
-  lightAngle: number
+  renderView: RenderView
+  lighting: LightingState
   showBounds: boolean
   showGrid: boolean
   frameTime: number | null
@@ -23,8 +23,8 @@ const emit = defineEmits<{
   (e: 'update:rendererEnabled', value: boolean): void
   (e: 'update:fit', value: FitMode): void
   (e: 'update:quality', value: QualityPreset): void
-  (e: 'update:normalView', value: NormalView): void
-  (e: 'update:lightAngle', value: number): void
+  (e: 'update:renderView', value: RenderView): void
+  (e: 'update:lighting', value: LightingState): void
   (e: 'update:showBounds', value: boolean): void
   (e: 'update:showGrid', value: boolean): void
   (e: 'update:blinkEnabled', value: boolean): void
@@ -33,12 +33,39 @@ const emit = defineEmits<{
   (e: 'update:leavesEnabled', value: boolean): void
 }>()
 
-const futureModules = ['Breathing', 'Hair Motion', 'Runtime Lighting', 'Region Overlay']
+const futureModules = ['Breathing', 'Hair Motion', 'Region Overlay']
+
+function updateLighting(patch: Partial<LightingState>): void {
+  emit('update:lighting', { ...props.lighting, ...patch })
+}
+
+function rgbToHex(color: RGBColor): string {
+  return `#${[color.r, color.g, color.b].map(value => Math.round(value * 255).toString(16).padStart(2, '0')).join('')}`
+}
+
+function hexToRgb(value: string): RGBColor {
+  return { r: parseInt(value.slice(1, 3), 16) / 255, g: parseInt(value.slice(3, 5), 16) / 255, b: parseInt(value.slice(5, 7), 16) / 255 }
+}
+
+function directionAngle(direction: LightingState['direction']): number {
+  return (Math.round(Math.atan2(direction.y, direction.x) * 180 / Math.PI) + 360) % 360
+}
+
+function directionElevation(direction: LightingState['direction']): number {
+  return Math.round(Math.asin(direction.z / Math.hypot(direction.x, direction.y, direction.z)) * 180 / Math.PI)
+}
+
+function withDirection(angle: number, elevation: number): LightingState['direction'] {
+  const azimuth = angle * Math.PI / 180
+  const altitude = elevation * Math.PI / 180
+  const planar = Math.cos(altitude)
+  return { x: Math.cos(azimuth) * planar, y: Math.sin(azimuth) * planar, z: Math.sin(altitude) }
+}
 </script>
 
 <template>
   <aside class="debug-panel" aria-label="Living Hero debug controls">
-    <header><strong>DB Living Hero 2.0</strong><small>Base + Blink + Leaves + Normal test</small></header>
+    <header><strong>DB Living Hero 2.0</strong><small>Base + Blink + Leaves + Runtime Lighting</small></header>
     <label><input type="checkbox" :checked="rendererEnabled" @change="emit('update:rendererEnabled', ($event.target as HTMLInputElement).checked)" /> Renderer</label>
     <label>Fit
       <select :value="fit" @change="emit('update:fit', ($event.target as HTMLSelectElement).value as FitMode)">
@@ -50,22 +77,41 @@ const futureModules = ['Breathing', 'Hair Motion', 'Runtime Lighting', 'Region O
         <option value="auto">Auto</option><option value="balanced">Balanced</option><option value="static">Static</option>
       </select>
     </label>
-    <label>Normal view
-      <select :value="normalView" :disabled="rendererStatus !== 'WebGL2'" @change="emit('update:normalView', ($event.target as HTMLSelectElement).value as NormalView)">
-        <option value="base">Base</option><option value="normal">Normal map</option><option value="test-light">Test Light</option>
+    <label>Render view
+      <select :value="renderView" :disabled="rendererStatus !== 'WebGL2'" @change="emit('update:renderView', ($event.target as HTMLSelectElement).value as RenderView)">
+        <option value="base">Base</option><option value="normal">Normal</option><option value="lit">Lit</option>
       </select>
     </label>
-    <label v-if="normalView === 'test-light'">Light angle {{ lightAngle }}°
-      <input type="range" min="0" max="359" step="1" :value="lightAngle" @input="emit('update:lightAngle', Number(($event.target as HTMLInputElement).value))" />
-    </label>
+    <details class="lighting-controls" open>
+      <summary>Runtime Lighting</summary>
+      <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
+      <label class="range-control">Direction {{ directionAngle(lighting.direction) }}°
+        <input type="range" min="0" max="359" step="1" :value="directionAngle(lighting.direction)"
+          @input="updateLighting({ direction: withDirection(Number(($event.target as HTMLInputElement).value), directionElevation(lighting.direction)) })" />
+      </label>
+      <label class="range-control">Elevation {{ directionElevation(lighting.direction) }}°
+        <input type="range" min="10" max="85" step="1" :value="directionElevation(lighting.direction)"
+          @input="updateLighting({ direction: withDirection(directionAngle(lighting.direction), Number(($event.target as HTMLInputElement).value)) })" />
+      </label>
+      <label class="range-control">Key light {{ lighting.intensity.toFixed(2) }}
+        <input type="range" min="0" max="0.6" step="0.01" :value="lighting.intensity"
+          @input="updateLighting({ intensity: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label class="range-control">Ambient {{ lighting.ambientIntensity.toFixed(3) }}
+        <input type="range" min="0" max="0.15" step="0.005" :value="lighting.ambientIntensity"
+          @input="updateLighting({ ambientIntensity: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label>Key color <input type="color" :value="rgbToHex(lighting.color)" @input="updateLighting({ color: hexToRgb(($event.target as HTMLInputElement).value) })" /></label>
+      <label>Ambient color <input type="color" :value="rgbToHex(lighting.ambientColor)" @input="updateLighting({ ambientColor: hexToRgb(($event.target as HTMLInputElement).value) })" /></label>
+    </details>
     <label><input type="checkbox" :checked="showBounds" @change="emit('update:showBounds', ($event.target as HTMLInputElement).checked)" /> Artwork bounds</label>
     <label><input type="checkbox" :checked="showGrid" @change="emit('update:showGrid', ($event.target as HTMLInputElement).checked)" /> UV grid</label>
-    <label><input type="checkbox" :checked="blinkEnabled && !reducedMotion && quality !== 'static' && normalView === 'base'" :disabled="reducedMotion || quality === 'static' || normalView !== 'base'"
+    <label><input type="checkbox" :checked="blinkEnabled && !reducedMotion && quality !== 'static' && renderView === 'base'" :disabled="reducedMotion || quality === 'static' || renderView !== 'base'"
       @change="emit('update:blinkEnabled', ($event.target as HTMLInputElement).checked)" /> Blink on/off</label>
-    <button type="button" :disabled="normalView !== 'base'" @click="emit('previewBlink')">Preview Blink</button>
+    <button type="button" :disabled="renderView !== 'base'" @click="emit('previewBlink')">Preview Blink</button>
     <label><input type="checkbox" :checked="showBlinkRegions" @change="emit('update:showBlinkRegions', ($event.target as HTMLInputElement).checked)" /> Show Blink Regions</label>
-    <label :title="reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
-      <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static'" :disabled="reducedMotion || quality === 'static'"
+    <label :title="renderView !== 'base' ? 'Available in Base view' : reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
+      <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static' && renderView === 'base'" :disabled="renderView !== 'base' || reducedMotion || quality === 'static'"
         @change="emit('update:leavesEnabled', ($event.target as HTMLInputElement).checked)" /> Leaves <small>{{ leavesCount }} active</small>
     </label>
     <div class="debug-future" aria-label="Future modules">

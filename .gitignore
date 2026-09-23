@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.vite/
+*.local
+.DS_Store
+.pnpm-store/
+DB Living Hero 2.0 - Codex 阶段1开工提示词.md

@@ -45,7 +45,7 @@ const futureModules = ['Blink', 'Breathing', 'Hair Motion', 'Runtime Lighting', 
     </label>
     <label><input type="checkbox" :checked="showBounds" @change="emit('update:showBounds', ($event.target as HTMLInputElement).checked)" /> Artwork bounds</label>
     <label><input type="checkbox" :checked="showGrid" @change="emit('update:showGrid', ($event.target as HTMLInputElement).checked)" /> UV grid</label>
-    <label title="Static candidate preview, not a blink animation"><input type="checkbox" :checked="previewBlink" @change="emit('update:previewBlink', ($event.target as HTMLInputElement).checked)" /> Preview closed-eye candidate</label>
+    <label title="Rejected for whole-frame Blink; static inspection only"><input type="checkbox" :checked="previewBlink" @change="emit('update:previewBlink', ($event.target as HTMLInputElement).checked)" /> Preview closed-eye candidate</label>
     <label :title="reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
       <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static'" :disabled="reducedMotion || quality === 'static'"
         @change="emit('update:leavesEnabled', ($event.target as HTMLInputElement).checked)" /> Leaves <small>{{ leavesCount }} active</small>

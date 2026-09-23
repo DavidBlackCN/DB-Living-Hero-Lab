@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FitMode, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
+import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
 const props = defineProps<{
   rendererEnabled: boolean
@@ -8,6 +8,7 @@ const props = defineProps<{
   quality: QualityPreset
   renderView: RenderView
   lighting: LightingState
+  lightingPreset: LightingPresetId
   showBounds: boolean
   showGrid: boolean
   frameTime: number | null
@@ -25,6 +26,7 @@ const emit = defineEmits<{
   (e: 'update:quality', value: QualityPreset): void
   (e: 'update:renderView', value: RenderView): void
   (e: 'update:lighting', value: LightingState): void
+  (e: 'selectLightingPreset', value: LightingPresetId): void
   (e: 'update:showBounds', value: boolean): void
   (e: 'update:showGrid', value: boolean): void
   (e: 'update:blinkEnabled', value: boolean): void
@@ -84,7 +86,16 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     </label>
     <details class="lighting-controls" open>
       <summary>Runtime Lighting</summary>
+      <div class="lighting-presets" role="group" aria-label="Time-of-day lighting presets">
+        <button v-for="preset in ['dawn', 'noon', 'dusk', 'night'] as const" :key="preset" type="button"
+          :class="{ active: lightingPreset === preset }" :aria-pressed="lightingPreset === preset"
+          @click="emit('selectLightingPreset', preset)">{{ preset }}</button>
+      </div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
+      <label class="range-control">Exposure {{ lighting.exposure.toFixed(2) }}
+        <input type="range" min="0.65" max="1.1" step="0.01" :value="lighting.exposure"
+          @input="updateLighting({ exposure: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
       <label class="range-control">Direction {{ directionAngle(lighting.direction) }}°
         <input type="range" min="0" max="359" step="1" :value="directionAngle(lighting.direction)"
           @input="updateLighting({ direction: withDirection(Number(($event.target as HTMLInputElement).value), directionElevation(lighting.direction)) })" />

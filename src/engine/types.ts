@@ -8,6 +8,7 @@ export interface ArtworkSpec {
 export type FitMode = 'auto' | 'cover' | 'contain'
 export type QualityPreset = 'auto' | 'static' | 'balanced'
 export type RenderView = 'base' | 'normal' | 'lit'
+export type LightingPresetId = 'dawn' | 'noon' | 'dusk' | 'night'
 
 export interface RGBColor {
   r: number
@@ -17,6 +18,7 @@ export interface RGBColor {
 
 export interface LightingState {
   enabled: boolean
+  exposure: number
   direction: { x: number; y: number; z: number }
   intensity: number
   color: RGBColor

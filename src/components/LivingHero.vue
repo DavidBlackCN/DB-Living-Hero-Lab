@@ -5,9 +5,10 @@ import BlinkLayer from './BlinkLayer.vue'
 import HeroCanvas from './HeroCanvas.vue'
 import LeavesLayer from './LeavesLayer.vue'
 import { heroConfig } from '../config/hero'
+import { createLightingState } from '../config/lighting'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { useStaticRendering } from '../engine/quality/policy'
-import type { FitMode, LightingState, QualityPreset, RenderView } from '../engine/types'
+import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView } from '../engine/types'
 
 const root = ref<HTMLElement | null>(null)
 const rendererEnabled = ref(true)
@@ -16,7 +17,8 @@ const rendererError = ref('')
 const fit = ref<FitMode>('auto')
 const quality = ref<QualityPreset>('auto')
 const renderView = ref<RenderView>('base')
-const lighting = ref<LightingState>(structuredClone(heroConfig.lighting))
+const lightingPreset = ref<LightingPresetId>('noon')
+const lighting = ref<LightingState>(createLightingState(lightingPreset.value))
 const showBounds = ref(false)
 const showGrid = ref(false)
 const blinkEnabled = ref(true)
@@ -57,6 +59,11 @@ function onRendererReady(): void {
   rendererReady.value = true
 }
 
+function selectLightingPreset(preset: LightingPresetId): void {
+  lightingPreset.value = preset
+  lighting.value = createLightingState(preset)
+}
+
 onMounted(() => {
   onMotionChange()
   motionQuery.addEventListener('change', onMotionChange)
@@ -83,7 +90,8 @@ onBeforeUnmount(() => {
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
-      v-model:lighting="lighting" v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
+      v-model:lighting="lighting" :lighting-preset="lightingPreset" @select-lighting-preset="selectLightingPreset"
+      v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"
       :frame-time="wantsRenderer ? frameTime : null" :reduced-motion="reducedMotion" :leaves-count="leavesCount" :leaves-fps-cap="heroConfig.leaves.fpsCap" />

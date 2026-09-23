@@ -5,6 +5,7 @@ uniform sampler2D u_base;
 uniform sampler2D u_normal;
 uniform int u_view;
 uniform int u_lightingEnabled;
+uniform float u_exposure;
 uniform vec3 u_lightDirection;
 uniform float u_lightIntensity;
 uniform vec3 u_lightColor;
@@ -28,6 +29,6 @@ void main() {
   float neutralWrapped = clamp((lightDirection.z + u_diffuseWrap) / (1.0 + u_diffuseWrap), 0.0, 1.0);
   float neutralDiffuse = smoothstep(u_diffuseThreshold - u_diffuseSoftness, u_diffuseThreshold + u_diffuseSoftness, neutralWrapped);
   float directionalResponse = diffuse - neutralDiffuse;
-  vec3 illumination = vec3(1.0) + u_ambientColor * u_ambientIntensity + u_lightColor * (directionalResponse * u_lightIntensity);
+  vec3 illumination = (vec3(1.0) + u_ambientColor * u_ambientIntensity + u_lightColor * (directionalResponse * u_lightIntensity)) * u_exposure;
   outColor = vec4(clamp(base.rgb * illumination, 0.0, 1.0), base.a);
 }

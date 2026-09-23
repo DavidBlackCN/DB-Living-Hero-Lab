@@ -25,6 +25,7 @@ export class BaseRenderer {
   private rectLocation: WebGLUniformLocation
   private viewLocation: WebGLUniformLocation
   private lightingEnabledLocation: WebGLUniformLocation
+  private exposureLocation: WebGLUniformLocation
   private lightLocation: WebGLUniformLocation
   private lightIntensityLocation: WebGLUniformLocation
   private lightColorLocation: WebGLUniformLocation
@@ -62,6 +63,7 @@ export class BaseRenderer {
     const locations = {
       light: gl.getUniformLocation(program, 'u_lightDirection'),
       lightingEnabled: gl.getUniformLocation(program, 'u_lightingEnabled'),
+      exposure: gl.getUniformLocation(program, 'u_exposure'),
       lightIntensity: gl.getUniformLocation(program, 'u_lightIntensity'),
       lightColor: gl.getUniformLocation(program, 'u_lightColor'),
       ambientIntensity: gl.getUniformLocation(program, 'u_ambientIntensity'),
@@ -77,6 +79,7 @@ export class BaseRenderer {
     this.rectLocation = rectLocation
     this.viewLocation = viewLocation
     this.lightingEnabledLocation = locations.lightingEnabled!
+    this.exposureLocation = locations.exposure!
     this.lightLocation = locations.light!
     this.lightIntensityLocation = locations.lightIntensity!
     this.lightColorLocation = locations.lightColor!
@@ -130,6 +133,7 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.normalTexture)
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
+    gl.uniform1f(this.exposureLocation, lighting.exposure)
     gl.uniform3f(this.lightLocation, lighting.direction.x, lighting.direction.y, lighting.direction.z)
     gl.uniform1f(this.lightIntensityLocation, lighting.enabled ? lighting.intensity : 0)
     gl.uniform3f(this.lightColorLocation, lighting.color.r, lighting.color.g, lighting.color.b)

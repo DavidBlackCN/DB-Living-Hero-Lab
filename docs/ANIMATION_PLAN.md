@@ -9,7 +9,7 @@
 
 Artwork 显示区域由 `engine/coordinates/artwork.ts` 提供。Blink 的双眼区域在 `config/hero.ts` 用 Source Pixel 定义，随 Artwork 布局缩放；时间线位于 `engine/animation/BlinkTimeline.ts`，不依赖 Vue。自动间隔随机 4.2–7.6 秒，闭眼 115 ms，贴图淡入淡出 35 ms。Debug 可开关自动 Blink、触发一次 Preview Blink、显示双眼区域。后台暂停并恢复睁眼；reduced motion 和 Static quality 关闭自动 Blink。参数是首版可调值。
 
-整图 Blink 路线已终止。v1 全图仅作离线提取来源，v2 失败候选继续归档；运行时不加载两张整图。局部静态验证见 [`validation/BLINK_LOCAL_V1.md`](validation/BLINK_LOCAL_V1.md)。Half 是后续可选状态。当前加载已冻结的 Normal v3；Debug 的 Base / Normal / Lit 用于基准、法线和手动光照对照。Runtime Lighting Foundation v1 已接入；正式 24h Time-of-Day 尚未开始，详见 [`validation/LIGHTING_FOUNDATION_V1.md`](validation/LIGHTING_FOUNDATION_V1.md)。
+整图 Blink 路线已终止。v1 全图仅作离线提取来源，v2 失败候选继续归档；运行时不加载两张整图。局部静态验证见 [`validation/BLINK_LOCAL_V1.md`](validation/BLINK_LOCAL_V1.md)。Half 是后续可选状态。当前加载已冻结的 Normal v3；Debug 的 Base / Normal / Lit 用于基准、法线和手动光照对照。Runtime Lighting Foundation v1 已通过验收。R2A 已接入 Dawn / Noon / Dusk / Night 静态 preset 与手动参数；R2B 自动 24h 时间线尚未开始，详见 [`validation/TIME_OF_DAY_KEYFRAMES_R2A.md`](validation/TIME_OF_DAY_KEYFRAMES_R2A.md)。
 
 Leaves 第一版用独立的 `engine/animation/LeafField.ts` 在 Canvas 2D 中逐片绘制，按可见 Artwork 区域裁剪；竖屏 contain 留边不会出现叶子。桌面 18 片、移动端（≤640 CSS px）10 片；主体约 14–32 CSS px，8% 概率为 38 px 前景叶。下落 10–22 CSS px/s；共同风向 2.5 CSS px/s，9 秒周期的 ±5 CSS px/s 微风，另有最多 2.5 CSS px/s 的个体轻摆。帧率上限 30、覆层 DPR 上限 1.5、透明度 0.58–0.84。以上均由 `src/config/hero.ts` 管理，属于可调的首版值，未视为最终视觉参数。
 

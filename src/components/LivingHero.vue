@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import DebugPanel from './DebugPanel.vue'
+import BlinkLayer from './BlinkLayer.vue'
 import HeroCanvas from './HeroCanvas.vue'
 import LeavesLayer from './LeavesLayer.vue'
 import { heroConfig } from '../config/hero'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { useStaticRendering } from '../engine/quality/policy'
-import type { FitMode, QualityPreset } from '../engine/types'
+import type { FitMode, NormalView, QualityPreset } from '../engine/types'
 
 const root = ref<HTMLElement | null>(null)
 const rendererEnabled = ref(true)
@@ -14,9 +15,13 @@ const rendererReady = ref(false)
 const rendererError = ref('')
 const fit = ref<FitMode>('auto')
 const quality = ref<QualityPreset>('auto')
+const normalView = ref<NormalView>('base')
+const lightAngle = ref(315)
 const showBounds = ref(false)
 const showGrid = ref(false)
-const previewBlink = ref(false)
+const blinkEnabled = ref(true)
+const blinkPreviewToken = ref(0)
+const showBlinkRegions = ref(false)
 const leavesEnabled = ref(true)
 const leavesCount = ref(0)
 const frameTime = ref<number | null>(null)
@@ -24,20 +29,15 @@ const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
 const size = ref({ width: window.innerWidth, height: window.innerHeight })
 const layout = computed(() => layoutArtwork(heroConfig.artwork, size.value.width, size.value.height, fit.value))
-const activeArtwork = computed(() => ({ ...heroConfig.artwork, baseUrl: previewBlink.value ? heroConfig.candidateBlinkUrl : heroConfig.artwork.baseUrl }))
 const staticPolicy = computed(() => useStaticRendering(quality.value, reducedMotion.value))
 const wantsRenderer = computed(() => rendererEnabled.value && !staticPolicy.value)
 const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static')
+const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && normalView.value === 'base')
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
 let observer: ResizeObserver | null = null
 
 watch(wantsRenderer, () => {
-  rendererReady.value = false
-  frameTime.value = null
-})
-
-watch(previewBlink, () => {
   rendererReady.value = false
   frameTime.value = null
 })
@@ -74,12 +74,17 @@ onBeforeUnmount(() => {
 
 <template>
   <main ref="root" class="hero-stage">
-    <img class="hero-image" :style="imageStyle" :src="activeArtwork.baseUrl" alt="DB Living Hero artwork preview" />
-    <HeroCanvas v-if="wantsRenderer" :key="activeArtwork.baseUrl" :artwork="activeArtwork" :fit="fit" :dpr-cap="heroConfig.dprCap"
+    <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
+    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :normal-view="normalView"
+      :light-angle="lightAngle" :test-strength="heroConfig.normal.testStrength" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
+    <BlinkLayer v-if="normalView === 'base'" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
+      :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" />
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
-    <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:preview-blink="previewBlink" v-model:leaves-enabled="leavesEnabled"
+    <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:normal-view="normalView"
+      v-model:light-angle="lightAngle" v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
+      v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"
       :frame-time="wantsRenderer ? frameTime : null" :reduced-motion="reducedMotion" :leaves-count="leavesCount" :leaves-fps-cap="heroConfig.leaves.fpsCap" />
   </main>

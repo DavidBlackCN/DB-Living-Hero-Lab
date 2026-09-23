@@ -5,6 +5,11 @@ html, body, #app { width: 100%; height: 100%; margin: 0; }
 .hero-image { position: absolute; display: block; max-width: none; }
 .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
 .hero-canvas.canvas-ready { opacity: 1; }
+.blink-layer { position: absolute; inset: 0; pointer-events: none; }
+.blink-eye, .blink-region { position: absolute; display: block; }
+.blink-eye { opacity: 0; transition: opacity 35ms ease-in-out; }
+.blink-eye.is-closed { opacity: 1; }
+.blink-region { border: 1px solid #52edcf; background: #52edcf24; }
 .leaves-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .artwork-overlay { position: absolute; pointer-events: none; }
 .artwork-overlay.show-bounds { outline: 2px solid #e9d27f; outline-offset: -2px; }
@@ -17,6 +22,7 @@ html, body, #app { width: 100%; height: 100%; margin: 0; }
 .debug-panel label:has(input[type='checkbox']) { justify-content: flex-start; }
 .debug-panel input[type='checkbox'] { accent-color: #d6a56c; }
 .debug-panel select { background: #332e2b; color: #fff; border: 1px solid #ffffff44; border-radius: 4px; padding: 2px 5px; }
+.debug-panel button { background: #43332d; color: #fff; border: 1px solid #ffffff44; border-radius: 4px; padding: 5px; cursor: pointer; }
 .debug-future { display: grid; gap: 3px; padding: 8px 0; border-top: 1px solid #ffffff30; border-bottom: 1px solid #ffffff30; color: #b7aaa4; }
 .debug-future label { gap: 4px; }
 .debug-future small { margin-left: auto; }

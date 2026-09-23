@@ -1,7 +1,8 @@
 import type { ArtworkSpec } from '../engine/types'
 import type { LeafConfig } from '../engine/animation/LeafField'
+import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-export const heroConfig: { artwork: ArtworkSpec; candidateBlinkUrl: string; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string; testStrength: number }; dprCap: number; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -9,7 +10,19 @@ export const heroConfig: { artwork: ArtworkSpec; candidateBlinkUrl: string; dprC
     aspectRatio: 1672 / 941,
     baseUrl: `${import.meta.env.BASE_URL}assets/hero/base/base-albedo.png`,
   },
-  candidateBlinkUrl: `${import.meta.env.BASE_URL}assets/hero/blink/blink-closed-eyes-v1.png`,
+  blink: {
+    eyes: [
+      { url: `${import.meta.env.BASE_URL}assets/hero/blink/left-closed-v1.png`, x: 1080, y: 177, width: 92, height: 73 },
+      { url: `${import.meta.env.BASE_URL}assets/hero/blink/right-closed-v1.png`, x: 1152, y: 195, width: 92, height: 78 },
+    ],
+    intervalMinMs: 4200,
+    intervalMaxMs: 7600,
+    closedMs: 115,
+  },
+  normal: {
+    url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v1.png`,
+    testStrength: 0.65,
+  },
   dprCap: 2,
   leaves: {
     urls: [1, 2, 3, 4].map(n => `${import.meta.env.BASE_URL}assets/hero/leaves/leaf-${String(n).padStart(2, '0')}.png`),

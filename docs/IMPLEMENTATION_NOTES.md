@@ -4,10 +4,12 @@ Vue 只管理容器、生命周期、调试状态和质量选择。`src/engine/`
 
 `HeroCanvas` 在挂载后加载 Base，验证真实尺寸，再建立 WebGL2 context、shader、texture 和 quad。ResizeObserver 触发按需重绘；卸载时释放资源。context lost 时显示底层 `<img>`，restored 时重新初始化。页面在 Canvas 准备好前始终显示同一 Base 图片，避免黑屏。
 
-Blink v1 与整图生成重试 v2 的差异均遍布全画面，不应把 Debug 的静态候选切换直接改成自动眨眼。验证记录见 [`validation/BLINK_V1_VALIDATION.md`](validation/BLINK_V1_VALIDATION.md) 和 [`validation/BLINK_V2_FULL_FRAME_RETRY.md`](validation/BLINK_V2_FULL_FRAME_RETRY.md)。后续采用局部眼部方案，继续复用 Artwork Space 坐标，只在双眼区域合成，并保证眼外输出与 Base 一致。
+Blink v1 与整图生成重试 v2 的差异均遍布全画面，整图路线已终止。验证记录见 [`validation/BLINK_V1_VALIDATION.md`](validation/BLINK_V1_VALIDATION.md) 和 [`validation/BLINK_V2_FULL_FRAME_RETRY.md`](validation/BLINK_V2_FULL_FRAME_RETRY.md)。`scripts/extract_blink_eyes.py` 从 v1 裁出两个带 5 px 羽化的 RGBA 眼部图，区域记录在 `src/config/hero.ts`。`BlinkLayer.vue` 只将它们按 Artwork Layout 贴到 Base 上；`BlinkTimeline.ts` 管自动随机间隔、预览脉冲和后台暂停。Canvas 和底层 `<img>` 始终使用同一 Base，不会再因 Blink 重建 WebGL 纹理。眼区外的合成结果与 Base 完全一致。
 
 `layoutArtwork` 统一算 cover/contain；默认 Auto 在 viewport 宽高比低于 0.9 时选 contain，其他情况选 cover。UV 与 Source Pixel、CSS Display 坐标转换都在同一模块。GLSL 用相同布局给 quad 定位。UV 定义为左上原点。Canvas 像素用受限 DPR（默认 2）缩放。cover 允许超出 viewport 的裁切，contain 留出背景边。
 
 `auto` 遇到 reduced motion 使用静态 Base；`static` 始终静态；`balanced` 用于强制检查 WebGL Base。Base 仍是按需绘制，面板记录上次绘制耗时。Leaves 有独立的限帧 RAF，`visibilitychange` 在后台停止并在恢复时重置计时。reduced motion 无论 Quality 是否为 balanced 都关闭 Leaves。
 
-Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。Normal、Lighting 与其他动效仍等待素材与视觉验收。
+Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。
+
+Normal 技术 v1 用 `scripts/generate_normal.py` 对 Base 亮度做 3 px / 16 px 模糊、梯度计算和单位向量编码，生成完全同尺寸、逐像素注册的 RGB 图；约定 R 向右、G 向下、B 朝向观察者。`HeroCanvas` 验证 Normal 尺寸并加载第二张 WebGL 纹理。Debug 的 Normal map 显示原始编码，Test Light 以角度滑杆改变方向，着色器对 Base 施加小幅相对亮度响应；默认 Base 视图不受影响。测试视图隐藏 Blink，避免局部眼图与测试光照混合。此资产是管线与方向验证用的浅浮雕法线；亮度边缘会混入原画阴影，不应直接视为最终物理表面结构。Runtime Lighting 还需人工修正面部、头发、衣料等语义区域，确定光照范围／色温／遮挡，并做桌面与移动端性能和观感验收。

@@ -3,9 +3,9 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { loadImage } from '../engine/assets/loadImage'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { BaseRenderer } from '../engine/renderer/BaseRenderer'
-import type { ArtworkSpec, FitMode } from '../engine/types'
+import type { ArtworkSpec, FitMode, NormalView } from '../engine/types'
 
-const props = defineProps<{ artwork: ArtworkSpec; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; normalView: NormalView; lightAngle: number; testStrength: number; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -19,7 +19,7 @@ function draw(): void {
   if (bounds.width < 1 || bounds.height < 1) return
   try {
     const start = performance.now()
-    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap)
+    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.normalView, props.lightAngle, props.testStrength)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -33,12 +33,15 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const image = await loadImage(props.artwork.baseUrl)
+    const [image, normalImage] = await Promise.all([loadImage(props.artwork.baseUrl), loadImage(props.normalUrl)])
     if (!mounted || current !== generation || !canvas.value) return
     if (image.naturalWidth !== props.artwork.width || image.naturalHeight !== props.artwork.height) {
       throw new Error('Base image dimensions do not match Artwork Space')
     }
-    renderer = new BaseRenderer(canvas.value, image)
+    if (normalImage.naturalWidth !== props.artwork.width || normalImage.naturalHeight !== props.artwork.height) {
+      throw new Error('Normal image dimensions do not match Artwork Space')
+    }
+    renderer = new BaseRenderer(canvas.value, image, normalImage)
     draw()
     if (renderer) emit('ready')
   } catch (error) {
@@ -73,6 +76,8 @@ onMounted(() => {
 
 watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
+watch(() => props.normalView, draw)
+watch(() => props.lightAngle, draw)
 
 onBeforeUnmount(() => {
   mounted = false

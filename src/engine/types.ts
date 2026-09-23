@@ -7,6 +7,7 @@ export interface ArtworkSpec {
 
 export type FitMode = 'auto' | 'cover' | 'contain'
 export type QualityPreset = 'auto' | 'static' | 'balanced'
+export type NormalView = 'base' | 'normal' | 'test-light'
 
 export interface Point {
   x: number

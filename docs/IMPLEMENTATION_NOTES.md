@@ -6,6 +6,6 @@ Vue 只管理容器、生命周期、调试状态和质量选择。`src/engine/`
 
 `layoutArtwork` 统一算 cover/contain；默认 Auto 在 viewport 宽高比低于 0.9 时选 contain，其他情况选 cover。UV 与 Source Pixel、CSS Display 坐标转换都在同一模块。GLSL 用相同布局给 quad 定位。UV 定义为左上原点。Canvas 像素用受限 DPR（默认 2）缩放。cover 允许超出 viewport 的裁切，contain 留出背景边。
 
-`auto` 遇到 reduced motion 使用静态图；`static` 始终静态；`balanced` 用于强制检查 WebGL。阶段 1 不存在持续动画循环，因此后台无需计时；页面回到前台会重绘。未来动画模块必须在 `visibilitychange` 暂停更新。Frame 面板显示上次按需绘制耗时；FPS 显示 idle，避免伪造持续帧率。
+`auto` 遇到 reduced motion 使用静态 Base；`static` 始终静态；`balanced` 用于强制检查 WebGL Base。Base 仍是按需绘制，面板记录上次绘制耗时。Leaves 有独立的限帧 RAF，`visibilitychange` 在后台停止并在恢复时重置计时。reduced motion 无论 Quality 是否为 balanced 都关闭 Leaves。
 
-质量策略及当前降级只覆盖静态与 WebGL 选择。移动端先保证 Base、Canvas 尺寸和静态回退。Normal、Lighting 与动效等候素材与视觉验收。
+Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。Normal、Lighting 与其他动效仍等待素材与视觉验收。

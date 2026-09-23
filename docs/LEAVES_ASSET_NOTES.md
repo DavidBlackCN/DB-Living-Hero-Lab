@@ -2,7 +2,7 @@
 
 ## 当前交付
 
-四张独立 PNG 位于 `public/assets/hero/leaves/`。每张为 1024×1024 RGBA，只有一片完整的五裂秋叶，四周为真实透明像素。它们是供后续场景预览的候选 master，尚未做运行时粒子与最终美术冻结。
+四张独立 PNG 位于 `public/assets/hero/leaves/`。每张为 1024×1024 RGBA，只有一片完整的五裂秋叶，四周为真实透明像素。四张 master 已确认可用于第一版运行时落叶覆层；动态观感仍可调整。
 
 参考 [KumengScreen](https://github.com/buger404/KumengScreen#%E5%8A%A8%E6%95%88%E4%B8%8E%E8%8A%B1%E7%93%A3) 的独立透明花瓣纹理资产思路；这里重新制作秋叶，不复用其素材或应用结构。
 
@@ -30,4 +30,4 @@
 
 程序检查：四张均为 RGBA / 1024×1024，四条画布边缘 alpha 全为 0，主体周围至少约 12% 透明留白；文件内容各不相同。已逐张检查轮廓，并在浅灰与深灰底上检查透明边缘。尚需在真实 Base 场景中以预期粒子尺寸和运动方式做人眼验收。
 
-若以后需要 atlas，可从这四张 master 派生打包版本，保留每片的透明 padding 与纹理过滤安全边；目前不创建 atlas，也不改变 master。动态 Leaves 开关继续保持禁用，直到粒子系统实现。
+若以后需要 atlas，可从这四张 master 派生打包版本，保留每片的透明 padding 与纹理过滤安全边；目前不创建 atlas，也不改变 master。当前 Leaves 实现与参数见 [`ANIMATION_PLAN.md`](ANIMATION_PLAN.md)。

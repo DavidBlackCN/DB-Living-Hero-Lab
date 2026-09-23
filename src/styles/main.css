@@ -5,6 +5,7 @@ html, body, #app { width: 100%; height: 100%; margin: 0; }
 .hero-image { position: absolute; display: block; max-width: none; }
 .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
 .hero-canvas.canvas-ready { opacity: 1; }
+.leaves-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .artwork-overlay { position: absolute; pointer-events: none; }
 .artwork-overlay.show-bounds { outline: 2px solid #e9d27f; outline-offset: -2px; }
 .artwork-overlay.show-grid { background-image: linear-gradient(to right, #fff7 1px, transparent 1px), linear-gradient(to bottom, #fff7 1px, transparent 1px); background-size: 10% 10%; }

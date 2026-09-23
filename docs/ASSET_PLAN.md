@@ -5,9 +5,11 @@
 | Base Albedo | `public/assets/hero/base/base-albedo.png` | Frozen | Artwork Space 基准，不在代码中破坏性裁切；替换需重新验收全部注册资产。 |
 | Blink Closed | `public/assets/hero/blink/blink-closed-eyes-v1.png` | Candidate | 与 Base 同尺寸；未接入渲染，实机验证后可替换。 |
 | Normal | `public/assets/hero/normal/` | Pending | 与 Base 严格同像素坐标。 |
-| Leaves | `public/assets/hero/leaves/` | Pending | 独立透明粒子素材，不伪造。 |
+| Leaves | `public/assets/hero/leaves/leaf-01.png`～`leaf-04.png` | Produced / visual candidate | 四张独立 1024×1024 RGBA master，已通过尺寸与透明边缘检查；场景内运动观感仍待人工验收。可逐张替换，保持文件名和透明留白规格。 |
 | Masks / regions | `public/assets/hero/masks/` | TBD | 若实现需要再设计，同步 Artwork Space。 |
 
 Artwork Space 为 1672×941，UV 原点在左上，`(0,0)` 是图像左上角，`(1,1)` 是右下角。像素坐标同样从左上起算。所有局部资产须记录区域、尺寸和与 Base 的注册关系。目录可为空，表示素材确实待制作。
 
 Debug 面板可静态切换 Base 与闭眼候选图，便于观察注册和背景变化。此功能不代表 Blink 候选已验收，也不代表运行时眨眼实现。
+
+落叶是独立前景粒子，不需要与 Base 像素注册。四张 master 的配色、形态、alpha 检查及未来 atlas 注意点见 [`LEAVES_ASSET_NOTES.md`](LEAVES_ASSET_NOTES.md)。目前没有叶片粒子运行时代码。

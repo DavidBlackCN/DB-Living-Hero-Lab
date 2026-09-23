@@ -18,7 +18,7 @@ export interface RGBColor {
 
 export interface LightingState {
   enabled: boolean
-  exposure: number
+  exposureStops: number
   relightStrength: number
   direction: { x: number; y: number; z: number }
   intensity: number

@@ -29,6 +29,14 @@ vec3 linearToSrgb(vec3 color) {
   vec3 high = 1.055 * pow(max(color, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055;
   return mix(low, high, step(vec3(0.0031308), color));
 }
+vec3 toneMapAces(vec3 color) {
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+  return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
+}
 float bandResponse(float facing) {
   float edge = max(u_bandSoftness, 0.001);
   return smoothstep(u_bandThreshold - edge, u_bandThreshold + edge, facing);
@@ -60,7 +68,8 @@ void main() {
   float shapedDiffuse = mix(diffuse, bandDiffuse, u_bandStrength);
   vec3 illumination = u_ambientColor * u_ambientIntensity
     + u_lightColor * (shapedDiffuse * u_lightIntensity);
-  vec3 relitLinear = max(baseLinear * illumination * u_exposure, vec3(0.0));
+  vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
-  outColor = vec4(clamp(linearToSrgb(blendedLinear), 0.0, 1.0), base.a);
+  vec3 exposedLinear = blendedLinear * exp2(u_exposure);
+  outColor = vec4(linearToSrgb(toneMapAces(exposedLinear)), base.a);
 }

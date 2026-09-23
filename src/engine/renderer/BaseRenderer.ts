@@ -145,7 +145,7 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.normalTexture)
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
-    gl.uniform1f(this.exposureLocation, lighting.exposure)
+    gl.uniform1f(this.exposureLocation, lighting.exposureStops)
     gl.uniform1f(this.relightStrengthLocation, lighting.relightStrength)
     gl.uniform3f(this.lightLocation, lighting.direction.x, lighting.direction.y, lighting.direction.z)
     gl.uniform1f(this.lightIntensityLocation, lighting.enabled ? lighting.intensity : 0)

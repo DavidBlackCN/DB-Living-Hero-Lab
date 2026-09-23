@@ -99,9 +99,9 @@ function withDirection(angle: number, elevation: number): LightingState['directi
           :aria-pressed="lightingMinutes === preset.minutes" @click="emit('selectLightingPreset', preset.id)">{{ preset.label }}</button>
       </div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
-      <label class="range-control">Exposure {{ lighting.exposure.toFixed(2) }}
-        <input type="range" min="0.65" max="1.1" step="0.01" :value="lighting.exposure"
-          @input="updateLighting({ exposure: Number(($event.target as HTMLInputElement).value) })" />
+      <label class="range-control">Display exposure {{ lighting.exposureStops.toFixed(2) }} EV
+        <input type="range" min="-1.5" max="1.5" step="0.01" :value="lighting.exposureStops"
+          @input="updateLighting({ exposureStops: Number(($event.target as HTMLInputElement).value) })" />
       </label>
       <label class="range-control">Relight {{ lighting.relightStrength.toFixed(2) }}
         <input type="range" min="0" max="1" step="0.01" :value="lighting.relightStrength"
@@ -122,6 +122,18 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <label class="range-control">Ambient {{ lighting.ambientIntensity.toFixed(3) }}
         <input type="range" min="0" max="0.8" step="0.005" :value="lighting.ambientIntensity"
           @input="updateLighting({ ambientIntensity: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label class="range-control">Band strength {{ lighting.bandStrength.toFixed(2) }}
+        <input type="range" min="0" max="0.8" step="0.01" :value="lighting.bandStrength"
+          @input="updateLighting({ bandStrength: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label class="range-control">Band threshold {{ lighting.bandThreshold.toFixed(2) }}
+        <input type="range" min="0.35" max="0.95" step="0.01" :value="lighting.bandThreshold"
+          @input="updateLighting({ bandThreshold: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <label class="range-control">Band softness {{ lighting.bandSoftness.toFixed(2) }}
+        <input type="range" min="0.05" max="0.5" step="0.01" :value="lighting.bandSoftness"
+          @input="updateLighting({ bandSoftness: Number(($event.target as HTMLInputElement).value) })" />
       </label>
       <label>Key color <input type="color" :value="rgbToHex(lighting.color)" @input="updateLighting({ color: hexToRgb(($event.target as HTMLInputElement).value) })" /></label>
       <label>Ambient color <input type="color" :value="rgbToHex(lighting.ambientColor)" @input="updateLighting({ ambientColor: hexToRgb(($event.target as HTMLInputElement).value) })" /></label>

@@ -19,12 +19,16 @@ export interface LightingModelConfig {
   duskAzimuth: number
   nightElevationDegrees: number
   dayElevationDegrees: number
-  nightExposure: number
-  dayExposure: number
+  nightExposureStops: number
+  dawnExposureStops: number
+  dayExposureStops: number
+  duskExposureStops: number
   nightKeyIntensity: number
   dayKeyIntensity: number
+  twilightKeyBoost: number
   nightAmbientIntensity: number
   dayAmbientIntensity: number
+  twilightAmbientBoost: number
   nightColor: { key: [number, number, number]; ambient: [number, number, number] }
   dayColor: { key: [number, number, number]; ambient: [number, number, number] }
   dawnColor: { key: [number, number, number]; ambient: [number, number, number] }
@@ -51,22 +55,26 @@ export const lightingModelConfig: LightingModelConfig = {
   duskAzimuth: 145,
   nightElevationDegrees: 18,
   dayElevationDegrees: 64,
-  nightExposure: 0.90,
-  dayExposure: 1,
-  nightKeyIntensity: 0.52,
+  nightExposureStops: 0.48,
+  dawnExposureStops: 0.02,
+  dayExposureStops: 0,
+  duskExposureStops: 0.02,
+  nightKeyIntensity: 0.28,
   dayKeyIntensity: 0.92,
-  nightAmbientIntensity: 0.30,
+  twilightKeyBoost: 0.58,
+  nightAmbientIntensity: 0.25,
   dayAmbientIntensity: 0.58,
+  twilightAmbientBoost: 0.20,
   nightColor: { key: [0.60, 0.73, 1], ambient: [0.28, 0.34, 0.58] },
   dayColor: { key: [1, 0.96, 0.88], ambient: [0.60, 0.70, 0.90] },
   dawnColor: { key: [1, 0.58, 0.36], ambient: [0.52, 0.43, 0.68] },
   duskColor: { key: [1, 0.40, 0.22], ambient: [0.38, 0.42, 0.72] },
   diffuseWrap: 0.08,
-  diffuseThreshold: 0.58,
+  diffuseThreshold: 0.52,
   diffuseSoftness: 0.24,
-  bandStrength: 0.38,
-  bandThreshold: 0.84,
-  bandSoftness: 0.20,
+  bandStrength: 0.48,
+  bandThreshold: 0.68,
+  bandSoftness: 0.24,
   relightStrength: 0.90,
 }
 
@@ -130,15 +138,21 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
   const twilightAmbient = mixColor(lightingModelConfig.dawnColor.ambient, lightingModelConfig.duskColor.ambient, duskSide)
   const keyColor = mixColor(mixColor(lightingModelConfig.nightColor.key, lightingModelConfig.dayColor.key, daylight), twilightKey, warmth)
   const ambientColor = mixColor(mixColor(lightingModelConfig.nightColor.ambient, lightingModelConfig.dayColor.ambient, daylight), twilightAmbient, warmth)
+  const dawnExposure = mix(lightingModelConfig.nightExposureStops, lightingModelConfig.dawnExposureStops, warmth)
+  const duskExposure = mix(lightingModelConfig.nightExposureStops, lightingModelConfig.duskExposureStops, warmth)
+  const exposureStops = mix(mix(dawnExposure, duskExposure, duskSide), lightingModelConfig.dayExposureStops, daylight)
+  const twilightEnergy = warmth * (1 - daylight)
 
   return {
     enabled: true,
-    exposure: mix(lightingModelConfig.nightExposure, lightingModelConfig.dayExposure, daylight),
+    exposureStops,
     relightStrength: lightingModelConfig.relightStrength,
     direction,
-    intensity: mix(lightingModelConfig.nightKeyIntensity, lightingModelConfig.dayKeyIntensity, daylight) * mix(0.76, 1, warmth),
+    intensity: mix(lightingModelConfig.nightKeyIntensity, lightingModelConfig.dayKeyIntensity, daylight)
+      + twilightEnergy * lightingModelConfig.twilightKeyBoost,
     color: colorChannels(keyColor),
-    ambientIntensity: mix(lightingModelConfig.nightAmbientIntensity, lightingModelConfig.dayAmbientIntensity, daylight),
+    ambientIntensity: mix(lightingModelConfig.nightAmbientIntensity, lightingModelConfig.dayAmbientIntensity, daylight)
+      + twilightEnergy * lightingModelConfig.twilightAmbientBoost,
     ambientColor: colorChannels(ambientColor),
     diffuseWrap: lightingModelConfig.diffuseWrap,
     diffuseThreshold: lightingModelConfig.diffuseThreshold,

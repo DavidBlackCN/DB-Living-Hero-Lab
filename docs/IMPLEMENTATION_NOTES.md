@@ -10,6 +10,8 @@ Blink v1 与整图生成重试 v2 的差异均遍布全画面，整图路线已�
 
 `auto` 在 reduced motion 下仍使用按需绘制的 WebGL Lit，以保留真实时钟驱动的光照和天空；`static` 始终静态；`balanced` 可用于强制检查 WebGL。面板记录上次绘制耗时。Leaves 有独立的限帧 RAF，`visibilitychange` 在后台停止并在恢复时重置计时。reduced motion 无论 Quality 是否为 balanced 都关闭 Leaves。
 
+R3 Breathing 在 fragment shader 中按 1672×941 Source Pixel 的软椭圆区域计算 UV 位移；Base 与 Normal 使用同一 UV，Sky 不变。`HeroCanvas` 只在 Breathing 启用且页面可见时启动动画 RAF，并把绘制限制在每秒 30 次；其余状态按需绘制。`prefers-reduced-motion` 与 Static quality 关闭呼吸。详见 [`validation/R3_BREATHING_PROTOTYPE.md`](validation/R3_BREATHING_PROTOTYPE.md)。现有 Blink/Leaves 仍仅在 Base 视图挂载，R3 尚未完成它们与 Lit/Sky 的同屏验收。
+
 Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。
 
 Normal 技术 v1 用 `scripts/generate_normal.py` 对 Base 亮度做 3 px / 16 px 模糊、梯度计算和单位向量编码，生成完全同尺寸、逐像素注册的 RGB 图；约定 R 向右、G 向下、B 朝向观察者。`HeroCanvas` 验证 Normal 尺寸并加载第二张 WebGL 纹理。Debug 的 Normal map 显示原始编码，Test Light 以角度滑杆改变方向，着色器对 Base 施加小幅相对亮度响应；默认 Base 视图不受影响。测试视图隐藏 Blink，避免局部眼图与测试光照混合。此资产是管线与方向验证用的浅浮雕法线；亮度边缘会混入原画阴影，不应直接视为最终物理表面结构。Runtime Lighting 还需人工修正面部、头发、衣料等语义区域，确定光照范围／色温／遮挡，并做桌面与移动端性能和观感验收。

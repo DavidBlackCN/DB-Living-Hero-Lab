@@ -3,7 +3,7 @@
 | Module | Asset / input | Next validation |
 | --- | --- | --- |
 | Blink | v1 闭眼候选提取的左、右眼透明局部图；Base 始终常驻 | 最小 Open → Closed → Open 已接入并通过局部像素检查与桌面页面检查。后续继续实机调节眼睑造型、节奏，Half 可独立补充。 |
-| Breathing | 安全区域、幅度和周期参数待定 | 先人工确认衣料和轮廓变形范围。 |
+| Breathing | R3 v1：Artwork Space 上躯干软区域、5.2 秒周期、4.8 source px 最大位移 | 已完成原型与自动检查；待人工动态验收，Lit + Blink/Leaves 同屏限制仍未解决。见 [`validation/R3_BREATHING_PROTOTYPE.md`](validation/R3_BREATHING_PROTOTYPE.md)。 |
 | Hair Motion | 独立发束区域或 Mask 待定 | 核对发梢、背景和遮挡关系。 |
 | Leaves | 四张透明 master 已接入第一版 Canvas 2D 粒子覆层 | 已有缓慢下落、共享微风、个体轻摆／旋转、resize、后台暂停和 reduced motion 关闭；后续继续实机调密度与遮挡。 |
 

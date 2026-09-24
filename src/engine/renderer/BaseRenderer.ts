@@ -3,6 +3,8 @@ import fragmentSource from '../../shaders/hero.frag.glsl?raw'
 import type { ArtworkLayout } from '../coordinates/artwork'
 import type { LightingState, RenderView } from '../types'
 import type { SkyPhaseId, SkyState } from '../../config/sky'
+import type { BreathingState } from '../animation/breathing'
+import { breathingConfig } from '../animation/breathing'
 
 function skyPhaseIndex(phase: SkyPhaseId): number {
   return phase === 'dawn' ? 0 : phase === 'noon' ? 1 : phase === 'dusk' ? 2 : 3
@@ -49,6 +51,9 @@ export class BaseRenderer {
   private skyPhaseALocation: WebGLUniformLocation
   private skyPhaseBLocation: WebGLUniformLocation
   private skyMixLocation: WebGLUniformLocation
+  private breathPhaseLocation: WebGLUniformLocation
+  private breathStrengthLocation: WebGLUniformLocation
+  private breathOverlayLocation: WebGLUniformLocation
   private disposed = false
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[]) {
@@ -96,6 +101,9 @@ export class BaseRenderer {
       skyPhaseA: gl.getUniformLocation(program, 'u_skyPhaseA'),
       skyPhaseB: gl.getUniformLocation(program, 'u_skyPhaseB'),
       skyMix: gl.getUniformLocation(program, 'u_skyMix'),
+      breathPhase: gl.getUniformLocation(program, 'u_breathPhase'),
+      breathStrength: gl.getUniformLocation(program, 'u_breathStrength'),
+      breathOverlay: gl.getUniformLocation(program, 'u_breathOverlay'),
     }
     if (!buffer || !texture || !normalTexture || skyTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
@@ -123,6 +131,9 @@ export class BaseRenderer {
     this.skyPhaseALocation = locations.skyPhaseA!
     this.skyPhaseBLocation = locations.skyPhaseB!
     this.skyMixLocation = locations.skyMix!
+    this.breathPhaseLocation = locations.breathPhase!
+    this.breathStrengthLocation = locations.breathStrength!
+    this.breathOverlayLocation = locations.breathOverlay!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -157,7 +168,7 @@ export class BaseRenderer {
     })
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -200,6 +211,9 @@ export class BaseRenderer {
     gl.uniform1i(this.skyPhaseALocation, skyPhaseIndex(sky.first))
     gl.uniform1i(this.skyPhaseBLocation, skyPhaseIndex(sky.second))
     gl.uniform1f(this.skyMixLocation, sky.mix)
+    gl.uniform1f(this.breathPhaseLocation, breathPhase)
+    gl.uniform1f(this.breathStrengthLocation, breathing.enabled ? breathing.strength * breathingConfig.maxDisplacementPx : 0)
+    gl.uniform1i(this.breathOverlayLocation, breathing.showRegion ? 1 : 0)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')

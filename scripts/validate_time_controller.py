@@ -30,6 +30,7 @@ def main() -> None:
         page.clock.install(time=datetime(2026, 9, 24, 23, 30, 0))
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+        page.get_by_label("Breathing on/off").uncheck()
         page.get_by_label("Render view").select_option("lit")
         output = page.locator(".time-control output")
         mode = page.locator(".time-mode")

@@ -49,3 +49,7 @@ Human review found a dark dip after Dusk: the face and white sleeves at 18:30 be
 ## Current phase: R2B 24H Time Controller
 
 Human review has accepted and frozen the R2A Runtime Lighting visual baseline. R2B now provides local Realtime by default, Manual slider/presets, Back to now, 60-second-per-day Play/Pause, midnight wrap, and visibility/reduced-motion behavior. Lighting and Sky receive one shared time value; their frozen visual curves are unchanged. Browser interaction tests, four pixel-identical anchor comparisons, and a repeated 97-frame 24H audit passed. See [`validation/R2B_TIME_CONTROLLER.md`](validation/R2B_TIME_CONTROLLER.md). R2B is ready for human acceptance; do not begin the next animation or post-processing stage yet.
+
+## Current phase: R3 Breathing v1 prototype
+
+Human review has accepted and frozen R2B. Torso-only Breathing v1 now has source-pixel soft regions, a 5.2-second cycle, shared Albedo/Normal UV deformation, a Region Overlay, a 0–2× strength control, and a visibility-aware 30-draw/s driver. Three calibration rounds plus stress and four-phase checks are recorded in [`validation/R3_BREATHING_PROTOTYPE.md`](validation/R3_BREATHING_PROTOTYPE.md). Breathing OFF is pixel-identical to R2B. The existing Blink/Leaves overlays are Base-view-only, so the requested simultaneous Lit/Sky/Blink/Leaves check remains open. Do not freeze R3 or start Hair Motion before human review and resolution of that integration item.

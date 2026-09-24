@@ -35,6 +35,7 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
         page.goto(args.url, wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+        page.get_by_label("Breathing on/off").uncheck()
         page.get_by_label("Render view").select_option("lit")
         slider = page.locator(".time-control input[type=range]")
 

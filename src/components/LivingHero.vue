@@ -8,6 +8,7 @@ import { heroConfig } from '../config/hero'
 import { createLightingStateForTime } from '../config/lighting'
 import { skyFor } from '../config/sky'
 import { layoutArtwork } from '../engine/coordinates/artwork'
+import type { BreathingState } from '../engine/animation/breathing'
 import { useStaticRendering } from '../engine/quality/policy'
 import { TimeController, clockMinutes } from '../engine/time/TimeController'
 import type { TimeSnapshot } from '../engine/time/TimeController'
@@ -31,6 +32,7 @@ const blinkPreviewToken = ref(0)
 const showBlinkRegions = ref(false)
 const leavesEnabled = ref(true)
 const leavesCount = ref(0)
+const breathing = ref<BreathingState>({ enabled: true, strength: 1, showRegion: false })
 const frameTime = ref<number | null>(null)
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
@@ -40,6 +42,7 @@ const staticPolicy = computed(() => useStaticRendering(quality.value))
 const wantsRenderer = computed(() => rendererEnabled.value && !staticPolicy.value)
 const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
 const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
+const breathingState = computed<BreathingState>(() => ({ ...breathing.value, enabled: breathing.value.enabled && !reducedMotion.value && wantsRenderer.value }))
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
 let observer: ResizeObserver | null = null
@@ -105,7 +108,7 @@ onBeforeUnmount(() => {
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls"
-      :sky="sky" :render-view="renderView" :lighting="lighting" :fit="fit" :dpr-cap="heroConfig.dprCap"
+      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="renderView === 'base'" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
       :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" />
@@ -117,6 +120,7 @@ onBeforeUnmount(() => {
       @back-to-now="timeController.backToNow()" @toggle-playback="timeMode === 'playing' ? timeController.pause() : timeController.play()"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
+      v-model:breathing="breathing"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"
       :frame-time="wantsRenderer ? frameTime : null" :reduced-motion="reducedMotion" :leaves-count="leavesCount" :leaves-fps-cap="heroConfig.leaves.fpsCap" />
   </main>

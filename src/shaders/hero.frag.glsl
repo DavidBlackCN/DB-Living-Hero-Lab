@@ -24,7 +24,31 @@ uniform float u_bandStrength;
 uniform float u_bandThreshold;
 uniform float u_bandSoftness;
 uniform float u_upperSceneAttenuation;
+uniform float u_breathPhase;
+uniform float u_breathStrength;
+uniform int u_breathOverlay;
 out vec4 outColor;
+float softEllipse(vec2 p, vec2 center, vec2 radius) {
+  return 1.0 - smoothstep(0.30, 1.0, length((p - center) / radius));
+}
+vec3 breathRegions(vec2 sourcePixel) {
+  float core = softEllipse(sourcePixel, vec2(1152.0, 461.0), vec2(103.0, 137.0));
+  float shoulder = softEllipse(sourcePixel, vec2(1151.0, 385.0), vec2(145.0, 93.0));
+  float protected = max(
+    softEllipse(sourcePixel, vec2(1154.0, 229.0), vec2(177.0, 135.0)),
+    max(softEllipse(sourcePixel, vec2(987.0, 501.0), vec2(87.0, 194.0)),
+        softEllipse(sourcePixel, vec2(1318.0, 520.0), vec2(79.0, 207.0)))
+  );
+  protected = max(protected, softEllipse(sourcePixel, vec2(1050.0, 433.0), vec2(44.0, 160.0)));
+  protected = max(protected, softEllipse(sourcePixel, vec2(1282.0, 444.0), vec2(50.0, 169.0)));
+  return vec3(core, shoulder, protected);
+}
+vec3 showBreathRegions(vec3 color, vec3 regions) {
+  if (u_breathOverlay == 0) return color;
+  vec3 tint = mix(vec3(0.14, 0.69, 0.90), vec3(0.24, 1.0, 0.58), regions.x);
+  vec3 shaded = mix(color, tint, max(regions.x, regions.y * 0.55) * 0.56);
+  return mix(shaded, vec3(1.0, 0.22, 0.37), regions.z * 0.36);
+}
 vec3 srgbToLinear(vec3 color) {
   vec3 low = color / 12.92;
   vec3 high = pow((color + 0.055) / 1.055, vec3(2.4));
@@ -54,11 +78,19 @@ float bandResponse(float facing) {
   return smoothstep(u_bandThreshold - edge, u_bandThreshold + edge, facing);
 }
 void main() {
-  vec4 base = texture(u_base, v_uv);
-  if (u_view == 0) { outColor = base; return; }
-  vec3 normalColor = texture(u_normal, v_uv).rgb;
-  if (u_view == 1) { outColor = vec4(normalColor, 1.0); return; }
-  if (u_lightingEnabled == 0) { outColor = base; return; }
+  vec3 regions = breathRegions(v_uv * vec2(1672.0, 941.0));
+  float weight = max(regions.x, regions.y * 0.42) * (1.0 - regions.z);
+  vec2 sampleUv = v_uv;
+  if (u_breathStrength > 0.0) {
+    float inhale = 0.5 - 0.5 * cos(u_breathPhase);
+    sampleUv.y += inhale * weight * u_breathStrength / 941.0;
+    sampleUv.x -= inhale * weight * (v_uv.x * 1672.0 - 1152.0) / 103.0 * u_breathStrength * 0.30 / 1672.0;
+  }
+  vec4 base = texture(u_base, sampleUv);
+  if (u_view == 0) { outColor = vec4(showBreathRegions(base.rgb, regions), base.a); return; }
+  vec3 normalColor = texture(u_normal, sampleUv).rgb;
+  if (u_view == 1) { outColor = vec4(showBreathRegions(normalColor, regions), 1.0); return; }
+  if (u_lightingEnabled == 0) { outColor = vec4(showBreathRegions(base.rgb, regions), base.a); return; }
   vec3 baseLinear = srgbToLinear(base.rgb);
   vec3 decodedNormal = normalColor * 2.0 - 1.0;
   vec3 normal = normalize(vec3(decodedNormal.x, -decodedNormal.y, decodedNormal.z));
@@ -68,10 +100,10 @@ void main() {
   float diffuse = smoothstep(u_diffuseThreshold - u_diffuseSoftness, u_diffuseThreshold + u_diffuseSoftness, wrapped);
   vec2 texel = 1.0 / vec2(textureSize(u_normal, 0));
   vec3 broadEncoded = normalColor * 4.0
-    + texture(u_normal, v_uv + vec2(texel.x * 5.0, 0.0)).rgb
-    + texture(u_normal, v_uv - vec2(texel.x * 5.0, 0.0)).rgb
-    + texture(u_normal, v_uv + vec2(0.0, texel.y * 5.0)).rgb
-    + texture(u_normal, v_uv - vec2(0.0, texel.y * 5.0)).rgb;
+    + texture(u_normal, sampleUv + vec2(texel.x * 5.0, 0.0)).rgb
+    + texture(u_normal, sampleUv - vec2(texel.x * 5.0, 0.0)).rgb
+    + texture(u_normal, sampleUv + vec2(0.0, texel.y * 5.0)).rgb
+    + texture(u_normal, sampleUv - vec2(0.0, texel.y * 5.0)).rgb;
   vec3 broadDecoded = broadEncoded / 8.0 * 2.0 - 1.0;
   vec3 broadNormal = normalize(vec3(broadDecoded.x, -broadDecoded.y, broadDecoded.z));
   float broadFacing = dot(broadNormal, lightDirection);
@@ -94,5 +126,5 @@ void main() {
     vec3 skyLinear = srgbToLinear(sky.rgb);
     displayLinear = mix(displayLinear, skyLinear, clamp(sky.a, 0.0, 1.0));
   }
-  outColor = vec4(linearToSrgb(displayLinear), base.a);
+  outColor = vec4(showBreathRegions(linearToSrgb(displayLinear), regions), base.a);
 }

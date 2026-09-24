@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatLightingTime, lightingPresets } from '../config/lighting'
 import type { TimeMode } from '../engine/time/TimeController'
+import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
 const props = defineProps<{
@@ -21,6 +22,7 @@ const props = defineProps<{
   leavesEnabled: boolean
   leavesCount: number
   leavesFpsCap: number
+  breathing: BreathingState
 }>()
 
 const emit = defineEmits<{
@@ -40,9 +42,14 @@ const emit = defineEmits<{
   (e: 'previewBlink'): void
   (e: 'update:leavesEnabled', value: boolean): void
   (e: 'update:skyEnabled', value: boolean): void
+  (e: 'update:breathing', value: BreathingState): void
 }>()
 
-const futureModules = ['Breathing', 'Hair Motion', 'Region Overlay']
+const futureModules = ['Hair Motion']
+
+function updateBreathing(patch: Partial<BreathingState>): void {
+  emit('update:breathing', { ...props.breathing, ...patch })
+}
 
 function updateLighting(patch: Partial<LightingState>): void {
   emit('update:lighting', { ...props.lighting, ...patch })
@@ -161,6 +168,20 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static' && renderView === 'base'" :disabled="renderView !== 'base' || reducedMotion || quality === 'static'"
         @change="emit('update:leavesEnabled', ($event.target as HTMLInputElement).checked)" /> Leaves <small>{{ leavesCount }} active</small>
     </label>
+    <details class="lighting-controls" open>
+      <summary>Breathing</summary>
+      <label><input type="checkbox" :checked="breathing.enabled && !reducedMotion && quality !== 'static' && rendererEnabled"
+        :disabled="reducedMotion || quality === 'static' || !rendererEnabled"
+        @change="updateBreathing({ enabled: ($event.target as HTMLInputElement).checked })" /> Breathing on/off</label>
+      <label><input type="checkbox" :checked="breathing.showRegion" :disabled="quality === 'static' || !rendererEnabled"
+        @change="updateBreathing({ showRegion: ($event.target as HTMLInputElement).checked })" /> Show Breathing Region</label>
+      <label class="range-control">Breathing Strength {{ (breathing.strength * breathingConfig.maxDisplacementPx).toFixed(1) }} source px
+        <input type="range" min="0" max="2" step="0.1" :value="breathing.strength"
+          :disabled="reducedMotion || quality === 'static' || !rendererEnabled"
+          @input="updateBreathing({ strength: Number(($event.target as HTMLInputElement).value) })" />
+      </label>
+      <small>Normal ×1 · Stress ×2 · {{ breathingConfig.periodSeconds }}s cycle</small>
+    </details>
     <div class="debug-future" aria-label="Future modules">
       <label v-for="name in futureModules" :key="name" :title="`${name}: Not implemented`">
         <input type="checkbox" disabled /> {{ name }} <small>Not implemented</small>
@@ -169,7 +190,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     <footer>
       <div>Mode: {{ rendererStatus }}</div>
       <div>Motion: {{ reducedMotion ? 'reduced' : 'normal' }}</div>
-      <div>Base frame: {{ frameTime === null ? 'idle' : `${frameTime.toFixed(1)} ms (on demand)` }}</div>
+      <div>Base frame: {{ frameTime === null ? 'idle' : `${frameTime.toFixed(1)} ms (${breathing.enabled && !reducedMotion && quality !== 'static' ? 'Breathing ≤30 FPS' : 'on demand'})` }}</div>
       <div>Leaves: {{ leavesCount ? `≤ ${leavesFpsCap} FPS` : 'off' }}</div>
     </footer>
   </aside>

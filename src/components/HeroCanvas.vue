@@ -5,14 +5,41 @@ import { layoutArtwork } from '../engine/coordinates/artwork'
 import { BaseRenderer } from '../engine/renderer/BaseRenderer'
 import type { SkyState } from '../config/sky'
 import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
+import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
 let resizeObserver: ResizeObserver | null = null
 let mounted = false
 let generation = 0
+let motionFrame: number | null = null
+let lastTick: number | null = null
+let lastDraw = 0
+let phaseSeconds = 0
+
+function stopMotion(): void {
+  if (motionFrame !== null) cancelAnimationFrame(motionFrame)
+  motionFrame = null
+  lastTick = null
+}
+
+function motionTick(time: number): void {
+  if (!props.breathing.enabled || document.hidden || !renderer) { stopMotion(); return }
+  if (lastTick !== null) phaseSeconds = (phaseSeconds + Math.min((time - lastTick) / 1000, 0.05)) % breathingConfig.periodSeconds
+  lastTick = time
+  if (time - lastDraw >= 1000 / 30) {
+    lastDraw = time
+    draw()
+  }
+  motionFrame = requestAnimationFrame(motionTick)
+}
+
+function scheduleMotion(): void {
+  stopMotion()
+  if (props.breathing.enabled && !document.hidden && renderer) motionFrame = requestAnimationFrame(motionTick)
+}
 
 function draw(): void {
   if (!renderer || !canvas.value || document.hidden) return
@@ -20,7 +47,8 @@ function draw(): void {
   if (bounds.width < 1 || bounds.height < 1) return
   try {
     const start = performance.now()
-    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky)
+    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky,
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -51,7 +79,7 @@ async function initialize(): Promise<void> {
     }
     renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages)
     draw()
-    if (renderer) emit('ready')
+    if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
     if (mounted && current === generation) emit('failed', String(error))
   }
@@ -59,6 +87,7 @@ async function initialize(): Promise<void> {
 
 function onContextLost(event: Event): void {
   event.preventDefault()
+  stopMotion()
   renderer?.destroy()
   renderer = null
   emit('failed', 'WebGL context lost')
@@ -69,7 +98,8 @@ function onContextRestored(): void {
 }
 
 function onVisibility(): void {
-  if (!document.hidden) draw()
+  if (document.hidden) stopMotion()
+  else { draw(); scheduleMotion() }
 }
 
 onMounted(() => {
@@ -85,12 +115,14 @@ onMounted(() => {
 watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
-watch(() => props.lighting, draw, { deep: true })
-watch(() => props.sky, draw, { deep: true })
+watch(() => props.lighting, () => { if (!props.breathing.enabled) draw() }, { deep: true })
+watch(() => props.sky, () => { if (!props.breathing.enabled) draw() }, { deep: true })
+watch(() => props.breathing, () => { draw(); scheduleMotion() }, { deep: true })
 
 onBeforeUnmount(() => {
   mounted = false
   generation++
+  stopMotion()
   resizeObserver?.disconnect()
   document.removeEventListener('visibilitychange', onVisibility)
   canvas.value?.removeEventListener('webglcontextlost', onContextLost)

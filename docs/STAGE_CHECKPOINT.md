@@ -27,3 +27,4 @@ R2A.2 曝光 / tone mapping 记录见 [`validation/R2A2_LIGHTING_VISUAL_CALIBRAT
 
 继续开发前先读 [`ASSET_PLAN.md`](ASSET_PLAN.md)、[`ANIMATION_PLAN.md`](ANIMATION_PLAN.md) 和相关 [`validation/`](validation/) 记录。改动后至少运行 `pnpm build`；涉及 Blink / Normal 时运行 `python scripts/validate_blink_normal.py`。
 | R2A.4b Night Sky / Upper-Background Compensation | **Self-review complete, pending final human acceptance**；针对 DB artwork 的露天天空和上方远景加入通用、平滑的 `upperSceneAttenuation`，完成两轮有限校准，22:00 上部背景明显沉降且人物保持可读；不冻结视觉基线，不进入 R2B。详见 [`validation/R2A4B_NIGHT_SKY_COMPENSATION.md`](validation/R2A4B_NIGHT_SKY_COMPENSATION.md)。 |
+| Registered four-phase sky assets | **Asset production complete, pending human acceptance**；新增 1672×941 天空遮罩及 Dawn / Noon / Dusk / Night 四张 RGBA 天空层。仅制作素材，尚未接入运行时；边界、合成预览与使用约定见 [`validation/SKY_ASSETS.md`](validation/SKY_ASSETS.md)。 |

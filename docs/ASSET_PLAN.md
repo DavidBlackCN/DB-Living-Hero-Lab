@@ -10,6 +10,7 @@
 | Normal v3 | `public/assets/hero/normal/base-normal-v3.png` | **Frozen for current Normal stage** | 在 v2 上仅修正薄发束、衣物内部和远景建筑／石雕；1672×941 RGB，与 Base 逐像素注册。脸、天空、主石柱和栏杆保持 v2 原像素；六方向和 1.3× stress 诊断已通过。见 [`validation/NORMAL_V3_VALIDATION.md`](validation/NORMAL_V3_VALIDATION.md)。 |
 | Leaves | `public/assets/hero/leaves/leaf-01.png`～`leaf-04.png` | Accepted / Integrated v1 | 四张独立 1024×1024 RGBA master 已确认可用，并接入第一版 Canvas 2D 落叶覆层；尺寸与轨迹后续独立调优。可逐张替换，保持文件名和透明留白规格。 |
 | Masks / regions | `public/assets/hero/masks/` | TBD | 仅在 Runtime Lighting / 动效实现确有需要时增加，同步 Artwork Space。 |
+| Sky system | `public/assets/hero/sky/sky-mask.png`、`sky-dawn.png`、`sky-noon.png`、`sky-dusk.png`、`sky-night.png` | Art asset ready / pending human acceptance | 与冻结 Base 同为 1672×941；遮罩为灰度，四张天空为已带相同 alpha 的全幅 RGBA，可直接叠加。仅替换露天空隙，不改变建筑、人物、藤蔓或栏杆。制作与检查见 [`validation/SKY_ASSETS.md`](validation/SKY_ASSETS.md)。 |
 
 Artwork Space 为 1672×941，UV 原点在左上，`(0,0)` 是图像左上角，`(1,1)` 是右下角。像素坐标同样从左上起算。所有局部资产须记录区域、尺寸和与 Base 的注册关系。目录可为空，表示素材确实待制作。
 

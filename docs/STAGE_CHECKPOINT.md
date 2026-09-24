@@ -41,3 +41,7 @@ Human review accepted Noon and Dusk. Dawn received a modest ambient/exposure lif
 ## Latest calibration: R2A.5e
 
 Human review identified overbright intermediate frames near 07:32 and 16:30. The twilight warmth curve was boosting Key, Ambient, and exposure between the preview anchors. Runtime Lighting now smoothly balances those energy scalars from 06:30–10:00 and 15:00–17:30 while preserving solar direction, colors, Sky behavior, and all four anchor images exactly. A 15-minute WebGL2 day-arc sweep found no intermediate frame brighter than Noon. See [`validation/R2A5E_DAY_ARC_BRIGHTNESS.md`](validation/R2A5E_DAY_ARC_BRIGHTNESS.md). Await human review; do not enter R2B.
+
+## Latest calibration: R2A.5f
+
+Human review found a dark dip after Dusk: the face and white sleeves at 18:30 became darker than Night, then recovered. Runtime Lighting now balances Key, Ambient, and exposure from the existing 17:30 Dusk state to the existing 20:00 Night-hold state, aligned with the Sky transition. All four preview anchor images are unchanged. A 97-frame WebGL2 scan covered every 15 minutes across the full 24H; the evening face no longer falls below its Night level, Noon remains the brightest artwork frame, and midnight wraps consistently. See [`validation/R2A5F_DUSK_NIGHT_CONTINUITY.md`](validation/R2A5F_DUSK_NIGHT_CONTINUITY.md). Await human review; do not enter R2B.

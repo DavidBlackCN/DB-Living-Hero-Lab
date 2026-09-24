@@ -4,9 +4,12 @@ in vec2 v_uv;
 uniform sampler2D u_base;
 uniform sampler2D u_normal;
 uniform sampler2D u_sky[4];
+uniform sampler2D u_blinkLeft;
+uniform sampler2D u_blinkRight;
 uniform int u_view;
 uniform int u_lightingEnabled;
 uniform int u_skyEnabled;
+uniform int u_blinkClosed;
 uniform int u_skyPhaseA;
 uniform int u_skyPhaseB;
 uniform float u_skyMix;
@@ -87,6 +90,19 @@ void main() {
     sampleUv.x -= inhale * weight * (v_uv.x * 1672.0 - 1152.0) / 103.0 * u_breathStrength * 0.30 / 1672.0;
   }
   vec4 base = texture(u_base, sampleUv);
+  // Closed-eye sprites replace local Albedo before the existing Normal-driven
+  // lighting transform. Base inspection retains its registered DOM overlay.
+  if (u_view == 2 && u_blinkClosed != 0) {
+    vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
+    if (sourcePixel.x >= 1080.0 && sourcePixel.x < 1172.0 && sourcePixel.y >= 177.0 && sourcePixel.y < 250.0) {
+      vec4 closedEye = texture(u_blinkLeft, (sourcePixel - vec2(1080.0, 177.0)) / vec2(92.0, 73.0));
+      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a);
+    }
+    if (sourcePixel.x >= 1152.0 && sourcePixel.x < 1244.0 && sourcePixel.y >= 195.0 && sourcePixel.y < 273.0) {
+      vec4 closedEye = texture(u_blinkRight, (sourcePixel - vec2(1152.0, 195.0)) / vec2(92.0, 78.0));
+      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a);
+    }
+  }
   if (u_view == 0) { outColor = vec4(showBreathRegions(base.rgb, regions), base.a); return; }
   vec3 normalColor = texture(u_normal, sampleUv).rgb;
   if (u_view == 1) { outColor = vec4(showBreathRegions(normalColor, regions), 1.0); return; }

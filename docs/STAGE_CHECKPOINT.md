@@ -53,3 +53,7 @@ Human review has accepted and frozen the R2A Runtime Lighting visual baseline. R
 ## Current phase: R3 Breathing v1 prototype
 
 Human review has accepted and frozen R2B. Torso-only Breathing v1 now has source-pixel soft regions, a 5.2-second cycle, shared Albedo/Normal UV deformation, a Region Overlay, a 0–2× strength control, and a visibility-aware 30-draw/s driver. Three calibration rounds plus stress and four-phase checks are recorded in [`validation/R3_BREATHING_PROTOTYPE.md`](validation/R3_BREATHING_PROTOTYPE.md). Breathing OFF is pixel-identical to R2B. The existing Blink/Leaves overlays are Base-view-only, so the requested simultaneous Lit/Sky/Blink/Leaves check remains open. Do not freeze R3 or start Hair Motion before human review and resolution of that integration item.
+
+## Current phase: R3.1 Final Lit Composition
+
+Human review accepted the R3 Breathing v1 motion. The remaining Lit integration is complete: approved local-eye Blink sprites now replace Albedo before Normal/Lighting/Sky, and existing Canvas2D Leaves overlay is enabled in Lit with a small time-of-day tone bridge. Four 18-second combined views, automatic Lit Blink closures, frozen-anchor comparisons, a repeated 97-frame 24H audit, visibility/reduced-motion checks, and build/typecheck validations passed. See [`validation/R3_1_FINAL_COMPOSITION.md`](validation/R3_1_FINAL_COMPOSITION.md). **R3 Breathing v1 is frozen.** Do not begin Hair Motion until the next stage is requested.

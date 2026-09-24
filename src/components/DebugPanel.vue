@@ -160,12 +160,12 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     </details>
     <label><input type="checkbox" :checked="showBounds" @change="emit('update:showBounds', ($event.target as HTMLInputElement).checked)" /> Artwork bounds</label>
     <label><input type="checkbox" :checked="showGrid" @change="emit('update:showGrid', ($event.target as HTMLInputElement).checked)" /> UV grid</label>
-    <label><input type="checkbox" :checked="blinkEnabled && !reducedMotion && quality !== 'static' && renderView === 'base'" :disabled="reducedMotion || quality === 'static' || renderView !== 'base'"
+    <label><input type="checkbox" :checked="blinkEnabled && !reducedMotion && quality !== 'static' && renderView !== 'normal'" :disabled="reducedMotion || quality === 'static' || renderView === 'normal'"
       @change="emit('update:blinkEnabled', ($event.target as HTMLInputElement).checked)" /> Blink on/off</label>
-    <button type="button" :disabled="renderView !== 'base'" @click="emit('previewBlink')">Preview Blink</button>
+    <button type="button" :disabled="renderView === 'normal' || quality === 'static' || reducedMotion" @click="emit('previewBlink')">Preview Blink</button>
     <label><input type="checkbox" :checked="showBlinkRegions" @change="emit('update:showBlinkRegions', ($event.target as HTMLInputElement).checked)" /> Show Blink Regions</label>
-    <label :title="renderView !== 'base' ? 'Available in Base view' : reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
-      <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static' && renderView === 'base'" :disabled="renderView !== 'base' || reducedMotion || quality === 'static'"
+    <label :title="renderView === 'normal' ? 'Available in Base and Lit views' : reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
+      <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static' && renderView !== 'normal'" :disabled="renderView === 'normal' || reducedMotion || quality === 'static'"
         @change="emit('update:leavesEnabled', ($event.target as HTMLInputElement).checked)" /> Leaves <small>{{ leavesCount }} active</small>
     </label>
     <details class="lighting-controls" open>

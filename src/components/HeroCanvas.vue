@@ -6,8 +6,9 @@ import { BaseRenderer } from '../engine/renderer/BaseRenderer'
 import type { SkyState } from '../config/sky'
 import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
+import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -48,7 +49,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.blinkClosed)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -62,9 +63,10 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
+      loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
     ])
     if (!mounted || current !== generation || !canvas.value) return
     if (image.naturalWidth !== props.artwork.width || image.naturalHeight !== props.artwork.height) {
@@ -77,7 +79,11 @@ async function initialize(): Promise<void> {
     if (skyImages.some(skyImage => skyImage.naturalWidth !== props.artwork.width || skyImage.naturalHeight !== props.artwork.height)) {
       throw new Error('Sky image dimensions do not match Artwork Space')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages)
+    if (leftBlink.naturalWidth !== props.blinkEyes[0].width || leftBlink.naturalHeight !== props.blinkEyes[0].height
+      || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
+      throw new Error('Local Blink images do not match registered eye rectangles')
+    }
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
@@ -117,6 +123,7 @@ watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
 watch(() => props.lighting, () => { if (!props.breathing.enabled) draw() }, { deep: true })
 watch(() => props.sky, () => { if (!props.breathing.enabled) draw() }, { deep: true })
+watch(() => props.blinkClosed, draw)
 watch(() => props.breathing, () => { draw(); scheduleMotion() }, { deep: true })
 
 onBeforeUnmount(() => {

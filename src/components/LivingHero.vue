@@ -7,6 +7,7 @@ import LeavesLayer from './LeavesLayer.vue'
 import { heroConfig } from '../config/hero'
 import { createLightingStateForTime } from '../config/lighting'
 import { skyFor } from '../config/sky'
+import { leafToneFor } from '../config/leafTone'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import type { BreathingState } from '../engine/animation/breathing'
 import { useStaticRendering } from '../engine/quality/policy'
@@ -25,10 +26,15 @@ const lightingMinutes = ref(clockMinutes(new Date()))
 const timeMode = ref<TimeSnapshot['mode']>('realtime')
 const lighting = ref<LightingState>(createLightingStateForTime(lightingMinutes.value))
 const sky = computed(() => skyFor(lightingMinutes.value))
+const leafStyle = computed(() => {
+  const tone = leafToneFor(lightingMinutes.value)
+  return { filter: `brightness(${tone.brightness.toFixed(3)}) saturate(${tone.saturation.toFixed(3)})` }
+})
 const showBounds = ref(false)
 const showGrid = ref(false)
 const blinkEnabled = ref(true)
 const blinkPreviewToken = ref(0)
+const blinkClosed = ref(false)
 const showBlinkRegions = ref(false)
 const leavesEnabled = ref(true)
 const leavesCount = ref(0)
@@ -40,8 +46,9 @@ const size = ref({ width: window.innerWidth, height: window.innerHeight })
 const layout = computed(() => layoutArtwork(heroConfig.artwork, size.value.width, size.value.height, fit.value))
 const staticPolicy = computed(() => useStaticRendering(quality.value))
 const wantsRenderer = computed(() => rendererEnabled.value && !staticPolicy.value)
-const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
-const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
+const sceneView = computed(() => renderView.value === 'base' || renderView.value === 'lit')
+const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static' && sceneView.value)
+const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && sceneView.value)
 const breathingState = computed<BreathingState>(() => ({ ...breathing.value, enabled: breathing.value.enabled && !reducedMotion.value && wantsRenderer.value }))
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
@@ -108,11 +115,12 @@ onBeforeUnmount(() => {
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls"
-      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :fit="fit" :dpr-cap="heroConfig.dprCap"
+      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :blink-eyes="heroConfig.blink.eyes"
+      :blink-closed="blinkClosed && blinkActive && renderView === 'lit'" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
-    <BlinkLayer v-if="renderView === 'base'" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
-      :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" />
-    <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" @count="leavesCount = $event" />
+    <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
+      :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base'" @closed="blinkClosed = $event" />
+    <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" :style="leafStyle" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
       v-model:lighting="lighting" :lighting-minutes="lightingMinutes" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"

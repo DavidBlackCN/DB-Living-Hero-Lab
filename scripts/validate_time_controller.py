@@ -31,6 +31,8 @@ def main() -> None:
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
         page.get_by_label("Breathing on/off").uncheck()
+        page.get_by_label("Blink on/off").uncheck()
+        page.get_by_label("Leaves").uncheck()
         page.get_by_label("Render view").select_option("lit")
         output = page.locator(".time-control output")
         mode = page.locator(".time-mode")
@@ -47,8 +49,10 @@ def main() -> None:
             assert mode.inner_text() == "Time: Manual"
             page.wait_for_timeout(100)
             shot = OUT / f"{name.lower()}.png"
-            page.screenshot(path=str(shot))
-            current = np.asarray(Image.open(shot).convert("RGB"))[:, 310:]
+            image_bytes = page.screenshot()
+            if not shot.exists():
+                shot.write_bytes(image_bytes)
+            current = np.asarray(Image.open(BytesIO(image_bytes)).convert("RGB"))[:, 310:]
             frozen = np.asarray(Image.open(BASELINE / f"{name.lower()}.png").convert("RGB"))[:, 310:]
             assert current.shape == frozen.shape
             assert np.max(np.abs(current.astype(np.int16) - frozen.astype(np.int16))) <= 1, name
@@ -82,7 +86,9 @@ def main() -> None:
             assert output.inner_text() == frozen
 
         select(1439)
-        page.screenshot(path=str(OUT / "before-midnight.png"))
+        before_midnight = OUT / "before-midnight.png"
+        if not before_midnight.exists():
+            page.screenshot(path=str(before_midnight))
         page.get_by_role("button", name="Play", exact=True).click()
         page.clock.run_for(100)
         assert int(slider.input_value()) in (0, 1, 2)

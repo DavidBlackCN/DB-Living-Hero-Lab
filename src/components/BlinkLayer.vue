@@ -11,7 +11,9 @@ const props = defineProps<{
   enabled: boolean
   previewToken: number
   showRegions: boolean
+  showPatch: boolean
 }>()
+const emit = defineEmits<{ (e: 'closed', value: boolean): void }>()
 
 const closed = ref(false)
 const scale = computed(() => props.layout.width / props.artwork.width)
@@ -28,7 +30,7 @@ function onVisibility(): void {
 }
 
 onMounted(() => {
-  timeline = new BlinkTimeline(props.config, value => { closed.value = value })
+  timeline = new BlinkTimeline(props.config, value => { closed.value = value; emit('closed', value) })
   timeline.setVisible(!document.hidden)
   timeline.setEnabled(props.enabled)
   document.addEventListener('visibilitychange', onVisibility)
@@ -45,9 +47,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="blink-layer" aria-hidden="true">
+  <div class="blink-layer" :class="{ 'is-closed': closed }" aria-hidden="true">
     <template v-for="(eye, index) in config.eyes" :key="eye.url">
-      <img class="blink-eye" :class="{ 'is-closed': closed }" :src="eye.url" :style="eyeStyles[index]" alt="" />
+      <img v-if="showPatch" class="blink-eye" :class="{ 'is-closed': closed }" :src="eye.url" :style="eyeStyles[index]" alt="" />
       <div v-if="showRegions" class="blink-region" :style="eyeStyles[index]" />
     </template>
   </div>

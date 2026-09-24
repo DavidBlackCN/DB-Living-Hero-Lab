@@ -36,6 +36,8 @@ def main() -> None:
         page.goto(args.url, wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
         page.get_by_label("Breathing on/off").uncheck()
+        page.get_by_label("Blink on/off").uncheck()
+        page.get_by_label("Leaves").uncheck()
         page.get_by_label("Render view").select_option("lit")
         slider = page.locator(".time-control input[type=range]")
 

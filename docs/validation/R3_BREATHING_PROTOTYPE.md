@@ -2,6 +2,8 @@
 
 Status: prototype implemented and measured; **not recommended for freeze yet**. The R2A/R2B curves and assets are unchanged. Full Lit + Sky + Blink + Leaves simultaneous acceptance remains unavailable because the previously accepted Blink/Leaves overlays are restricted to Base view. This limitation requires a separately authorized integration decision; this R3 task did not refactor those modules.
 
+Historical R3 prototype record: the remaining composition item was resolved in [R3.1 Final Lit composition](R3_1_FINAL_COMPOSITION.md), after human acceptance of the breathing motion.
+
 ## Reference and design
 
 The [KumengScreen scene loop](https://github.com/buger404/KumengScreen/blob/main/components/dream-scene.tsx) advances a motion phase only while enabled and resets its timestamp on visibility changes. Its [scene shader](https://github.com/buger404/KumengScreen/blob/main/lib/scene-shader.ts) applies broad UV region weights before sampling albedo and normal. DB adopts the UV sampling order and visibility principle, with its own source-pixel region. Unlike KumengScreen, DB v1 leaves the head stationary to preserve the separate local-eye Blink registration.

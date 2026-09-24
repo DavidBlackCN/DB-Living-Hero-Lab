@@ -45,3 +45,7 @@ Human review identified overbright intermediate frames near 07:32 and 16:30. The
 ## Latest calibration: R2A.5f
 
 Human review found a dark dip after Dusk: the face and white sleeves at 18:30 became darker than Night, then recovered. Runtime Lighting now balances Key, Ambient, and exposure from the existing 17:30 Dusk state to the existing 20:00 Night-hold state, aligned with the Sky transition. All four preview anchor images are unchanged. A 97-frame WebGL2 scan covered every 15 minutes across the full 24H; the evening face no longer falls below its Night level, Noon remains the brightest artwork frame, and midnight wraps consistently. See [`validation/R2A5F_DUSK_NIGHT_CONTINUITY.md`](validation/R2A5F_DUSK_NIGHT_CONTINUITY.md). Await human review; do not enter R2B.
+
+## Current phase: R2B 24H Time Controller
+
+Human review has accepted and frozen the R2A Runtime Lighting visual baseline. R2B now provides local Realtime by default, Manual slider/presets, Back to now, 60-second-per-day Play/Pause, midnight wrap, and visibility/reduced-motion behavior. Lighting and Sky receive one shared time value; their frozen visual curves are unchanged. Browser interaction tests, four pixel-identical anchor comparisons, and a repeated 97-frame 24H audit passed. See [`validation/R2B_TIME_CONTROLLER.md`](validation/R2B_TIME_CONTROLLER.md). R2B is ready for human acceptance; do not begin the next animation or post-processing stage yet.

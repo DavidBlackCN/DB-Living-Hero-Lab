@@ -8,7 +8,7 @@ Blink v1 与整图生成重试 v2 的差异均遍布全画面，整图路线已�
 
 `layoutArtwork` 统一算 cover/contain；默认 Auto 在 viewport 宽高比低于 0.9 时选 contain，其他情况选 cover。UV 与 Source Pixel、CSS Display 坐标转换都在同一模块。GLSL 用相同布局给 quad 定位。UV 定义为左上原点。Canvas 像素用受限 DPR（默认 2）缩放。cover 允许超出 viewport 的裁切，contain 留出背景边。
 
-`auto` 遇到 reduced motion 使用静态 Base；`static` 始终静态；`balanced` 用于强制检查 WebGL Base。Base 仍是按需绘制，面板记录上次绘制耗时。Leaves 有独立的限帧 RAF，`visibilitychange` 在后台停止并在恢复时重置计时。reduced motion 无论 Quality 是否为 balanced 都关闭 Leaves。
+`auto` 在 reduced motion 下仍使用按需绘制的 WebGL Lit，以保留真实时钟驱动的光照和天空；`static` 始终静态；`balanced` 可用于强制检查 WebGL。面板记录上次绘制耗时。Leaves 有独立的限帧 RAF，`visibilitychange` 在后台停止并在恢复时重置计时。reduced motion 无论 Quality 是否为 balanced 都关闭 Leaves。
 
 Leaves 的 `LeafField` 不依赖 Vue，使用 Canvas 2D Alpha Blend 绘制四张 PNG，职责包含纹理加载、粒子状态、共享风、resize、暂停和销毁。`LeavesLayer.vue` 只桥接生命周期与活动数量。覆层裁到 Artwork 在 viewport 中可见的矩形；粒子内部位置为该矩形的归一化坐标，速度以 CSS px/s 计，在 resize 后继续运动。覆层在 Base WebGL 或静态 `<img>` 之上，关闭 Base Renderer 不影响 Leaves 开关。移动端降低数量，静态和 reduced motion 移除整个覆层。
 

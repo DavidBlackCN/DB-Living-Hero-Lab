@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatLightingTime, lightingPresets } from '../config/lighting'
+import type { TimeMode } from '../engine/time/TimeController'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
 const props = defineProps<{
@@ -10,6 +11,7 @@ const props = defineProps<{
   renderView: RenderView
   lighting: LightingState
   lightingMinutes: number
+  timeMode: TimeMode
   showBounds: boolean
   showGrid: boolean
   frameTime: number | null
@@ -29,6 +31,8 @@ const emit = defineEmits<{
   (e: 'update:lighting', value: LightingState): void
   (e: 'selectLightingPreset', value: LightingPresetId): void
   (e: 'selectLightingTime', value: number): void
+  (e: 'backToNow'): void
+  (e: 'togglePlayback'): void
   (e: 'update:showBounds', value: boolean): void
   (e: 'update:showGrid', value: boolean): void
   (e: 'update:blinkEnabled', value: boolean): void
@@ -90,7 +94,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     <details class="lighting-controls" open>
       <summary>Runtime Lighting</summary>
       <label class="range-control time-control"><span>24H Preview <output>{{ formatLightingTime(lightingMinutes) }}</output></span>
-        <input type="range" min="0" max="1440" step="1" :value="lightingMinutes"
+        <input type="range" min="0" max="1440" step="1" :value="Math.round(lightingMinutes)" aria-label="24H Preview"
           :aria-valuetext="formatLightingTime(lightingMinutes)"
           @input="emit('selectLightingTime', Number(($event.target as HTMLInputElement).value))" />
         <div class="time-ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
@@ -99,6 +103,13 @@ function withDirection(angle: number, elevation: number): LightingState['directi
         <button v-for="preset in Object.values(lightingPresets)" :key="preset.id" type="button"
           :aria-pressed="lightingMinutes === preset.minutes" @click="emit('selectLightingPreset', preset.id)">{{ preset.label }}</button>
       </div>
+      <div class="time-actions">
+        <button type="button" :disabled="reducedMotion && timeMode !== 'playing'" :aria-pressed="timeMode === 'playing'"
+          :title="reducedMotion ? 'Playback is unavailable with reduced motion' : 'One day in 60 seconds'"
+          @click="emit('togglePlayback')">{{ timeMode === 'playing' ? 'Pause' : 'Play' }}</button>
+        <button type="button" :disabled="timeMode === 'realtime'" @click="emit('backToNow')">Back to now</button>
+      </div>
+      <div class="time-mode" role="status">Time: {{ timeMode === 'realtime' ? 'Realtime' : timeMode === 'playing' ? 'Playing' : 'Manual' }}</div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
       <label><input type="checkbox" :checked="lighting.skyEnabled" @change="updateLighting({ skyEnabled: ($event.target as HTMLInputElement).checked })" /> Sky on/off</label>
       <label class="range-control">Display exposure {{ lighting.exposureStops.toFixed(2) }} EV

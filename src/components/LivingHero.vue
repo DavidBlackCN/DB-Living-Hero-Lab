@@ -9,6 +9,8 @@ import { createLightingStateForTime } from '../config/lighting'
 import { skyFor } from '../config/sky'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { useStaticRendering } from '../engine/quality/policy'
+import { TimeController, clockMinutes } from '../engine/time/TimeController'
+import type { TimeSnapshot } from '../engine/time/TimeController'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView } from '../engine/types'
 
 const root = ref<HTMLElement | null>(null)
@@ -17,8 +19,9 @@ const rendererReady = ref(false)
 const rendererError = ref('')
 const fit = ref<FitMode>('auto')
 const quality = ref<QualityPreset>('auto')
-const renderView = ref<RenderView>('base')
-const lightingMinutes = ref(720)
+const renderView = ref<RenderView>('lit')
+const lightingMinutes = ref(clockMinutes(new Date()))
+const timeMode = ref<TimeSnapshot['mode']>('realtime')
 const lighting = ref<LightingState>(createLightingStateForTime(lightingMinutes.value))
 const sky = computed(() => skyFor(lightingMinutes.value))
 const showBounds = ref(false)
@@ -33,13 +36,18 @@ const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
 const size = ref({ width: window.innerWidth, height: window.innerHeight })
 const layout = computed(() => layoutArtwork(heroConfig.artwork, size.value.width, size.value.height, fit.value))
-const staticPolicy = computed(() => useStaticRendering(quality.value, reducedMotion.value))
+const staticPolicy = computed(() => useStaticRendering(quality.value))
 const wantsRenderer = computed(() => rendererEnabled.value && !staticPolicy.value)
 const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
 const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && renderView.value === 'base')
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
 let observer: ResizeObserver | null = null
+const timeController = new TimeController(state => {
+  timeMode.value = state.mode
+  lightingMinutes.value = state.minutes
+  lighting.value = { ...createLightingStateForTime(state.minutes), skyEnabled: lighting.value.skyEnabled }
+})
 
 watch(wantsRenderer, () => {
   rendererReady.value = false
@@ -48,7 +56,10 @@ watch(wantsRenderer, () => {
 
 function onMotionChange(): void {
   reducedMotion.value = motionQuery.matches
+  if (reducedMotion.value) timeController.pause()
 }
+
+function onVisibility(): void { timeController.setVisible(!document.hidden) }
 
 function onRendererFailed(reason: string): void {
   rendererReady.value = false
@@ -67,12 +78,13 @@ function selectLightingPreset(preset: LightingPresetId): void {
 }
 
 function selectLightingTime(minutes: number): void {
-  const skyEnabled = lighting.value.skyEnabled
-  lightingMinutes.value = Math.max(0, Math.min(1440, Math.round(minutes)))
-  lighting.value = { ...createLightingStateForTime(lightingMinutes.value), skyEnabled }
+  timeController.select(minutes)
 }
 
 onMounted(() => {
+  timeController.setVisible(!document.hidden)
+  timeController.backToNow()
+  document.addEventListener('visibilitychange', onVisibility)
   onMotionChange()
   motionQuery.addEventListener('change', onMotionChange)
   observer = new ResizeObserver(([entry]) => {
@@ -82,6 +94,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  timeController.destroy()
+  document.removeEventListener('visibilitychange', onVisibility)
   observer?.disconnect()
   motionQuery.removeEventListener('change', onMotionChange)
 })
@@ -98,8 +112,9 @@ onBeforeUnmount(() => {
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
-      v-model:lighting="lighting" :lighting-minutes="lightingMinutes" @select-lighting-preset="selectLightingPreset"
+      v-model:lighting="lighting" :lighting-minutes="lightingMinutes" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"
       @select-lighting-time="selectLightingTime"
+      @back-to-now="timeController.backToNow()" @toggle-playback="timeMode === 'playing' ? timeController.pause() : timeController.play()"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"

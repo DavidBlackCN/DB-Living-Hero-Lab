@@ -26,3 +26,4 @@ R2A.2 曝光 / tone mapping 记录见 [`validation/R2A2_LIGHTING_VISUAL_CALIBRAT
 当前最新阶段为 R2A.4，详见 [`validation/R2A4_REFERENCE_GUIDED_CALIBRATION.md`](validation/R2A4_REFERENCE_GUIDED_CALIBRATION.md)。两轮自检后建议交由人工验收，尚未冻结视觉基线；上文 R2A.3 等待验收的描述为历史状态。不得自行进入 R2B。
 
 继续开发前先读 [`ASSET_PLAN.md`](ASSET_PLAN.md)、[`ANIMATION_PLAN.md`](ANIMATION_PLAN.md) 和相关 [`validation/`](validation/) 记录。改动后至少运行 `pnpm build`；涉及 Blink / Normal 时运行 `python scripts/validate_blink_normal.py`。
+| R2A.4b Night Sky / Upper-Background Compensation | **Self-review complete, pending final human acceptance**；针对 DB artwork 的露天天空和上方远景加入通用、平滑的 `upperSceneAttenuation`，完成两轮有限校准，22:00 上部背景明显沉降且人物保持可读；不冻结视觉基线，不进入 R2B。详见 [`validation/R2A4B_NIGHT_SKY_COMPENSATION.md`](validation/R2A4B_NIGHT_SKY_COMPENSATION.md)。 |

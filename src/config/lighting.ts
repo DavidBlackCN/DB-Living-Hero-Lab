@@ -39,6 +39,8 @@ export interface LightingModelConfig {
   bandStrength: number
   bandThreshold: number
   bandSoftness: number
+  duskUpperSceneAttenuation: number
+  nightUpperSceneAttenuation: number
   relightStrength: number
 }
 
@@ -75,6 +77,8 @@ export const lightingModelConfig: LightingModelConfig = {
   bandStrength: 0.34,
   bandThreshold: 0.66,
   bandSoftness: 0.32,
+  duskUpperSceneAttenuation: 0.08,
+  nightUpperSceneAttenuation: 0.54,
   relightStrength: 0.90,
 }
 
@@ -174,6 +178,12 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     ),
     bandThreshold: lightingModelConfig.bandThreshold,
     bandSoftness: lightingModelConfig.bandSoftness,
+    upperSceneAttenuation: duskWeight * lightingModelConfig.duskUpperSceneAttenuation
+      + (safeMinutes < lightingModelConfig.sunriseMinutes
+        ? (1 - smooth(0, lightingModelConfig.sunriseMinutes, safeMinutes))
+        : safeMinutes > lightingModelConfig.sunsetMinutes
+          ? smooth(lightingModelConfig.sunsetMinutes, nextSunrise, safeMinutes)
+          : 0) * lightingModelConfig.nightUpperSceneAttenuation,
     daylight,
     warmth,
   }

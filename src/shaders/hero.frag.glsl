@@ -18,6 +18,7 @@ uniform float u_diffuseSoftness;
 uniform float u_bandStrength;
 uniform float u_bandThreshold;
 uniform float u_bandSoftness;
+uniform float u_upperSceneAttenuation;
 out vec4 outColor;
 vec3 srgbToLinear(vec3 color) {
   vec3 low = color / 12.92;
@@ -68,6 +69,9 @@ void main() {
   float shapedDiffuse = mix(diffuse, bandDiffuse, u_bandStrength);
   vec3 illumination = u_ambientColor * u_ambientIntensity
     + u_lightColor * (shapedDiffuse * u_lightIntensity);
+  float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
+  float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
+  illumination *= upperSceneFactor;
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);

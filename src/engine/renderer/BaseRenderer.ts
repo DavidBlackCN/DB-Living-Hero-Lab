@@ -38,6 +38,7 @@ export class BaseRenderer {
   private bandStrengthLocation: WebGLUniformLocation
   private bandThresholdLocation: WebGLUniformLocation
   private bandSoftnessLocation: WebGLUniformLocation
+  private upperSceneAttenuationLocation: WebGLUniformLocation
   private disposed = false
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement) {
@@ -79,6 +80,7 @@ export class BaseRenderer {
       bandStrength: gl.getUniformLocation(program, 'u_bandStrength'),
       bandThreshold: gl.getUniformLocation(program, 'u_bandThreshold'),
       bandSoftness: gl.getUniformLocation(program, 'u_bandSoftness'),
+      upperSceneAttenuation: gl.getUniformLocation(program, 'u_upperSceneAttenuation'),
     }
     if (!buffer || !texture || !normalTexture || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
@@ -100,6 +102,7 @@ export class BaseRenderer {
     this.bandStrengthLocation = locations.bandStrength!
     this.bandThresholdLocation = locations.bandThreshold!
     this.bandSoftnessLocation = locations.bandSoftness!
+    this.upperSceneAttenuationLocation = locations.upperSceneAttenuation!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -158,6 +161,7 @@ export class BaseRenderer {
     gl.uniform1f(this.bandStrengthLocation, lighting.bandStrength)
     gl.uniform1f(this.bandThresholdLocation, lighting.bandThreshold)
     gl.uniform1f(this.bandSoftnessLocation, lighting.bandSoftness)
+    gl.uniform1f(this.upperSceneAttenuationLocation, lighting.upperSceneAttenuation)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')

@@ -12,6 +12,7 @@ from PIL import Image
 ANCHORS = ("0630", "1200", "1730", "2200")
 SCREENSHOT_SIZE = (1440, 900)
 REGIONS = {
+    "artwork": [(310, 0, 1440, 900)],
     "face": [(930, 90, 1110, 300)],
     "white_shirt": [(730, 300, 920, 650), (1130, 300, 1245, 670)],
     "background_architecture": [(320, 40, 740, 470)],

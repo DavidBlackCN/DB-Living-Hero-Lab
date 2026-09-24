@@ -28,10 +28,13 @@ export interface LightingModelConfig {
   dawnKeyBoost: number
   duskKeyBoost: number
   nightAmbientIntensity: number
+  deepNightAmbientLift: number
+  deepNightKeyReduction: number
   dayAmbientIntensity: number
   dawnAmbientBoost: number
   duskAmbientBoost: number
   nightColor: { key: [number, number, number]; ambient: [number, number, number] }
+  deepNightAmbientColor: [number, number, number]
   dayColor: { key: [number, number, number]; ambient: [number, number, number] }
   dawnColor: { key: [number, number, number]; ambient: [number, number, number] }
   duskColor: { key: [number, number, number]; ambient: [number, number, number] }
@@ -61,7 +64,7 @@ export const lightingModelConfig: LightingModelConfig = {
   duskAzimuth: 145,
   nightElevationDegrees: 18,
   dayElevationDegrees: 64,
-  dawnExposureStops: 0.20,
+  dawnExposureStops: 0.29,
   dayExposureStops: -0.42,
   duskExposureStops: 0.16,
   nightExposureStops: -0.22,
@@ -70,12 +73,15 @@ export const lightingModelConfig: LightingModelConfig = {
   dawnKeyBoost: 0.44,
   duskKeyBoost: 1.28,
   nightAmbientIntensity: 0.14,
+  deepNightAmbientLift: 0.025,
+  deepNightKeyReduction: 0.025,
   dayAmbientIntensity: 0.38,
-  dawnAmbientBoost: 0.32,
+  dawnAmbientBoost: 0.39,
   duskAmbientBoost: 0.34,
   nightColor: { key: [0.56, 0.70, 1], ambient: [0.28, 0.36, 0.62] },
+  deepNightAmbientColor: [0.36, 0.47, 0.72],
   dayColor: { key: [1, 0.98, 0.94], ambient: [0.60, 0.70, 0.88] },
-  dawnColor: { key: [0.84, 0.90, 1], ambient: [0.28, 0.46, 0.78] },
+  dawnColor: { key: [0.92, 0.92, 0.93], ambient: [0.28, 0.46, 0.78] },
   duskColor: { key: [1, 0.59, 0.22], ambient: [0.60, 0.43, 0.48] },
   diffuseWrap: 0.08,
   diffuseThreshold: 0.52,
@@ -121,6 +127,8 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
   const safeMinutes = inputMinutes === 1440 ? 0 : inputMinutes
   const hourAngle = ((safeMinutes - lightingModelConfig.sunriseMinutes) / 1440) * Math.PI * 2
   const solarElevation = Math.sin(hourAngle)
+  // Deep-night fill fades before twilight, leaving the accepted Noon/Dusk looks intact.
+  const deepNight = 1 - smooth(-0.28, -0.10, solarElevation)
   const daylight = smooth(lightingModelConfig.daylightElevationStart, lightingModelConfig.daylightElevationFull, solarElevation)
   const warmth = (1 - smooth(lightingModelConfig.warmthElevationPeak, lightingModelConfig.warmthElevationEnd, solarElevation))
     * smooth(lightingModelConfig.warmthElevationStart, lightingModelConfig.warmthElevationPeak, solarElevation)
@@ -154,11 +162,11 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     mixColor(lightingModelConfig.dawnColor.key, lightingModelConfig.duskColor.key, duskSide),
     twilightColorWeight,
   )
-  const ambientColor = mixColor(
+  const ambientColor = mixColor(mixColor(
     mixColor(lightingModelConfig.nightColor.ambient, lightingModelConfig.dayColor.ambient, daylight),
     mixColor(lightingModelConfig.dawnColor.ambient, lightingModelConfig.duskColor.ambient, duskSide),
     twilightColorWeight,
-  )
+  ), lightingModelConfig.deepNightAmbientColor, deepNight)
   const exposureStops = mix(
     mix(mix(lightingModelConfig.nightExposureStops, lightingModelConfig.dawnExposureStops, dawnWeight), lightingModelConfig.duskExposureStops, duskWeight),
     lightingModelConfig.dayExposureStops,
@@ -171,10 +179,12 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
       + duskWeight * lightingModelConfig.duskRelightBoost),
     direction,
     intensity: mix(lightingModelConfig.nightKeyIntensity, lightingModelConfig.dayKeyIntensity, daylight)
-      + dawnWeight * lightingModelConfig.dawnKeyBoost + duskWeight * lightingModelConfig.duskKeyBoost,
+      + dawnWeight * lightingModelConfig.dawnKeyBoost + duskWeight * lightingModelConfig.duskKeyBoost
+      - deepNight * lightingModelConfig.deepNightKeyReduction,
     color: colorChannels(keyColor),
     ambientIntensity: mix(lightingModelConfig.nightAmbientIntensity, lightingModelConfig.dayAmbientIntensity, daylight)
-      + dawnWeight * lightingModelConfig.dawnAmbientBoost + duskWeight * lightingModelConfig.duskAmbientBoost,
+      + dawnWeight * lightingModelConfig.dawnAmbientBoost + duskWeight * lightingModelConfig.duskAmbientBoost
+      + deepNight * lightingModelConfig.deepNightAmbientLift,
     ambientColor: colorChannels(ambientColor),
     diffuseWrap: lightingModelConfig.diffuseWrap,
     diffuseThreshold: lightingModelConfig.diffuseThreshold,

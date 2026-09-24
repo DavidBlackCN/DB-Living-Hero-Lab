@@ -33,3 +33,7 @@ R2A.2 曝光 / tone mapping 记录见 [`validation/R2A2_LIGHTING_VISUAL_CALIBRAT
 ## Latest calibration: R2A.5c
 
 The Runtime Lighting four-phase visual calibration has completed three screenshot iterations and is ready for human visual acceptance. Dawn is cooler, Noon retains brighter-state detail, Dusk has stronger amber low-angle light, and Night is substantially deeper while the face and white sleeves remain legible. The time-varying relight strength, effective anchor parameters, baseline/iteration captures, and intermediate 24H checks are recorded in [`validation/R2A5C_RUNTIME_LIGHTING_FOUR_PHASE.md`](validation/R2A5C_RUNTIME_LIGHTING_FOUR_PHASE.md). Base, Normal, Blink, Leaves, and Sky assets remain unchanged. Do not enter R2B before human acceptance.
+
+## Latest calibration: R2A.5d
+
+Human review accepted Noon and Dusk. Dawn received a modest ambient/exposure lift, and Night received deeper blue-gray fill with a slightly weaker key. The Sky Timeline now holds Night from 20:00 through 05:00, with smooth transitions through Dawn and Dusk; preview shortcuts remain at 06:30 / 12:00 / 17:30 / 22:00. All 12 requested times and the 22:00–04:30 night continuity were captured in WebGL2 Lit mode. See [`validation/R2A5D_DAWN_NIGHT_SKY_TIMELINE.md`](validation/R2A5D_DAWN_NIGHT_SKY_TIMELINE.md). Dawn, Night, and the corrected timeline await final human acceptance. Do not enter R2B.

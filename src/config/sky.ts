@@ -13,11 +13,13 @@ export const skyAssets: Record<SkyPhaseId, string> = {
   night: `${import.meta.env.BASE_URL}assets/hero/sky/sky-night.png`,
 }
 
-export const skyKeyframes: ReadonlyArray<{ id: SkyPhaseId; minutes: number }> = [
-  { id: 'dawn', minutes: 390 },
-  { id: 'noon', minutes: 720 },
-  { id: 'dusk', minutes: 1050 },
-  { id: 'night', minutes: 1320 },
+// Preview shortcuts are not sky phase boundaries. Keep the authored Dawn and
+// Dusk assets at their shortcut times while holding Night through the night.
+const skyTransitions: ReadonlyArray<{ start: number; end: number; first: SkyPhaseId; second: SkyPhaseId }> = [
+  { start: 300, end: 390, first: 'night', second: 'dawn' },
+  { start: 390, end: 480, first: 'dawn', second: 'noon' },
+  { start: 960, end: 1050, first: 'noon', second: 'dusk' },
+  { start: 1050, end: 1200, first: 'dusk', second: 'night' },
 ]
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value))
@@ -30,22 +32,13 @@ function smooth(amount: number): number {
 export function skyFor(minutes: number): SkyState {
   const input = Number.isFinite(minutes) ? Math.max(0, Math.min(1440, minutes)) : 720
   const value = input === 1440 ? 0 : input
-  const count = skyKeyframes.length
 
-  for (let index = 0; index < count; index++) {
-    const start = skyKeyframes[index]
-    const nextIndex = (index + 1) % count
-    const end = skyKeyframes[nextIndex]
-    const endMinute = nextIndex === 0 ? end.minutes + 1440 : end.minutes
-    const sampleMinute = value < start.minutes ? value + 1440 : value
-    if (sampleMinute >= start.minutes && sampleMinute <= endMinute) {
-      return {
-        first: start.id,
-        second: end.id,
-        mix: smooth((sampleMinute - start.minutes) / (endMinute - start.minutes)),
-      }
+  for (const transition of skyTransitions) {
+    if (value >= transition.start && value < transition.end) {
+      return { first: transition.first, second: transition.second, mix: smooth((value - transition.start) / (transition.end - transition.start)) }
     }
   }
 
-  return { first: 'night', second: 'dawn', mix: 0 }
+  const phase: SkyPhaseId = value >= 480 && value < 960 ? 'noon' : 'night'
+  return { first: phase, second: phase, mix: 0 }
 }

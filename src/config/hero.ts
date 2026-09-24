@@ -2,8 +2,9 @@ import type { ArtworkSpec } from '../engine/types'
 import type { LeafConfig } from '../engine/animation/LeafField'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import { defaultLighting } from './lighting'
+import { skyAssets } from './sky'
 
-export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; sky: { urls: typeof skyAssets }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -23,6 +24,7 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
   normal: {
     url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v3.png`,
   },
+  sky: { urls: skyAssets },
   lighting: defaultLighting,
   dprCap: 2,
   leaves: {

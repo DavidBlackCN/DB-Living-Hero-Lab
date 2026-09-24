@@ -3,9 +3,10 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { loadImage } from '../engine/assets/loadImage'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { BaseRenderer } from '../engine/renderer/BaseRenderer'
+import type { SkyState } from '../config/sky'
 import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; renderView: RenderView; lighting: LightingState; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -19,7 +20,7 @@ function draw(): void {
   if (bounds.width < 1 || bounds.height < 1) return
   try {
     const start = performance.now()
-    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting)
+    renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -33,7 +34,10 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage] = await Promise.all([loadImage(props.artwork.baseUrl), loadImage(props.normalUrl)])
+    const [image, normalImage, dawn, noon, dusk, night] = await Promise.all([
+      loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
+      loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
+    ])
     if (!mounted || current !== generation || !canvas.value) return
     if (image.naturalWidth !== props.artwork.width || image.naturalHeight !== props.artwork.height) {
       throw new Error('Base image dimensions do not match Artwork Space')
@@ -41,7 +45,11 @@ async function initialize(): Promise<void> {
     if (normalImage.naturalWidth !== props.artwork.width || normalImage.naturalHeight !== props.artwork.height) {
       throw new Error('Normal image dimensions do not match Artwork Space')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage)
+    const skyImages = [dawn, noon, dusk, night]
+    if (skyImages.some(skyImage => skyImage.naturalWidth !== props.artwork.width || skyImage.naturalHeight !== props.artwork.height)) {
+      throw new Error('Sky image dimensions do not match Artwork Space')
+    }
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages)
     draw()
     if (renderer) emit('ready')
   } catch (error) {
@@ -78,6 +86,7 @@ watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
 watch(() => props.lighting, draw, { deep: true })
+watch(() => props.sky, draw, { deep: true })
 
 onBeforeUnmount(() => {
   mounted = false

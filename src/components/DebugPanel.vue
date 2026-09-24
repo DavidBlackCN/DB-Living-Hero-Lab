@@ -35,6 +35,7 @@ const emit = defineEmits<{
   (e: 'update:showBlinkRegions', value: boolean): void
   (e: 'previewBlink'): void
   (e: 'update:leavesEnabled', value: boolean): void
+  (e: 'update:skyEnabled', value: boolean): void
 }>()
 
 const futureModules = ['Breathing', 'Hair Motion', 'Region Overlay']
@@ -99,6 +100,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
           :aria-pressed="lightingMinutes === preset.minutes" @click="emit('selectLightingPreset', preset.id)">{{ preset.label }}</button>
       </div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
+      <label><input type="checkbox" :checked="lighting.skyEnabled" @change="updateLighting({ skyEnabled: ($event.target as HTMLInputElement).checked })" /> Sky on/off</label>
       <label class="range-control">Display exposure {{ lighting.exposureStops.toFixed(2) }} EV
         <input type="range" min="-1.5" max="1.5" step="0.01" :value="lighting.exposureStops"
           @input="updateLighting({ exposureStops: Number(($event.target as HTMLInputElement).value) })" />

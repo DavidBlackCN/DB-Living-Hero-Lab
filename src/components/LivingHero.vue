@@ -6,6 +6,7 @@ import HeroCanvas from './HeroCanvas.vue'
 import LeavesLayer from './LeavesLayer.vue'
 import { heroConfig } from '../config/hero'
 import { createLightingStateForTime } from '../config/lighting'
+import { skyFor } from '../config/sky'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import { useStaticRendering } from '../engine/quality/policy'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView } from '../engine/types'
@@ -19,6 +20,7 @@ const quality = ref<QualityPreset>('auto')
 const renderView = ref<RenderView>('base')
 const lightingMinutes = ref(720)
 const lighting = ref<LightingState>(createLightingStateForTime(lightingMinutes.value))
+const sky = computed(() => skyFor(lightingMinutes.value))
 const showBounds = ref(false)
 const showGrid = ref(false)
 const blinkEnabled = ref(true)
@@ -65,8 +67,9 @@ function selectLightingPreset(preset: LightingPresetId): void {
 }
 
 function selectLightingTime(minutes: number): void {
+  const skyEnabled = lighting.value.skyEnabled
   lightingMinutes.value = Math.max(0, Math.min(1440, Math.round(minutes)))
-  lighting.value = createLightingStateForTime(lightingMinutes.value)
+  lighting.value = { ...createLightingStateForTime(lightingMinutes.value), skyEnabled }
 }
 
 onMounted(() => {
@@ -87,8 +90,8 @@ onBeforeUnmount(() => {
 <template>
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
-    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :render-view="renderView"
-      :lighting="lighting" :fit="fit" :dpr-cap="heroConfig.dprCap"
+    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls"
+      :sky="sky" :render-view="renderView" :lighting="lighting" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="renderView === 'base'" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
       :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" />

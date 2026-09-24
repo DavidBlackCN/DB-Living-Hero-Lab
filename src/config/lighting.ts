@@ -77,8 +77,8 @@ export const lightingModelConfig: LightingModelConfig = {
   bandStrength: 0.34,
   bandThreshold: 0.66,
   bandSoftness: 0.32,
-  duskUpperSceneAttenuation: 0.08,
-  nightUpperSceneAttenuation: 0.54,
+  duskUpperSceneAttenuation: 0,
+  nightUpperSceneAttenuation: 0,
   relightStrength: 0.90,
 }
 
@@ -184,6 +184,7 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
         : safeMinutes > lightingModelConfig.sunsetMinutes
           ? smooth(lightingModelConfig.sunsetMinutes, nextSunrise, safeMinutes)
           : 0) * lightingModelConfig.nightUpperSceneAttenuation,
+    skyEnabled: true,
     daylight,
     warmth,
   }

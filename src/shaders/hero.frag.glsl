@@ -3,8 +3,13 @@ precision mediump float;
 in vec2 v_uv;
 uniform sampler2D u_base;
 uniform sampler2D u_normal;
+uniform sampler2D u_sky[4];
 uniform int u_view;
 uniform int u_lightingEnabled;
+uniform int u_skyEnabled;
+uniform int u_skyPhaseA;
+uniform int u_skyPhaseB;
+uniform float u_skyMix;
 uniform float u_exposure;
 uniform float u_relightStrength;
 uniform vec3 u_lightDirection;
@@ -37,6 +42,12 @@ vec3 toneMapAces(vec3 color) {
   const float d = 0.59;
   const float e = 0.14;
   return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
+}
+vec4 sampleSky(int phase) {
+  if (phase == 0) return texture(u_sky[0], v_uv);
+  if (phase == 1) return texture(u_sky[1], v_uv);
+  if (phase == 2) return texture(u_sky[2], v_uv);
+  return texture(u_sky[3], v_uv);
 }
 float bandResponse(float facing) {
   float edge = max(u_bandSoftness, 0.001);
@@ -75,5 +86,13 @@ void main() {
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);
-  outColor = vec4(linearToSrgb(toneMapAces(exposedLinear)), base.a);
+  vec3 displayLinear = toneMapAces(exposedLinear);
+  if (u_skyEnabled != 0) {
+    vec4 skyA = sampleSky(u_skyPhaseA);
+    vec4 skyB = sampleSky(u_skyPhaseB);
+    vec4 sky = mix(skyA, skyB, clamp(u_skyMix, 0.0, 1.0));
+    vec3 skyLinear = srgbToLinear(sky.rgb);
+    displayLinear = mix(displayLinear, skyLinear, clamp(sky.a, 0.0, 1.0));
+  }
+  outColor = vec4(linearToSrgb(displayLinear), base.a);
 }

@@ -2,6 +2,11 @@ import vertexSource from '../../shaders/hero.vert.glsl?raw'
 import fragmentSource from '../../shaders/hero.frag.glsl?raw'
 import type { ArtworkLayout } from '../coordinates/artwork'
 import type { LightingState, RenderView } from '../types'
+import type { SkyPhaseId, SkyState } from '../../config/sky'
+
+function skyPhaseIndex(phase: SkyPhaseId): number {
+  return phase === 'dawn' ? 0 : phase === 'noon' ? 1 : phase === 'dusk' ? 2 : 3
+}
 
 function compile(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type)
@@ -22,6 +27,7 @@ export class BaseRenderer {
   private buffer: WebGLBuffer
   private texture: WebGLTexture
   private normalTexture: WebGLTexture
+  private skyTextures: WebGLTexture[]
   private rectLocation: WebGLUniformLocation
   private viewLocation: WebGLUniformLocation
   private lightingEnabledLocation: WebGLUniformLocation
@@ -39,9 +45,13 @@ export class BaseRenderer {
   private bandThresholdLocation: WebGLUniformLocation
   private bandSoftnessLocation: WebGLUniformLocation
   private upperSceneAttenuationLocation: WebGLUniformLocation
+  private skyEnabledLocation: WebGLUniformLocation
+  private skyPhaseALocation: WebGLUniformLocation
+  private skyPhaseBLocation: WebGLUniformLocation
+  private skyMixLocation: WebGLUniformLocation
   private disposed = false
 
-  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement) {
+  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[]) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
     if (!gl) throw new Error('WebGL2 unavailable')
     this.gl = gl
@@ -63,6 +73,7 @@ export class BaseRenderer {
     const buffer = gl.createBuffer()
     const texture = gl.createTexture()
     const normalTexture = gl.createTexture()
+    const skyTextures = skyImages.map(() => gl.createTexture())
     const rectLocation = gl.getUniformLocation(program, 'u_rect')
     const viewLocation = gl.getUniformLocation(program, 'u_view')
     const locations = {
@@ -81,11 +92,16 @@ export class BaseRenderer {
       bandThreshold: gl.getUniformLocation(program, 'u_bandThreshold'),
       bandSoftness: gl.getUniformLocation(program, 'u_bandSoftness'),
       upperSceneAttenuation: gl.getUniformLocation(program, 'u_upperSceneAttenuation'),
+      skyEnabled: gl.getUniformLocation(program, 'u_skyEnabled'),
+      skyPhaseA: gl.getUniformLocation(program, 'u_skyPhaseA'),
+      skyPhaseB: gl.getUniformLocation(program, 'u_skyPhaseB'),
+      skyMix: gl.getUniformLocation(program, 'u_skyMix'),
     }
-    if (!buffer || !texture || !normalTexture || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
+    if (!buffer || !texture || !normalTexture || skyTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
     this.texture = texture
     this.normalTexture = normalTexture
+    this.skyTextures = skyTextures as WebGLTexture[]
     this.rectLocation = rectLocation
     this.viewLocation = viewLocation
     this.lightingEnabledLocation = locations.lightingEnabled!
@@ -103,6 +119,10 @@ export class BaseRenderer {
     this.bandThresholdLocation = locations.bandThreshold!
     this.bandSoftnessLocation = locations.bandSoftness!
     this.upperSceneAttenuationLocation = locations.upperSceneAttenuation!
+    this.skyEnabledLocation = locations.skyEnabled!
+    this.skyPhaseALocation = locations.skyPhaseA!
+    this.skyPhaseBLocation = locations.skyPhaseB!
+    this.skyMixLocation = locations.skyMix!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -125,9 +145,19 @@ export class BaseRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normalImage)
     gl.uniform1i(gl.getUniformLocation(program, 'u_normal'), 1)
+    skyTextures.forEach((skyTexture, index) => {
+      gl.activeTexture(gl.TEXTURE2 + index)
+      gl.bindTexture(gl.TEXTURE_2D, skyTexture)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyImages[index])
+      gl.uniform1i(gl.getUniformLocation(program, `u_sky[${index}]`), 2 + index)
+    })
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -146,6 +176,10 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.texture)
     gl.activeTexture(gl.TEXTURE1)
     gl.bindTexture(gl.TEXTURE_2D, this.normalTexture)
+    this.skyTextures.forEach((texture, index) => {
+      gl.activeTexture(gl.TEXTURE2 + index)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+    })
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
     gl.uniform1f(this.exposureLocation, lighting.exposureStops)
@@ -162,6 +196,10 @@ export class BaseRenderer {
     gl.uniform1f(this.bandThresholdLocation, lighting.bandThreshold)
     gl.uniform1f(this.bandSoftnessLocation, lighting.bandSoftness)
     gl.uniform1f(this.upperSceneAttenuationLocation, lighting.upperSceneAttenuation)
+    gl.uniform1i(this.skyEnabledLocation, lighting.skyEnabled ? 1 : 0)
+    gl.uniform1i(this.skyPhaseALocation, skyPhaseIndex(sky.first))
+    gl.uniform1i(this.skyPhaseBLocation, skyPhaseIndex(sky.second))
+    gl.uniform1f(this.skyMixLocation, sky.mix)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')
@@ -173,6 +211,7 @@ export class BaseRenderer {
     const gl = this.gl
     gl.deleteTexture(this.texture)
     gl.deleteTexture(this.normalTexture)
+    this.skyTextures.forEach(texture => gl.deleteTexture(texture))
     gl.deleteBuffer(this.buffer)
     gl.deleteProgram(this.program)
   }

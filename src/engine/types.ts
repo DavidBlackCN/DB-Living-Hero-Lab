@@ -32,6 +32,7 @@ export interface LightingState {
   bandThreshold: number
   bandSoftness: number
   upperSceneAttenuation: number
+  skyEnabled: boolean
 }
 
 export interface Point {

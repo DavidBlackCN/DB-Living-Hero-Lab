@@ -122,7 +122,7 @@ function colorChannels(values: [number, number, number]): LightingState['color']
   return { r: values[0], g: values[1], b: values[2] }
 }
 
-export function lightingFor(minutes: number): LightingState & { daylight: number; warmth: number } {
+function solarLightingFor(minutes: number): LightingState & { daylight: number; warmth: number } {
   const inputMinutes = Number.isFinite(minutes) ? Math.max(0, Math.min(1440, minutes)) : 720
   const safeMinutes = inputMinutes === 1440 ? 0 : inputMinutes
   const hourAngle = ((safeMinutes - lightingModelConfig.sunriseMinutes) / 1440) * Math.PI * 2
@@ -206,6 +206,30 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     daylight,
     warmth,
   }
+}
+
+const dawnEnergy = solarLightingFor(lightingPresets.dawn.minutes)
+const morningEndEnergy = solarLightingFor(600)
+const afternoonStartEnergy = solarLightingFor(900)
+const duskEnergy = solarLightingFor(lightingPresets.dusk.minutes)
+
+export function lightingFor(minutes: number): LightingState & { daylight: number; warmth: number } {
+  const state = solarLightingFor(minutes)
+  const time = Math.max(0, Math.min(1440, Number.isFinite(minutes) ? minutes : 720))
+
+  // Solar direction, colors and sky keep their continuous curves. Balance only
+  // light energy where the twilight warmth hump would outshine accepted Noon.
+  const endpoints = time > 390 && time < 600
+    ? { first: dawnEnergy, second: morningEndEnergy, amount: smooth(390, 600, time) }
+    : time > 900 && time < 1050
+      ? { first: afternoonStartEnergy, second: duskEnergy, amount: smooth(900, 1050, time) }
+      : null
+  if (endpoints) {
+    state.exposureStops = mix(endpoints.first.exposureStops, endpoints.second.exposureStops, endpoints.amount)
+    state.intensity = mix(endpoints.first.intensity, endpoints.second.intensity, endpoints.amount)
+    state.ambientIntensity = mix(endpoints.first.ambientIntensity, endpoints.second.ambientIntensity, endpoints.amount)
+  }
+  return state
 }
 
 export function createLightingStateForTime(minutes: number): LightingState {

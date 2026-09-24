@@ -37,3 +37,7 @@ The Runtime Lighting four-phase visual calibration has completed three screensho
 ## Latest calibration: R2A.5d
 
 Human review accepted Noon and Dusk. Dawn received a modest ambient/exposure lift, and Night received deeper blue-gray fill with a slightly weaker key. The Sky Timeline now holds Night from 20:00 through 05:00, with smooth transitions through Dawn and Dusk; preview shortcuts remain at 06:30 / 12:00 / 17:30 / 22:00. All 12 requested times and the 22:00–04:30 night continuity were captured in WebGL2 Lit mode. See [`validation/R2A5D_DAWN_NIGHT_SKY_TIMELINE.md`](validation/R2A5D_DAWN_NIGHT_SKY_TIMELINE.md). Dawn, Night, and the corrected timeline await final human acceptance. Do not enter R2B.
+
+## Latest calibration: R2A.5e
+
+Human review identified overbright intermediate frames near 07:32 and 16:30. The twilight warmth curve was boosting Key, Ambient, and exposure between the preview anchors. Runtime Lighting now smoothly balances those energy scalars from 06:30–10:00 and 15:00–17:30 while preserving solar direction, colors, Sky behavior, and all four anchor images exactly. A 15-minute WebGL2 day-arc sweep found no intermediate frame brighter than Noon. See [`validation/R2A5E_DAY_ARC_BRIGHTNESS.md`](validation/R2A5E_DAY_ARC_BRIGHTNESS.md). Await human review; do not enter R2B.

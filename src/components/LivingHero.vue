@@ -8,6 +8,7 @@ import { heroConfig } from '../config/hero'
 import { createLightingStateForTime } from '../config/lighting'
 import { skyFor } from '../config/sky'
 import { leafToneFor } from '../config/leafTone'
+import { postFor, type PostState } from '../config/post'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import type { BreathingState } from '../engine/animation/breathing'
 import type { HairState } from '../engine/animation/hair'
@@ -42,6 +43,11 @@ const leavesCount = ref(0)
 const breathing = ref<BreathingState>({ enabled: true, strength: 1, showRegion: false })
 const hair = ref<HairState>({ enabled: true, strength: 1, showRegion: false })
 const lightingDetailEnabled = ref(true)
+const postEnabled = ref(true)
+const bloomEnabled = ref(true)
+const postView = ref<PostState['view']>('final')
+const post = computed<PostState>(() => ({ ...postFor(lightingMinutes.value), enabled: postEnabled.value,
+  bloomEnabled: bloomEnabled.value, view: postView.value }))
 const frameTime = ref<number | null>(null)
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
@@ -119,7 +125,7 @@ onBeforeUnmount(() => {
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-tone-url="heroConfig.sky.edgeToneUrl" :hair-mask-url="heroConfig.hair.maskUrl" :material-mask-url="heroConfig.material.maskUrl"
-      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
+      :sky="sky" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
       :blink-closed="blinkClosed && blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled))" :lighting-detail-enabled="lightingDetailEnabled" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
@@ -127,7 +133,7 @@ onBeforeUnmount(() => {
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" :style="leafStyle" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
-      v-model:lighting="lighting" v-model:lighting-detail-enabled="lightingDetailEnabled" :lighting-minutes="lightingMinutes" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"
+      v-model:lighting="lighting" v-model:lighting-detail-enabled="lightingDetailEnabled" v-model:post-enabled="postEnabled" v-model:bloom-enabled="bloomEnabled" v-model:post-view="postView" :lighting-minutes="lightingMinutes" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"
       @select-lighting-time="selectLightingTime"
       @back-to-now="timeController.backToNow()" @toggle-playback="timeMode === 'playing' ? timeController.pause() : timeController.play()"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"

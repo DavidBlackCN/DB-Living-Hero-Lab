@@ -8,8 +8,9 @@ import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
 import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
+import type { PostState } from '../config/post'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -57,7 +58,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled, props.post)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -142,6 +143,8 @@ watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
 watch(() => props.lightingDetailEnabled, draw)
+watch(() => [props.post.enabled, props.post.bloomEnabled, props.post.view], draw)
+watch(() => props.post, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.blinkClosed, draw)

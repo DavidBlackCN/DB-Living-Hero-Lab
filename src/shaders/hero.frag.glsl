@@ -1,5 +1,5 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 in vec2 v_uv;
 uniform sampler2D u_base;
 uniform sampler2D u_normal;
@@ -40,7 +40,22 @@ uniform float u_headMassStrength;
 uniform float u_headHairStrength;
 uniform int u_hairOverlay;
 uniform int u_detailEnabled;
-out vec4 outColor;
+uniform int u_sceneLinear;
+layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outBloomGate;
+vec4 encodeHDR(vec3 color) {
+  color = clamp(color, vec3(0.0), vec3(16.0));
+  float multiplier = clamp(ceil(max(max(color.r, color.g), color.b) * (255.0 / 16.0)) / 255.0, 1.0 / 255.0, 1.0);
+  return vec4(color / (multiplier * 16.0), multiplier);
+}
+// Inverse of the existing ACES fit, used only to register already display-referred Sky plates.
+vec3 inverseAces(vec3 target) {
+  vec3 y = clamp(target, vec3(0.0), vec3(0.98));
+  vec3 a = y * 2.43 - 2.51;
+  vec3 b = y * 0.59 - 0.03;
+  vec3 c = y * 0.14;
+  return max((-b - sqrt(max(b * b - 4.0 * a * c, vec3(0.0)))) / (2.0 * a), vec3(0.0));
+}
 float softEllipse(vec2 p, vec2 center, vec2 radius) {
   return 1.0 - smoothstep(0.30, 1.0, length((p - center) / radius));
 }
@@ -254,6 +269,27 @@ void main() {
     relitLinear += reflection * glint * material.b;
   }
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
+  if (u_sceneLinear != 0) {
+    float skyAlpha = 0.0;
+    vec3 sceneLinear = blendedLinear;
+    if (u_skyEnabled != 0) {
+      vec4 sky = mix(sampleSky(u_skyPhaseA), sampleSky(u_skyPhaseB), clamp(u_skyMix, 0.0, 1.0));
+      skyAlpha = clamp(sky.a, 0.0, 1.0);
+      // The frozen Sky RGB is display-referred. Place its inverse display value
+      // in the linear scene so the one Post ACES pass recovers the same plate.
+      vec3 skyLinear = inverseAces(srgbToLinear(sky.rgb)) / exp2(u_exposure);
+      sceneLinear = mix(sceneLinear, skyLinear, skyAlpha);
+    }
+    outColor = encodeHDR(sceneLinear);
+    vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
+    float shirtArea = smoothstep(850.0, 950.0, sourcePixel.x)
+      * (1.0 - smoothstep(1490.0, 1570.0, sourcePixel.x))
+      * smoothstep(270.0, 340.0, sourcePixel.y)
+      * (1.0 - smoothstep(650.0, 720.0, sourcePixel.y));
+    float whiteFabric = smoothstep(0.60, 0.84, min(min(base.rgb.r, base.rgb.g), base.rgb.b));
+    outBloomGate = vec4((1.0 - skyAlpha) * (1.0 - 0.82 * shirtArea * whiteFabric), 0.0, 0.0, 1.0);
+    return;
+  }
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);
   vec3 displayLinear = toneMapAces(exposedLinear);
   if (u_skyEnabled != 0) {

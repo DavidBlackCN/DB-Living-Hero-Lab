@@ -85,3 +85,7 @@ Whole-head gain is now 1.8 source px and nearby-hair gain 3.0 source px after th
 ## R5 Lighting Detail / Material Response
 
 Human review has accepted and frozen the R4/R4.1b Character Motion Core. R5 adds a registered face, crown-hair, and iris material mask and a separately switchable Lit-only shader detail layer. Six visual rounds were compared at Dawn, Noon, Dusk, and Night. The final candidate keeps the frozen 24H lighting and Sky curves and all animation systems unchanged; Detail OFF restores the previous Lit image. Four 22-second full-composition previews, closed Blink, 24H audit, regressions, build, and typecheck are recorded in [`validation/R5_LIGHTING_DETAIL.md`](validation/R5_LIGHTING_DETAIL.md). R5 awaits human visual acceptance before freeze.
+
+## R6 HDR / Bloom / Display Post
+
+Human review accepted and froze R5. R6 moves the Lit output through an RGBM linear-HDR Scene target, four-level bloom pyramid, one final ACES/display conversion, and continuous 24H display grading. Post OFF retains the exact R5 Lit baseline. Base/Normal inspection, frozen artwork and animation assets, Lighting/Sky curves, and R5 material logic remain unchanged. Five visual/curve iterations and the final 24H/full-composition validation are documented in [`validation/R6_POST_PROCESSING.md`](validation/R6_POST_PROCESSING.md). R6 awaits human visual acceptance; do not begin R7.

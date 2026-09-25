@@ -6,6 +6,8 @@ import type { SkyPhaseId, SkyState } from '../../config/sky'
 import type { BreathingState } from '../animation/breathing'
 import { breathingConfig } from '../animation/breathing'
 import { hairConfig, type HairState } from '../animation/hair'
+import { PostPipeline } from './PostPipeline'
+import type { PostState } from '../../config/post'
 
 function skyPhaseIndex(phase: SkyPhaseId): number {
   return phase === 'dawn' ? 0 : phase === 'noon' ? 1 : phase === 'dusk' ? 2 : 3
@@ -28,6 +30,7 @@ export class BaseRenderer {
   private gl: WebGL2RenderingContext
   private program: WebGLProgram
   private buffer: WebGLBuffer
+  private positionLocation: number
   private texture: WebGLTexture
   private normalTexture: WebGLTexture
   private skyTextures: WebGLTexture[]
@@ -67,6 +70,8 @@ export class BaseRenderer {
   private headHairStrengthLocation: WebGLUniformLocation
   private hairOverlayLocation: WebGLUniformLocation
   private detailEnabledLocation: WebGLUniformLocation
+  private sceneLinearLocation: WebGLUniformLocation
+  private post: PostPipeline
   private disposed = false
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeToneImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
@@ -129,6 +134,7 @@ export class BaseRenderer {
       headHairStrength: gl.getUniformLocation(program, 'u_headHairStrength'),
       hairOverlay: gl.getUniformLocation(program, 'u_hairOverlay'),
       detailEnabled: gl.getUniformLocation(program, 'u_detailEnabled'),
+      sceneLinear: gl.getUniformLocation(program, 'u_sceneLinear'),
     }
     if (!buffer || !texture || !normalTexture || !skyEdgeToneTexture || !hairMaskTexture || !materialMaskTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
@@ -171,10 +177,12 @@ export class BaseRenderer {
     this.headHairStrengthLocation = locations.headHairStrength!
     this.hairOverlayLocation = locations.hairOverlay!
     this.detailEnabledLocation = locations.detailEnabled!
+    this.sceneLinearLocation = locations.sceneLinear!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
     const position = gl.getAttribLocation(program, 'a_position')
+    this.positionLocation = position
     gl.enableVertexAttribArray(position)
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
     gl.activeTexture(gl.TEXTURE0)
@@ -237,9 +245,10 @@ export class BaseRenderer {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, blinkImages[index])
       gl.uniform1i(gl.getUniformLocation(program, index === 0 ? 'u_blinkLeft' : 'u_blinkRight'), 6 + index)
     })
+    this.post = new PostPipeline(gl)
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -249,11 +258,18 @@ export class BaseRenderer {
       this.canvas.width = width
       this.canvas.height = height
     }
-    gl.viewport(0, 0, width, height)
-    gl.clearColor(0.08, 0.075, 0.075, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    const usePost = postState.enabled && view === 'lit' && lighting.enabled && !breathing.showRegion && !hair.showRegion
+    if (usePost) this.post.begin(width, height)
+    else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      gl.drawBuffers([gl.BACK])
+      gl.viewport(0, 0, width, height)
+      gl.clearColor(0.08, 0.075, 0.075, 1)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+    }
     gl.useProgram(this.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+    gl.vertexAttribPointer(this.positionLocation, 2, gl.FLOAT, false, 0, 0)
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.texture)
     gl.activeTexture(gl.TEXTURE1)
@@ -304,8 +320,16 @@ export class BaseRenderer {
     gl.uniform1f(this.headHairStrengthLocation, hair.enabled ? hair.strength * hairConfig.headHairDisplacementPx : 0)
     gl.uniform1i(this.hairOverlayLocation, hair.showRegion ? 1 : 0)
     gl.uniform1i(this.detailEnabledLocation, detailEnabled ? 1 : 0)
+    gl.uniform1i(this.sceneLinearLocation, usePost ? 1 : 0)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    if (usePost) {
+      const nightWeight = (sky.first === 'night' ? 1 - sky.mix : 0) + (sky.second === 'night' ? sky.mix : 0)
+      this.post.render(postState, lighting.exposureStops,
+        { x: layout.x / layout.viewportWidth, y: 1 - (layout.y + layout.height) / layout.viewportHeight,
+          width: layout.width / layout.viewportWidth, height: layout.height / layout.viewportHeight },
+        this.skyEdgeToneTexture, lighting.skyEnabled ? nightWeight : 0)
+    }
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')
   }
 
@@ -322,5 +346,6 @@ export class BaseRenderer {
     this.blinkTextures.forEach(texture => gl.deleteTexture(texture))
     gl.deleteBuffer(this.buffer)
     gl.deleteProgram(this.program)
+    this.post.destroy()
   }
 }

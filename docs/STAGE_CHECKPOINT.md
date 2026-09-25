@@ -58,6 +58,10 @@ Human review has accepted and frozen R2B. Torso-only Breathing v1 now has source
 
 Human review accepted the R3 Breathing v1 motion. The remaining Lit integration is complete: approved local-eye Blink sprites now replace Albedo before Normal/Lighting/Sky, and existing Canvas2D Leaves overlay is enabled in Lit with a small time-of-day tone bridge. Four 18-second combined views, automatic Lit Blink closures, frozen-anchor comparisons, a repeated 97-frame 24H audit, visibility/reduced-motion checks, and build/typecheck validations passed. See [`validation/R3_1_FINAL_COMPOSITION.md`](validation/R3_1_FINAL_COMPOSITION.md). **R3 Breathing v1 is frozen.** Do not begin Hair Motion until the next stage is requested.
 
-## R3.2 Sky edge matte cleanup
+## R3.2 Sky edge matte cleanup (rejected)
 
-The shared Sky alpha matte received a narrow, source-color-gated edge correction for the upper sky, reducing the Night light seam next to leaves and distant spires. All four Sky RGB plates, time curves, shader path, and accepted motion modules remain unchanged. Four Lit screenshots and a combined Night motion check are in [`validation/R3_2_SKY_EDGE_CLEANUP.md`](validation/R3_2_SKY_EDGE_CLEANUP.md). Await human review before formally freezing the whole R3 stage; do not begin Hair Motion.
+The narrow, source-color-gated correction was rejected after human review found its before/after Night edge difference negligible. The earlier screenshots are archived in [`validation/R3_2_SKY_EDGE_CLEANUP.md`](validation/R3_2_SKY_EDGE_CLEANUP.md).
+
+## R3.2b Edge-aware Sky Rematte
+
+A 3 to 5 source-pixel trimap, local soft-alpha estimate, and small registered override replace the R3.2 edge-only result. Sky RGB, Lighting, timelines, and accepted motion modules remain unchanged. Four Lit anchors and 4x Night/Neon/matte audits are in [`validation/R3_2B_SKY_EDGE_REMATTE.md`](validation/R3_2B_SKY_EDGE_REMATTE.md). Await human visual acceptance before freezing R3; do not begin Hair Motion.

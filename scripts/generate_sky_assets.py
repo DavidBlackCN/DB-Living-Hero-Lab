@@ -5,12 +5,14 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
+from scipy.ndimage import distance_transform_edt
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "public/assets/hero/base/base-albedo.png"
 OUT = ROOT / "public/assets/hero/sky"
 QA = ROOT / "docs/validation/sky-assets"
+EDGE_OVERRIDE = OUT / "sky-edge-override.png"
 
 
 def make_mask(rgb: np.ndarray) -> np.ndarray:
@@ -43,12 +45,48 @@ def make_mask(rgb: np.ndarray) -> np.ndarray:
             mask[components == component] = 0
     mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
     mask = cv2.GaussianBlur(mask, (0, 0), .65)
-    # Recover one source-pixel fringe of the original cool sky around the
-    # registered contour. The color gate protects warm leaves, pale masonry,
-    # and the hat while closing the light seam most visible at Night.
+    # Preserve the existing R3.2 contour as a coarse seed. Its color test is
+    # never used as the final decision in the unknown edge band below.
     fringe = cv2.dilate(mask, np.ones((3, 3), np.uint8)).astype(np.float32)
     sky_edge = (xx >= 850) & (yy <= 320) & (blue > 0) & (light > 130)
     return np.uint8(np.rint(np.where(sky_edge, mask * .35 + fringe * .65, mask)))
+
+
+def rematte_edges(rgb: np.ndarray, seed: np.ndarray) -> np.ndarray:
+    """Recover subpixel sky coverage only inside a narrow registered trimap."""
+    binary = seed > 127
+    inside = distance_transform_edt(binary)
+    outside = distance_transform_edt(~binary)
+    sky_core = inside >= 3.5
+    foreground_core = outside >= 3.5
+    unknown = ((inside > 0) & (inside < 4.5)) | ((outside > 0) & (outside < 4.5))
+
+    # Nearest definite sky/foreground colors are local references. The
+    # continuous projection can classify warm antialiased leaf/sky pixels;
+    # the old global blue/light threshold is used only to obtain the seed.
+    _, sky_index = distance_transform_edt(~sky_core, return_indices=True)
+    _, foreground_index = distance_transform_edt(~foreground_core, return_indices=True)
+    source = rgb.astype(np.float32)
+    sky = source[sky_index[0], sky_index[1]]
+    foreground = source[foreground_index[0], foreground_index[1]]
+    axis = sky - foreground
+    separation = np.sum(axis * axis, axis=2)
+    estimate = np.clip(np.sum((source - foreground) * axis, axis=2) /
+                       np.maximum(separation, 1), 0, 1)
+    confidence = np.clip((separation - 400) / 1600, 0, 1)
+    original = seed.astype(np.float32) / 255
+    alpha = original.copy()
+    # Preserve already-covered sky and extend only where the local color
+    # projection supports antialiased sky. Shrinking the seed reopened seams.
+    alpha[unknown] = np.maximum(original, estimate * .9 * confidence)[unknown]
+
+    # A tiny registered artist override recovers genuine connected sky holes
+    # in the top leaf clusters. It stays zero across the rest of the artwork.
+    override = np.asarray(Image.open(EDGE_OVERRIDE).convert("L"), dtype=np.float32) / 255
+    if override.shape != seed.shape:
+        raise ValueError("Sky edge override must match the 1672x941 artwork")
+    alpha = np.maximum(alpha, override)
+    return np.uint8(np.rint(np.clip(alpha, 0, 1) * 255))
 
 
 def sky_plate(rgb: np.ndarray, name: str) -> np.ndarray:
@@ -92,7 +130,7 @@ def sky_plate(rgb: np.ndarray, name: str) -> np.ndarray:
 
 def main() -> None:
     rgb = np.asarray(Image.open(BASE).convert("RGB"))
-    mask = make_mask(rgb)
+    mask = rematte_edges(rgb, make_mask(rgb))
     OUT.mkdir(parents=True, exist_ok=True)
     QA.mkdir(parents=True, exist_ok=True)
     Image.fromarray(mask).save(OUT / "sky-mask.png")

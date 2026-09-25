@@ -97,3 +97,7 @@ R6 remains intact. R6.5 adds a switchable, low-sun Scene Lighting response from 
 ## R6 character shadow cleanup
 
 Human feedback found that R6.5's broad directional response still tinted and flattened the main character's Dawn/Dusk shadows. The character now uses softer face/garment directional gains and subtle registered bang/chin contact plus Base-guided shirt folds. Architecture direction, frozen curves and R6 Post are unchanged. Dawn/Dusk character crops, Noon/Night regression, 24H scan and validation are recorded in [`validation/R6_5B_CHARACTER_SHADOW_CLEANUP.md`](validation/R6_5B_CHARACTER_SHADOW_CLEANUP.md). Await human review; do not begin R7 or left-lamp lighting.
+
+## R6.5C Dawn polish and directional moonlight
+
+Dawn's character shadow band now receives a softer cool fill on the left hair, face, and upper clothing, while the receiving side and architecture retain their morning direction. Night gains low-contrast cold moon shaping driven by the existing continuously rotating nighttime Direction vector, with stable Night-hold energy. Noon and Dusk static output remain unchanged. Four visual rounds, final 24H and combined captures, and validation are recorded in [`validation/R6_5C_DAWN_MOONLIGHT.md`](validation/R6_5C_DAWN_MOONLIGHT.md). Await human review; do not begin R7 or left-lamp lighting.

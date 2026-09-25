@@ -282,11 +282,27 @@ void main() {
   float faceContrast = (solarBand - 0.5) * 0.35;
   float contrast = mix(broadContrast, garmentContrast, garment);
   contrast = mix(contrast, faceContrast, material.r);
+  float dawnEase = smoothstep(0.08, 0.50, lightDirection.x) * lowSun * solarPresence
+    * clamp(u_directionalStrength, 0.0, 1.0);
+  float hairPigment = smoothstep(0.025, 0.08, base.rgb.r - base.rgb.g)
+    * (1.0 - smoothstep(0.44, 0.68, base.rgb.g));
+  float leftContour = softEllipse(characterPixel, vec2(1000.0, 385.0), vec2(150.0, 260.0))
+    * (1.0 - smoothstep(1080.0, 1110.0, characterPixel.x));
+  float leftHair = max(hairRegion.r, max(max(hairRegion.a, material.g)
+    * (1.0 - smoothstep(1080.0, 1110.0, characterPixel.x)), leftContour))
+    * hairPigment * (1.0 - material.r);
+  float dawnCharacter = max(material.r * 0.85, max(garment * 0.82, leftHair));
+  // Morning keeps the receiving plane, but pulls the character's darkest
+  // hair/skin/cloth band back toward a quiet cool fill. Evening is untouched.
+  contrast = mix(contrast, max(contrast, -0.12), dawnEase * dawnCharacter);
   illumination *= 1.0 + contrast * solarResponse;
+  float dawnShadowFill = dawnEase * max(leftHair * (0.34 + 0.66 * (1.0 - solarBand)) * 0.48,
+    (1.0 - solarBand) * max(material.r * 0.14, garment * 0.15));
+  illumination += vec3(0.72, 0.78, 0.89) * u_ambientIntensity * dawnShadowFill;
   // Preserve a clean skin fill on the side away from the low sun. The painted
   // fringe, brow and cheek shadows remain in the albedo and filtered Normal.
   illumination += vec3(0.82, 0.81, 0.80) * u_ambientIntensity
-    * material.r * (1.0 - solarBand) * solarResponse * 0.10;
+    * material.r * (1.0 - solarBand) * solarResponse * (0.10 + dawnEase * 0.04);
   // A narrow contact shadow tracks the registered skin boundary immediately
   // below the bangs. Restrict it to the upper forehead so eye/cheek mask
   // holes cannot turn into dirty patches.
@@ -298,15 +314,37 @@ void main() {
   float chinContact = max(skinAbove - material.r, 0.0) * neckSkin
     * smoothstep(276.0, 296.0, characterPixel.y)
     * (1.0 - smoothstep(322.0, 340.0, characterPixel.y));
-  illumination *= 1.0 - solarResponse * (bangContact * 0.13 + chinContact * 0.12);
+  illumination *= 1.0 - solarResponse * (bangContact * 0.13 + chinContact * 0.12)
+    * (1.0 - dawnEase * 0.30);
   // Deepen only folds already drawn into the shirt, rather than tinting the
   // whole sleeve or drawing a detached contact-shadow shape over the outfit.
   float paintedFold = 1.0 - smoothstep(0.52, 0.78, dot(base.rgb, vec3(0.30, 0.59, 0.11)));
-  illumination *= 1.0 - sleeves * paintedFold * solarResponse * 0.065;
+  illumination *= 1.0 - sleeves * paintedFold * solarResponse * 0.065 * (1.0 - dawnEase * 0.35);
+  // The existing continuous night direction rotates through the night. Use it
+  // for a separate, much softer cool response rather than a fixed moon angle.
+  // Night sky weight keeps the energy steady through the hold while the
+  // receiving side changes; twilight smoothly removes the response.
+  float moonPresence = u_skyNightWeight * (1.0 - smoothstep(0.24, 0.38, u_lightIntensity))
+    * clamp(u_directionalStrength, 0.0, 1.0);
+  float moonFacing = broadDecoded.x * lightDirection.x * 11.0
+    + broadDecoded.y * lightDirection.y * 3.0;
+  float moonBand = smoothstep(-0.42, 0.42, moonFacing);
+  float moonSide = clamp((0.53 - v_uv.x) * lightDirection.x * 0.34
+    + (0.46 - v_uv.y) * lightDirection.y * 0.12, -0.10, 0.10);
+  float moonContrast = max((moonBand - 0.5) * 0.55 + moonSide - 0.08, -0.08);
+  illumination *= 1.0 + moonPresence * moonContrast;
+  illumination += vec3(0.30, 0.46, 0.85) * u_ambientIntensity
+    * moonPresence * max(moonBand - 0.42, 0.0) * 0.22;
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
+  // Moon shaping belongs to Scene Lighting, so the R5 Detail switch must not
+  // remove its crown mask or change the Night comparison.
+  float moonCrown = texture(u_materialMask, sampleUv).g;
+  float moonHair = max(max(hairRegion.r, hairRegion.g), max(hairRegion.a, moonCrown))
+    * hairPigment * moonBand * moonPresence;
+  relitLinear += vec3(0.36, 0.54, 0.86) * moonHair * 0.018;
   if (material.g > 0.001) {
     float dayVisibility = smoothstep(0.22, 0.48, u_lightIntensity);
     float facing = 0.35 + 0.65 * smoothstep(-0.10, 0.75, broadFacing);

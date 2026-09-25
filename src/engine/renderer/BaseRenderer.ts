@@ -33,6 +33,7 @@ export class BaseRenderer {
   private skyTextures: WebGLTexture[]
   private skyEdgeToneTexture: WebGLTexture
   private hairMaskTexture: WebGLTexture
+  private materialMaskTexture: WebGLTexture
   private blinkTextures: WebGLTexture[]
   private rectLocation: WebGLUniformLocation
   private viewLocation: WebGLUniformLocation
@@ -65,9 +66,10 @@ export class BaseRenderer {
   private headMassStrengthLocation: WebGLUniformLocation
   private headHairStrengthLocation: WebGLUniformLocation
   private hairOverlayLocation: WebGLUniformLocation
+  private detailEnabledLocation: WebGLUniformLocation
   private disposed = false
 
-  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeToneImage: HTMLImageElement, hairMaskImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
+  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeToneImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
     if (!gl) throw new Error('WebGL2 unavailable')
     this.gl = gl
@@ -92,6 +94,7 @@ export class BaseRenderer {
     const skyTextures = skyImages.map(() => gl.createTexture())
     const skyEdgeToneTexture = gl.createTexture()
     const hairMaskTexture = gl.createTexture()
+    const materialMaskTexture = gl.createTexture()
     const blinkTextures = blinkImages.map(() => gl.createTexture())
     const rectLocation = gl.getUniformLocation(program, 'u_rect')
     const viewLocation = gl.getUniformLocation(program, 'u_view')
@@ -125,14 +128,16 @@ export class BaseRenderer {
       headMassStrength: gl.getUniformLocation(program, 'u_headMassStrength'),
       headHairStrength: gl.getUniformLocation(program, 'u_headHairStrength'),
       hairOverlay: gl.getUniformLocation(program, 'u_hairOverlay'),
+      detailEnabled: gl.getUniformLocation(program, 'u_detailEnabled'),
     }
-    if (!buffer || !texture || !normalTexture || !skyEdgeToneTexture || !hairMaskTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
+    if (!buffer || !texture || !normalTexture || !skyEdgeToneTexture || !hairMaskTexture || !materialMaskTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
     this.texture = texture
     this.normalTexture = normalTexture
     this.skyTextures = skyTextures as WebGLTexture[]
     this.skyEdgeToneTexture = skyEdgeToneTexture
     this.hairMaskTexture = hairMaskTexture
+    this.materialMaskTexture = materialMaskTexture
     this.blinkTextures = blinkTextures as WebGLTexture[]
     this.rectLocation = rectLocation
     this.viewLocation = viewLocation
@@ -165,6 +170,7 @@ export class BaseRenderer {
     this.headMassStrengthLocation = locations.headMassStrength!
     this.headHairStrengthLocation = locations.headHairStrength!
     this.hairOverlayLocation = locations.hairOverlay!
+    this.detailEnabledLocation = locations.detailEnabled!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
     gl.useProgram(program)
@@ -213,6 +219,14 @@ export class BaseRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, hairMaskImage)
     gl.uniform1i(gl.getUniformLocation(program, 'u_hairMask'), 9)
+    gl.activeTexture(gl.TEXTURE10)
+    gl.bindTexture(gl.TEXTURE_2D, materialMaskTexture)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, materialMaskImage)
+    gl.uniform1i(gl.getUniformLocation(program, 'u_materialMask'), 10)
     blinkTextures.forEach((blinkTexture, index) => {
       gl.activeTexture(gl.TEXTURE6 + index)
       gl.bindTexture(gl.TEXTURE_2D, blinkTexture)
@@ -225,7 +239,7 @@ export class BaseRenderer {
     })
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -256,6 +270,8 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.skyEdgeToneTexture)
     gl.activeTexture(gl.TEXTURE9)
     gl.bindTexture(gl.TEXTURE_2D, this.hairMaskTexture)
+    gl.activeTexture(gl.TEXTURE10)
+    gl.bindTexture(gl.TEXTURE_2D, this.materialMaskTexture)
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
     gl.uniform1f(this.exposureLocation, lighting.exposureStops)
@@ -287,6 +303,7 @@ export class BaseRenderer {
     gl.uniform1f(this.headMassStrengthLocation, hair.enabled ? hair.strength * hairConfig.headMassDisplacementPx : 0)
     gl.uniform1f(this.headHairStrengthLocation, hair.enabled ? hair.strength * hairConfig.headHairDisplacementPx : 0)
     gl.uniform1i(this.hairOverlayLocation, hair.showRegion ? 1 : 0)
+    gl.uniform1i(this.detailEnabledLocation, detailEnabled ? 1 : 0)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     if (gl.getError() !== gl.NO_ERROR) throw new Error('WebGL draw failed')
@@ -301,6 +318,7 @@ export class BaseRenderer {
     this.skyTextures.forEach(texture => gl.deleteTexture(texture))
     gl.deleteTexture(this.skyEdgeToneTexture)
     gl.deleteTexture(this.hairMaskTexture)
+    gl.deleteTexture(this.materialMaskTexture)
     this.blinkTextures.forEach(texture => gl.deleteTexture(texture))
     gl.deleteBuffer(this.buffer)
     gl.deleteProgram(this.program)

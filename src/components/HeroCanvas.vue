@@ -9,7 +9,7 @@ import { breathingConfig, type BreathingState } from '../engine/animation/breath
 import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -57,7 +57,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -71,11 +71,12 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, edgeTone, hairMask, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeTone, hairMask, materialMask, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
       loadImage(props.skyEdgeToneUrl),
       loadImage(props.hairMaskUrl),
+      loadImage(props.materialMaskUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
     ])
     if (!mounted || current !== generation || !canvas.value) return
@@ -95,11 +96,14 @@ async function initialize(): Promise<void> {
     if (hairMask.naturalWidth !== props.artwork.width || hairMask.naturalHeight !== props.artwork.height) {
       throw new Error('Hair mask dimensions do not match Artwork Space')
     }
+    if (materialMask.naturalWidth !== props.artwork.width || materialMask.naturalHeight !== props.artwork.height) {
+      throw new Error('Material mask dimensions do not match Artwork Space')
+    }
     if (leftBlink.naturalWidth !== props.blinkEyes[0].width || leftBlink.naturalHeight !== props.blinkEyes[0].height
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, hairMask, [leftBlink, rightBlink])
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, hairMask, materialMask, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
@@ -137,6 +141,7 @@ onMounted(() => {
 watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
+watch(() => props.lightingDetailEnabled, draw)
 watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.blinkClosed, draw)

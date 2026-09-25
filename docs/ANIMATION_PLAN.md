@@ -24,3 +24,7 @@ The earlier Hair Motion TBD row is superseded. A registered two-channel 1672x941
 ## R4.1 head-motion refinement
 
 The accepted R4 lower-hair masks remain unchanged. The same registered RGBA asset now also carries a whole-head mass channel and a protected nearby-hair channel. Whole-head translation is capped at 0.9 source px; bangs and side locks at 2.1 source px; lower hair remains 5.2 source px. All share the Albedo/Normal UV path and existing WebGL motion driver. Base Blink moves into the same shader path whenever Hair is active, avoiding a stationary DOM eye patch. See [R4.1 validation](validation/R4_1_HEAD_MOTION.md). Human visual acceptance is pending before Character Motion Core freeze.
+
+## R5 material detail
+
+Human review subsequently accepted and froze R4/R4.1b Character Motion Core, including the final 1.8 px head and 3.0 px nearby-hair gains. R5 changes no animation paths or parameters. Its face, crown-hair, and iris mask is sampled at the same deformed UV as Base and Normal, so the material response follows Breathing and Hair; iris reflection is suppressed while the integrated Blink is closed. See [R5 validation](validation/R5_LIGHTING_DETAIL.md).

@@ -34,6 +34,7 @@ def main() -> None:
         page.get_by_label("Hair Motion on/off").uncheck()
         page.get_by_label("Blink on/off").uncheck()
         page.get_by_label("Leaves").uncheck()
+        page.get_by_label("Lighting Detail on/off").uncheck()
         page.get_by_role("button", name="Noon", exact=True).click()
         page.get_by_label("Show Breathing Region").check()
         page.screenshot(path=str(args.output / "region.png"))

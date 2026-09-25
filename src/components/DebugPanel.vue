@@ -12,6 +12,7 @@ const props = defineProps<{
   quality: QualityPreset
   renderView: RenderView
   lighting: LightingState
+  lightingDetailEnabled: boolean
   lightingMinutes: number
   timeMode: TimeMode
   showBounds: boolean
@@ -33,6 +34,7 @@ const emit = defineEmits<{
   (e: 'update:quality', value: QualityPreset): void
   (e: 'update:renderView', value: RenderView): void
   (e: 'update:lighting', value: LightingState): void
+  (e: 'update:lightingDetailEnabled', value: boolean): void
   (e: 'selectLightingPreset', value: LightingPresetId): void
   (e: 'selectLightingTime', value: number): void
   (e: 'backToNow'): void
@@ -123,6 +125,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       </div>
       <div class="time-mode" role="status">Time: {{ timeMode === 'realtime' ? 'Realtime' : timeMode === 'playing' ? 'Playing' : 'Manual' }}</div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
+      <label><input type="checkbox" :checked="lightingDetailEnabled" @change="emit('update:lightingDetailEnabled', ($event.target as HTMLInputElement).checked)" /> Lighting Detail on/off</label>
       <label><input type="checkbox" :checked="lighting.skyEnabled" @change="updateLighting({ skyEnabled: ($event.target as HTMLInputElement).checked })" /> Sky on/off</label>
       <label class="range-control">Display exposure {{ lighting.exposureStops.toFixed(2) }} EV
         <input type="range" min="-1.5" max="1.5" step="0.01" :value="lighting.exposureStops"

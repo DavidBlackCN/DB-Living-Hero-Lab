@@ -6,6 +6,7 @@ uniform sampler2D u_normal;
 uniform sampler2D u_sky[4];
 uniform sampler2D u_skyEdgeTone;
 uniform sampler2D u_hairMask;
+uniform sampler2D u_materialMask;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
 uniform int u_view;
@@ -38,6 +39,7 @@ uniform float u_hairStrength;
 uniform float u_headMassStrength;
 uniform float u_headHairStrength;
 uniform int u_hairOverlay;
+uniform int u_detailEnabled;
 out vec4 outColor;
 float softEllipse(vec2 p, vec2 center, vec2 radius) {
   return 1.0 - smoothstep(0.30, 1.0, length((p - center) / radius));
@@ -96,6 +98,33 @@ vec4 sampleSky(int phase) {
 float bandResponse(float facing) {
   float edge = max(u_bandSoftness, 0.001);
   return smoothstep(u_bandThreshold - edge, u_bandThreshold + edge, facing);
+}
+vec3 filteredFaceNormal(vec2 uv, vec2 texel, vec3 centerEncoded) {
+  vec3 encoded = centerEncoded * 3.0;
+  float weight = 3.0;
+  for (int index = 0; index < 4; index++) {
+    vec2 offset = index == 0 ? vec2(4.0, 0.0) : index == 1 ? vec2(-4.0, 0.0)
+      : index == 2 ? vec2(0.0, 4.0) : vec2(0.0, -4.0);
+    vec2 neighbor = uv + offset * texel;
+    float sameFace = texture(u_materialMask, neighbor).r;
+    encoded += texture(u_normal, neighbor).rgb * sameFace;
+    weight += sameFace;
+  }
+  vec3 decoded = encoded / weight * 2.0 - 1.0;
+  return normalize(vec3(decoded.x * 2.8, -decoded.y * 2.8, max(decoded.z, 0.001)));
+}
+float crownRibbon(vec2 sourcePixel) {
+  float x = (sourcePixel.x - 1165.0) / 105.0;
+  float curveY = 132.0 + 26.0 * x * x + 4.0 * x;
+  float width = mix(11.0, 5.0, clamp(abs(x), 0.0, 1.0));
+  float offset = (sourcePixel.y - curveY) / width;
+  float strandBreakup = 0.76 + 0.24 * sin(sourcePixel.x * 0.17 + sourcePixel.y * 0.07);
+  return exp(-offset * offset * 1.25) * strandBreakup;
+}
+float irisGlint(vec2 sourcePixel, vec2 center, vec3 lightDirection) {
+  vec2 highlight = center + vec2(lightDirection.x * 1.7, -1.0);
+  vec2 delta = (sourcePixel - highlight) / vec2(3.0, 2.6);
+  return exp(-dot(delta, delta) * 1.2);
 }
 void main() {
   vec3 regions = breathRegions(v_uv * vec2(1672.0, 941.0));
@@ -165,14 +194,22 @@ void main() {
   vec3 normalColor = texture(u_normal, sampleUv).rgb;
   if (u_view == 1) { outColor = vec4(showMotionRegions(normalColor, regions, hairRegion), 1.0); return; }
   if (u_lightingEnabled == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
+  vec4 material = u_detailEnabled != 0 ? texture(u_materialMask, sampleUv) : vec4(0.0);
   vec3 baseLinear = srgbToLinear(base.rgb);
+  // Skin is a slightly warmer reflectance, never a light source.
+  baseLinear *= mix(vec3(1.0), vec3(1.005, 0.965, 0.945), material.r);
   vec3 decodedNormal = normalColor * 2.0 - 1.0;
   vec3 normal = normalize(vec3(decodedNormal.x, -decodedNormal.y, decodedNormal.z));
+  vec2 texel = 1.0 / vec2(textureSize(u_normal, 0));
+  vec3 faceNormal = normal;
+  if (material.r > 0.001) {
+    faceNormal = filteredFaceNormal(sampleUv, texel, normalColor);
+    normal = normalize(mix(normal, faceNormal, material.r * 0.82));
+  }
   vec3 lightDirection = normalize(u_lightDirection);
   float ndotl = dot(normal, lightDirection);
   float wrapped = clamp((ndotl + u_diffuseWrap) / (1.0 + u_diffuseWrap), 0.0, 1.0);
   float diffuse = smoothstep(u_diffuseThreshold - u_diffuseSoftness, u_diffuseThreshold + u_diffuseSoftness, wrapped);
-  vec2 texel = 1.0 / vec2(textureSize(u_normal, 0));
   vec3 broadEncoded = normalColor * 4.0
     + texture(u_normal, sampleUv + vec2(texel.x * 5.0, 0.0)).rgb
     + texture(u_normal, sampleUv - vec2(texel.x * 5.0, 0.0)).rgb
@@ -182,14 +219,40 @@ void main() {
   vec3 broadNormal = normalize(vec3(broadDecoded.x, -broadDecoded.y, broadDecoded.z));
   float broadFacing = dot(broadNormal, lightDirection);
   float paintedBand = bandResponse(broadFacing);
+  if (material.r > 0.001) {
+    vec3 faceLight = normalize(vec3(lightDirection.x, lightDirection.y * 0.78, lightDirection.z));
+    float faceFacing = dot(faceNormal, faceLight);
+    float faceSoftness = max(0.15, u_bandSoftness * 0.80);
+    float faceBand = smoothstep(u_bandThreshold - faceSoftness, u_bandThreshold + faceSoftness, faceFacing);
+    paintedBand = mix(paintedBand, faceBand, material.r);
+  }
   float bandDiffuse = mix(0.20, 0.66, paintedBand);
-  float shapedDiffuse = mix(diffuse, bandDiffuse, u_bandStrength);
+  bandDiffuse = mix(bandDiffuse, mix(0.12, 0.72, paintedBand), material.r);
+  float bandWeight = mix(u_bandStrength, max(u_bandStrength, 0.62), material.r);
+  float shapedDiffuse = mix(diffuse, bandDiffuse, bandWeight);
   vec3 illumination = u_ambientColor * u_ambientIntensity
     + u_lightColor * (shapedDiffuse * u_lightIntensity);
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
+  if (material.g > 0.001) {
+    float dayVisibility = smoothstep(0.22, 0.48, u_lightIntensity);
+    float facing = 0.35 + 0.65 * smoothstep(-0.10, 0.75, broadFacing);
+    float paintedStrand = mix(0.52, 1.0, smoothstep(0.055, 0.24, baseLinear.r));
+    float sheen = material.g * crownRibbon(sampleUv * vec2(1672.0, 941.0))
+      * facing * paintedStrand * dayVisibility * u_lightIntensity * 0.155;
+    relitLinear += u_lightColor * sheen;
+  }
+  if (material.b > 0.001 && u_blinkClosed == 0) {
+    vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
+    float glint = max(irisGlint(sourcePixel, vec2(1123.0, 219.0), lightDirection),
+      irisGlint(sourcePixel, vec2(1187.0, 238.0), lightDirection));
+    float dayVisibility = smoothstep(0.22, 0.48, u_lightIntensity);
+    vec3 reflection = u_lightColor * u_lightIntensity * (0.075 * dayVisibility)
+      + u_ambientColor * u_ambientIntensity * (0.012 * (1.0 - dayVisibility));
+    relitLinear += reflection * glint * material.b;
+  }
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);
   vec3 displayLinear = toneMapAces(exposedLinear);

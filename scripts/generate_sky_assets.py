@@ -42,7 +42,13 @@ def make_mask(rgb: np.ndarray) -> np.ndarray:
         if stats[component, cv2.CC_STAT_AREA] < 5:
             mask[components == component] = 0
     mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
-    return cv2.GaussianBlur(mask, (0, 0), .65)
+    mask = cv2.GaussianBlur(mask, (0, 0), .65)
+    # Recover one source-pixel fringe of the original cool sky around the
+    # registered contour. The color gate protects warm leaves, pale masonry,
+    # and the hat while closing the light seam most visible at Night.
+    fringe = cv2.dilate(mask, np.ones((3, 3), np.uint8)).astype(np.float32)
+    sky_edge = (xx >= 850) & (yy <= 320) & (blue > 0) & (light > 130)
+    return np.uint8(np.rint(np.where(sky_edge, mask * .35 + fringe * .65, mask)))
 
 
 def sky_plate(rgb: np.ndarray, name: str) -> np.ndarray:

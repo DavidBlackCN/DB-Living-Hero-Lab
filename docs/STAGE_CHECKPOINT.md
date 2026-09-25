@@ -57,3 +57,7 @@ Human review has accepted and frozen R2B. Torso-only Breathing v1 now has source
 ## Current phase: R3.1 Final Lit Composition
 
 Human review accepted the R3 Breathing v1 motion. The remaining Lit integration is complete: approved local-eye Blink sprites now replace Albedo before Normal/Lighting/Sky, and existing Canvas2D Leaves overlay is enabled in Lit with a small time-of-day tone bridge. Four 18-second combined views, automatic Lit Blink closures, frozen-anchor comparisons, a repeated 97-frame 24H audit, visibility/reduced-motion checks, and build/typecheck validations passed. See [`validation/R3_1_FINAL_COMPOSITION.md`](validation/R3_1_FINAL_COMPOSITION.md). **R3 Breathing v1 is frozen.** Do not begin Hair Motion until the next stage is requested.
+
+## R3.2 Sky edge matte cleanup
+
+The shared Sky alpha matte received a narrow, source-color-gated edge correction for the upper sky, reducing the Night light seam next to leaves and distant spires. All four Sky RGB plates, time curves, shader path, and accepted motion modules remain unchanged. Four Lit screenshots and a combined Night motion check are in [`validation/R3_2_SKY_EDGE_CLEANUP.md`](validation/R3_2_SKY_EDGE_CLEANUP.md). Await human review before formally freezing the whole R3 stage; do not begin Hair Motion.

@@ -73,3 +73,7 @@ The clarified upper-right target contains pale foreground canopy/building pixels
 ## R3 accepted and frozen; R4 Hair Motion
 
 Human review accepted R3 Breathing, local Blink, Leaves, their Lit/Sky combination, the R2A/R2B lighting/time baseline, and the current Sky edge correction. A small top-leaf Sky residual is accepted and deferred to R5/R7 polish; R4 does not change Sky, Lighting, or Timeline. R4 now adds registered left/right lower-hair motion using one shared Albedo/Normal UV warp and the existing 30-draw/s WebGL motion driver. Three visual rounds, four 22-second full-composition checks, dynamic previews, lifecycle and pixel regressions are documented in [`validation/R4_HAIR_MOTION.md`](validation/R4_HAIR_MOTION.md). R4 awaits human visual acceptance before Character Motion Core is formally frozen. Do not begin R5 yet.
+
+## R4.1 Head mass and nearby hair motion
+
+Human review accepted R4 lower-hair motion and requested a more complete but still restrained head response. R4.1 adds near-rigid whole-head micro translation and protected secondary motion in bangs and side locks, while preserving lower-hair mask channels exactly. Base/Lit Blink, Breathing, four Lit phases, and lifecycle checks passed. See [`validation/R4_1_HEAD_MOTION.md`](validation/R4_1_HEAD_MOTION.md). Await human visual acceptance before formally freezing Hair Motion / Character Motion Core; no R5 work has begun.

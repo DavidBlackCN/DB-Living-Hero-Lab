@@ -20,3 +20,7 @@ Debug Panel 已可开关 Leaves 并查看粒子数量。`prefers-reduced-motion`
 ## R4 Hair Motion v1 update
 
 The earlier Hair Motion TBD row is superseded. A registered two-channel 1672x941 lower-hair mask drives independent left/right sway (6.4 s primary, 9.1 s secondary, 5.2 source-pixel configured maximum). Albedo and Normal share one UV displacement; Breathing uses the existing capped WebGL motion driver. Blink, Leaves, reduced motion, Static quality, and hidden-tab behavior were checked. R3 is formally frozen; its small Sky edge residual is accepted and deferred to R5/R7. See [R4 validation](validation/R4_HAIR_MOTION.md). R4 awaits human visual acceptance before Character Motion Core freeze.
+
+## R4.1 head-motion refinement
+
+The accepted R4 lower-hair masks remain unchanged. The same registered RGBA asset now also carries a whole-head mass channel and a protected nearby-hair channel. Whole-head translation is capped at 0.9 source px; bangs and side locks at 2.1 source px; lower hair remains 5.2 source px. All share the Albedo/Normal UV path and existing WebGL motion driver. Base Blink moves into the same shader path whenever Hair is active, avoiding a stationary DOM eye patch. See [R4.1 validation](validation/R4_1_HEAD_MOTION.md). Human visual acceptance is pending before Character Motion Core freeze.

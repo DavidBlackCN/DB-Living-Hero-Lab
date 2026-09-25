@@ -62,6 +62,8 @@ export class BaseRenderer {
   private breathOverlayLocation: WebGLUniformLocation
   private hairTimeLocation: WebGLUniformLocation
   private hairStrengthLocation: WebGLUniformLocation
+  private headMassStrengthLocation: WebGLUniformLocation
+  private headHairStrengthLocation: WebGLUniformLocation
   private hairOverlayLocation: WebGLUniformLocation
   private disposed = false
 
@@ -120,6 +122,8 @@ export class BaseRenderer {
       breathOverlay: gl.getUniformLocation(program, 'u_breathOverlay'),
       hairTime: gl.getUniformLocation(program, 'u_hairTime'),
       hairStrength: gl.getUniformLocation(program, 'u_hairStrength'),
+      headMassStrength: gl.getUniformLocation(program, 'u_headMassStrength'),
+      headHairStrength: gl.getUniformLocation(program, 'u_headHairStrength'),
       hairOverlay: gl.getUniformLocation(program, 'u_hairOverlay'),
     }
     if (!buffer || !texture || !normalTexture || !skyEdgeToneTexture || !hairMaskTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
@@ -158,6 +162,8 @@ export class BaseRenderer {
     this.breathOverlayLocation = locations.breathOverlay!
     this.hairTimeLocation = locations.hairTime!
     this.hairStrengthLocation = locations.hairStrength!
+    this.headMassStrengthLocation = locations.headMassStrength!
+    this.headHairStrengthLocation = locations.headHairStrength!
     this.hairOverlayLocation = locations.hairOverlay!
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
@@ -278,6 +284,8 @@ export class BaseRenderer {
     gl.uniform1i(this.breathOverlayLocation, breathing.showRegion ? 1 : 0)
     gl.uniform1f(this.hairTimeLocation, hairSeconds)
     gl.uniform1f(this.hairStrengthLocation, hair.enabled ? hair.strength * hairConfig.maxDisplacementPx : 0)
+    gl.uniform1f(this.headMassStrengthLocation, hair.enabled ? hair.strength * hairConfig.headMassDisplacementPx : 0)
+    gl.uniform1f(this.headHairStrengthLocation, hair.enabled ? hair.strength * hairConfig.headHairDisplacementPx : 0)
     gl.uniform1i(this.hairOverlayLocation, hair.showRegion ? 1 : 0)
     gl.uniform4f(this.rectLocation, layout.x / layout.viewportWidth, 1 - (layout.y + layout.height) / layout.viewportHeight, layout.width / layout.viewportWidth, layout.height / layout.viewportHeight)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)

@@ -29,3 +29,7 @@ R2A.1 将连续 `lightingFor(minutes)` 与日照曲线集中在 `src/config/ligh
 ## R4 Hair Motion integration
 
 `hair-motion-mask.png` uses red for the image-left lower fall and green for the image-right long fall. The generator in `scripts/paint_hair_motion_mask.py` records the source-space polygons and sleeve guard. `HeroCanvas` loads and validates this 1672x941 texture, then shares its 30-draw/s RAF between Breathing and Hair. The renderer supplies independent hair time/strength/overlay uniforms. The fragment shader applies Breath then Hair UV deformation before sampling both Albedo and Normal; Blink sprites remain registered near the unmoving face. Sky composition remains at original UV. See `docs/validation/R4_HAIR_MOTION.md` for dynamic captures and regression results.
+
+## R4.1 head and nearby-hair channels
+
+The blue and alpha channels of `hair-motion-mask.png` respectively contain an almost-rigid head mass and protected bangs/side-lock weights. The red/green lower-hair channels are unchanged. The renderer passes separate head-mass and head-hair maximum displacement uniforms, while the fragment shader composes Breathing, head mass, nearby hair, and lower hair before one Albedo/Normal sample coordinate. With Hair active in Base view, the registered Blink sprites are composited in shader at the moved UV; Hair OFF retains the previous DOM Base Blink path. See `docs/validation/R4_1_HEAD_MOTION.md`.

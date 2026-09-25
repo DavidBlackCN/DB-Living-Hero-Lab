@@ -14,6 +14,7 @@ def main() -> None:
     parser.add_argument("--strength", type=float, default=1)
     parser.add_argument("--full", action="store_true")
     parser.add_argument("--gif", action="store_true")
+    parser.add_argument("--head", action="store_true", help="Crop dynamic review to the head and nearby hair")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
@@ -41,9 +42,10 @@ def main() -> None:
         page.screenshot(path=str(args.output / "t4.png"))
         if args.gif:
             frames = []
+            crop = (785, 15, 1195, 385) if args.head else (730, 190, 1280, 630)
             for _ in range(32):
                 page.wait_for_timeout(190)
-                frames.append(Image.open(BytesIO(page.screenshot())).convert("RGB").crop((730, 190, 1280, 630)).quantize(colors=96))
+                frames.append(Image.open(BytesIO(page.screenshot())).convert("RGB").crop(crop).quantize(colors=96))
             frames[0].save(args.output / "normal-preview.gif", save_all=True, append_images=frames[1:], duration=190, loop=0, optimize=True)
         page.get_by_label("Breathing on/off").check()
         page.wait_for_timeout(1800)
@@ -51,6 +53,11 @@ def main() -> None:
         page.get_by_label("Blink on/off").check()
         page.get_by_role("button", name="Preview Blink").click()
         page.screenshot(path=str(args.output / "blink-hair.png"))
+        if args.head:
+            page.get_by_label("Render view").select_option("base")
+            page.get_by_role("button", name="Preview Blink").click()
+            page.screenshot(path=str(args.output / "base-blink-hair.png"))
+            page.get_by_label("Render view").select_option("lit")
         page.get_by_label("Leaves").check()
         page.get_by_role("button", name="Night", exact=True).click()
         page.wait_for_timeout(1800)
@@ -59,7 +66,7 @@ def main() -> None:
             frames = []
             for _ in range(32):
                 page.wait_for_timeout(190)
-                frames.append(Image.open(BytesIO(page.screenshot())).convert("RGB").crop((730, 190, 1280, 630)).quantize(colors=96))
+                frames.append(Image.open(BytesIO(page.screenshot())).convert("RGB").crop(crop).quantize(colors=96))
             frames[0].save(args.output / "full-composition.gif", save_all=True, append_images=frames[1:], duration=190, loop=0, optimize=True)
         if args.full:
             for name in ("Dawn", "Noon", "Dusk", "Night"):

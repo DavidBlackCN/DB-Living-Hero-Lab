@@ -199,7 +199,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
           :disabled="reducedMotion || quality === 'static' || !rendererEnabled"
           @input="updateHair({ strength: Number(($event.target as HTMLInputElement).value) })" />
       </label>
-      <small>Normal ×1 · Stress ×2 · {{ hairConfig.primaryPeriodSeconds }}s + {{ hairConfig.secondaryPeriodSeconds }}s</small>
+      <small>Head {{ hairConfig.headMassDisplacementPx }}px · near hair {{ hairConfig.headHairDisplacementPx }}px · lower {{ hairConfig.maxDisplacementPx }}px · Stress ×2</small>
     </details>
     <footer>
       <div>Mode: {{ rendererStatus }}</div>

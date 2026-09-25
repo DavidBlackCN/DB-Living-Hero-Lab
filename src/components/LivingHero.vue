@@ -119,10 +119,10 @@ onBeforeUnmount(() => {
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-tone-url="heroConfig.sky.edgeToneUrl" :hair-mask-url="heroConfig.hair.maskUrl"
       :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
-      :blink-closed="blinkClosed && blinkActive && renderView === 'lit'" :fit="fit" :dpr-cap="heroConfig.dprCap"
+      :blink-closed="blinkClosed && blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled))" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
-      :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base'" @closed="blinkClosed = $event" />
+      :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base' && !hairState.enabled" @closed="blinkClosed = $event" />
     <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" :style="leafStyle" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"

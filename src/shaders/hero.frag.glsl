@@ -35,6 +35,8 @@ uniform float u_breathStrength;
 uniform int u_breathOverlay;
 uniform float u_hairTime;
 uniform float u_hairStrength;
+uniform float u_headMassStrength;
+uniform float u_headHairStrength;
 uniform int u_hairOverlay;
 out vec4 outColor;
 float softEllipse(vec2 p, vec2 center, vec2 radius) {
@@ -58,9 +60,11 @@ vec3 showBreathRegions(vec3 color, vec3 regions) {
   vec3 shaded = mix(color, tint, max(regions.x, regions.y * 0.55) * 0.56);
   return mix(shaded, vec3(1.0, 0.22, 0.37), regions.z * 0.36);
 }
-vec3 showMotionRegions(vec3 color, vec3 breath, vec2 hair) {
+vec3 showMotionRegions(vec3 color, vec3 breath, vec4 hair) {
   color = showBreathRegions(color, breath);
   if (u_hairOverlay == 0) return color;
+  color = mix(color, vec3(0.15, 0.70, 1.0), hair.b * 0.35);
+  color = mix(color, vec3(1.0, 0.20, 0.72), hair.a * 0.55);
   color = mix(color, vec3(1.0, 0.12, 0.69), hair.x * 0.60);
   color = mix(color, vec3(1.0, 0.79, 0.06), hair.y * 0.60);
   return color;
@@ -102,7 +106,31 @@ void main() {
     sampleUv.y += inhale * weight * u_breathStrength / 941.0;
     sampleUv.x -= inhale * weight * (v_uv.x * 1672.0 - 1152.0) / 103.0 * u_breathStrength * 0.30 / 1672.0;
   }
-  vec2 hairRegion = texture(u_hairMask, v_uv).rg;
+  vec4 hairRegion = texture(u_hairMask, v_uv);
+  if (u_headMassStrength > 0.0 || u_headHairStrength > 0.0) {
+    vec2 p = v_uv * vec2(1672.0, 941.0);
+    float primary = 6.2831853 * u_hairTime / 6.4;
+    float secondary = 6.2831853 * u_hairTime / 9.1;
+    float breathLink = u_breathStrength > 0.0 ? sin(u_breathPhase - 0.35) : 0.0;
+    vec2 headPx = vec2(
+      0.66 * sin(primary + 0.45) + 0.22 * sin(secondary + 1.05) + 0.12 * breathLink,
+      0.34 * sin(secondary + 0.85) + 0.12 * breathLink
+    ) * u_headMassStrength;
+    vec2 headCandidate = sampleUv + headPx / vec2(1672.0, 941.0);
+    float headProtect = min(hairRegion.b, texture(u_hairMask, headCandidate).b);
+    sampleUv += headPx * headProtect / vec2(1672.0, 941.0);
+
+    float side = smoothstep(1150.0, 1230.0, p.x);
+    float leftDrift = 0.70 * sin(primary + p.y * 0.018 + 1.1)
+      + 0.25 * sin(secondary + p.x * 0.013 + 2.3);
+    float rightDrift = 0.72 * sin(primary + p.y * 0.016 + 0.3)
+      + 0.26 * sin(secondary + p.x * 0.011 + 1.5);
+    vec2 strandPx = vec2(mix(leftDrift, rightDrift, side),
+      0.15 * cos(secondary + p.y * 0.014 + side)) * u_headHairStrength;
+    vec2 strandCandidate = sampleUv + strandPx / vec2(1672.0, 941.0);
+    float strandProtect = min(hairRegion.a, texture(u_hairMask, strandCandidate).a);
+    sampleUv += strandPx * strandProtect / vec2(1672.0, 941.0);
+  }
   if (u_hairStrength > 0.0) {
     vec2 p = v_uv * vec2(1672.0, 941.0);
     float primary = 6.2831853 * u_hairTime / 6.4;
@@ -122,7 +150,7 @@ void main() {
   vec4 base = texture(u_base, sampleUv);
   // Closed-eye sprites replace local Albedo before the existing Normal-driven
   // lighting transform. Base inspection retains its registered DOM overlay.
-  if (u_view == 2 && u_blinkClosed != 0) {
+  if ((u_view == 2 || (u_view == 0 && u_headMassStrength > 0.0)) && u_blinkClosed != 0) {
     vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
     if (sourcePixel.x >= 1080.0 && sourcePixel.x < 1172.0 && sourcePixel.y >= 177.0 && sourcePixel.y < 250.0) {
       vec4 closedEye = texture(u_blinkLeft, (sourcePixel - vec2(1080.0, 177.0)) / vec2(92.0, 73.0));

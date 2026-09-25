@@ -54,6 +54,7 @@ export class BaseRenderer {
   private bandStrengthLocation: WebGLUniformLocation
   private bandThresholdLocation: WebGLUniformLocation
   private bandSoftnessLocation: WebGLUniformLocation
+  private directionalStrengthLocation: WebGLUniformLocation
   private upperSceneAttenuationLocation: WebGLUniformLocation
   private skyEnabledLocation: WebGLUniformLocation
   private skyPhaseALocation: WebGLUniformLocation
@@ -118,6 +119,7 @@ export class BaseRenderer {
       bandStrength: gl.getUniformLocation(program, 'u_bandStrength'),
       bandThreshold: gl.getUniformLocation(program, 'u_bandThreshold'),
       bandSoftness: gl.getUniformLocation(program, 'u_bandSoftness'),
+      directionalStrength: gl.getUniformLocation(program, 'u_directionalStrength'),
       upperSceneAttenuation: gl.getUniformLocation(program, 'u_upperSceneAttenuation'),
       skyEnabled: gl.getUniformLocation(program, 'u_skyEnabled'),
       skyPhaseA: gl.getUniformLocation(program, 'u_skyPhaseA'),
@@ -161,6 +163,7 @@ export class BaseRenderer {
     this.bandStrengthLocation = locations.bandStrength!
     this.bandThresholdLocation = locations.bandThreshold!
     this.bandSoftnessLocation = locations.bandSoftness!
+    this.directionalStrengthLocation = locations.directionalStrength!
     this.upperSceneAttenuationLocation = locations.upperSceneAttenuation!
     this.skyEnabledLocation = locations.skyEnabled!
     this.skyPhaseALocation = locations.skyPhaseA!
@@ -248,7 +251,7 @@ export class BaseRenderer {
     this.post = new PostPipeline(gl)
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState, directionalStrength: number): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -303,6 +306,7 @@ export class BaseRenderer {
     gl.uniform1f(this.bandStrengthLocation, lighting.bandStrength)
     gl.uniform1f(this.bandThresholdLocation, lighting.bandThreshold)
     gl.uniform1f(this.bandSoftnessLocation, lighting.bandSoftness)
+    gl.uniform1f(this.directionalStrengthLocation, directionalStrength)
     gl.uniform1f(this.upperSceneAttenuationLocation, lighting.upperSceneAttenuation)
     gl.uniform1i(this.skyEnabledLocation, lighting.skyEnabled ? 1 : 0)
     gl.uniform1i(this.skyPhaseALocation, skyPhaseIndex(sky.first))

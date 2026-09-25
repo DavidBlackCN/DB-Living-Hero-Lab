@@ -89,3 +89,7 @@ Human review has accepted and frozen the R4/R4.1b Character Motion Core. R5 adds
 ## R6 HDR / Bloom / Display Post
 
 Human review accepted and froze R5. R6 moves the Lit output through an RGBM linear-HDR Scene target, four-level bloom pyramid, one final ACES/display conversion, and continuous 24H display grading. Post OFF retains the exact R5 Lit baseline. Base/Normal inspection, frozen artwork and animation assets, Lighting/Sky curves, and R5 material logic remain unchanged. Five visual/curve iterations and the final 24H/full-composition validation are documented in [`validation/R6_POST_PROCESSING.md`](validation/R6_POST_PROCESSING.md). R6 awaits human visual acceptance; do not begin R7.
+
+## R6.5 Directional Solar Shading
+
+R6 remains intact. R6.5 adds a switchable, low-sun Scene Lighting response from the existing broad Normal and sun vector, with a light painted side cue for flat architecture. Dawn and Dusk show different receiving sides; Noon response softens and Night fades out. The frozen lighting and Sky curves, R5 material assets, R6 Post, and motion paths are unchanged. Four tuning iterations, static A/B and full-composition screenshots, 24H audit, build/typecheck, and critical regressions are documented in [`validation/R6_5_DIRECTIONAL_SOLAR_SHADING.md`](validation/R6_5_DIRECTIONAL_SOLAR_SHADING.md). Await human acceptance; do not begin R7.

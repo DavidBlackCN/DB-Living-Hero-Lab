@@ -14,6 +14,8 @@ const props = defineProps<{
   renderView: RenderView
   lighting: LightingState
   lightingDetailEnabled: boolean
+  directionalEnabled: boolean
+  directionalGain: number
   postEnabled: boolean
   bloomEnabled: boolean
   postView: PostView
@@ -39,6 +41,8 @@ const emit = defineEmits<{
   (e: 'update:renderView', value: RenderView): void
   (e: 'update:lighting', value: LightingState): void
   (e: 'update:lightingDetailEnabled', value: boolean): void
+  (e: 'update:directionalEnabled', value: boolean): void
+  (e: 'update:directionalGain', value: number): void
   (e: 'update:postEnabled', value: boolean): void
   (e: 'update:bloomEnabled', value: boolean): void
   (e: 'update:postView', value: PostView): void
@@ -133,6 +137,11 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <div class="time-mode" role="status">Time: {{ timeMode === 'realtime' ? 'Realtime' : timeMode === 'playing' ? 'Playing' : 'Manual' }}</div>
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
       <label><input type="checkbox" :checked="lightingDetailEnabled" @change="emit('update:lightingDetailEnabled', ($event.target as HTMLInputElement).checked)" /> Lighting Detail on/off</label>
+      <label><input type="checkbox" :checked="directionalEnabled" @change="emit('update:directionalEnabled', ($event.target as HTMLInputElement).checked)" /> Directional Shading on/off</label>
+      <label class="range-control">Directional Strength {{ directionalGain.toFixed(2) }}
+        <input type="range" min="0" max="1.6" step="0.05" :value="directionalGain" :disabled="!directionalEnabled"
+          @input="emit('update:directionalGain', Number(($event.target as HTMLInputElement).value))" />
+      </label>
       <label><input type="checkbox" :checked="postEnabled" @change="emit('update:postEnabled', ($event.target as HTMLInputElement).checked)" /> Post Processing on/off</label>
       <label><input type="checkbox" :checked="bloomEnabled" @change="emit('update:bloomEnabled', ($event.target as HTMLInputElement).checked)" /> Bloom on/off</label>
       <label>Post preview

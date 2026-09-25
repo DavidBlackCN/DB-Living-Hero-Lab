@@ -36,6 +36,7 @@ def main() -> None:
         page.get_by_label("Leaves").uncheck()
         page.get_by_label("Lighting Detail on/off").uncheck()
         page.get_by_label("Post Processing on/off").uncheck()
+        page.get_by_label("Directional Shading on/off").uncheck()
         page.get_by_label("Render view").select_option("lit")
         output = page.locator(".time-control output")
         mode = page.locator(".time-mode")

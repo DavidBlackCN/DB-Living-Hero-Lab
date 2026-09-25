@@ -30,6 +30,7 @@ uniform float u_diffuseSoftness;
 uniform float u_bandStrength;
 uniform float u_bandThreshold;
 uniform float u_bandSoftness;
+uniform float u_directionalStrength;
 uniform float u_upperSceneAttenuation;
 uniform float u_breathPhase;
 uniform float u_breathStrength;
@@ -247,6 +248,26 @@ void main() {
   float shapedDiffuse = mix(diffuse, bandDiffuse, bandWeight);
   vec3 illumination = u_ambientColor * u_ambientIntensity
     + u_lightColor * (shapedDiffuse * u_lightIntensity);
+  // Broad solar separation follows the existing continuous sun direction. Low
+  // daylight angles reveal side-facing planes; overhead sun softens them and
+  // the night key fades out before it can cast a false solar shadow.
+  float solarPresence = smoothstep(0.25, 0.48, u_lightIntensity);
+  float lowSun = 1.0 - smoothstep(0.54, 0.89, lightDirection.z);
+  float solarResponse = u_directionalStrength * solarPresence * (0.15 + 0.85 * lowSun);
+  vec2 directionalSlope = broadDecoded.xy;
+  if (material.r > 0.001) {
+    directionalSlope = mix(directionalSlope, faceNormal.xy / 2.8, material.r * 0.48);
+  }
+  // Center the new band on the horizontal slope instead of the upward Z
+  // component. Otherwise low Sun merely darkens both morning and evening.
+  float solarFacing = directionalSlope.x * lightDirection.x * 11.0
+    + directionalSlope.y * lightDirection.y * 2.5;
+  float solarBand = smoothstep(-0.42, 0.42, solarFacing);
+  // Flat painted masonry carries almost no XY slope in Normal v3. A weak,
+  // broad spatial falloff lets the side light read across the composition.
+  float paintedSide = clamp((0.5 - v_uv.x) * lightDirection.x * 0.60, -0.20, 0.20);
+  solarResponse *= 1.0 - material.r * 0.18;
+  illumination *= 1.0 + ((solarBand - 0.5) * 1.10 + paintedSide) * solarResponse;
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;

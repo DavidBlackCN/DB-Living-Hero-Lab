@@ -25,6 +25,7 @@ with sync_playwright() as playwright:
     page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
     page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
     page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+    page.get_by_label("Directional Shading on/off").uncheck()
     for label in ("Breathing on/off", "Hair Motion on/off", "Blink on/off", "Leaves"):
         page.get_by_label(label).uncheck()
     post = page.get_by_label("Post Processing on/off")

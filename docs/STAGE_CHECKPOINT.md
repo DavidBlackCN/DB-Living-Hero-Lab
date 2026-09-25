@@ -93,3 +93,7 @@ Human review accepted and froze R5. R6 moves the Lit output through an RGBM line
 ## R6.5 Directional Solar Shading
 
 R6 remains intact. R6.5 adds a switchable, low-sun Scene Lighting response from the existing broad Normal and sun vector, with a light painted side cue for flat architecture. Dawn and Dusk show different receiving sides; Noon response softens and Night fades out. The frozen lighting and Sky curves, R5 material assets, R6 Post, and motion paths are unchanged. Four tuning iterations, static A/B and full-composition screenshots, 24H audit, build/typecheck, and critical regressions are documented in [`validation/R6_5_DIRECTIONAL_SOLAR_SHADING.md`](validation/R6_5_DIRECTIONAL_SOLAR_SHADING.md). Await human acceptance; do not begin R7.
+
+## R6 character shadow cleanup
+
+Human feedback found that R6.5's broad directional response still tinted and flattened the main character's Dawn/Dusk shadows. The character now uses softer face/garment directional gains and subtle registered bang/chin contact plus Base-guided shirt folds. Architecture direction, frozen curves and R6 Post are unchanged. Dawn/Dusk character crops, Noon/Night regression, 24H scan and validation are recorded in [`validation/R6_5B_CHARACTER_SHADOW_CLEANUP.md`](validation/R6_5B_CHARACTER_SHADOW_CLEANUP.md). Await human review; do not begin R7 or left-lamp lighting.

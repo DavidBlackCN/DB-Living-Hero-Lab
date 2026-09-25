@@ -266,8 +266,43 @@ void main() {
   // Flat painted masonry carries almost no XY slope in Normal v3. A weak,
   // broad spatial falloff lets the side light read across the composition.
   float paintedSide = clamp((0.5 - v_uv.x) * lightDirection.x * 0.60, -0.20, 0.20);
-  solarResponse *= 1.0 - material.r * 0.18;
-  illumination *= 1.0 + ((solarBand - 0.5) * 1.10 + paintedSide) * solarResponse;
+  vec2 characterPixel = sampleUv * vec2(1672.0, 941.0);
+  float whitePigment = smoothstep(0.38, 0.62, min(min(base.rgb.r, base.rgb.g), base.rgb.b))
+    * (1.0 - smoothstep(0.09, 0.20, max(abs(base.rgb.r - base.rgb.g), abs(base.rgb.g - base.rgb.b))));
+  float sleeves = max(softEllipse(characterPixel, vec2(971.0, 465.0), vec2(126.0, 205.0)),
+    softEllipse(characterPixel, vec2(1327.0, 469.0), vec2(110.0, 214.0))) * whitePigment;
+  float vestPigment = smoothstep(0.015, 0.065, base.rgb.r - base.rgb.g)
+    * (1.0 - smoothstep(0.28, 0.48, base.rgb.g));
+  float vest = softEllipse(characterPixel, vec2(1159.0, 459.0), vec2(150.0, 184.0)) * vestPigment;
+  float garment = max(sleeves, vest);
+  float broadContrast = (solarBand - 0.5) * 1.10 + paintedSide;
+  // Cloth keeps its painted fold/occlusion values. Remove the broad spatial
+  // tint across the figure and let the existing Normal band shape the form.
+  float garmentContrast = (solarBand - 0.5) * 0.66;
+  float faceContrast = (solarBand - 0.5) * 0.35;
+  float contrast = mix(broadContrast, garmentContrast, garment);
+  contrast = mix(contrast, faceContrast, material.r);
+  illumination *= 1.0 + contrast * solarResponse;
+  // Preserve a clean skin fill on the side away from the low sun. The painted
+  // fringe, brow and cheek shadows remain in the albedo and filtered Normal.
+  illumination += vec3(0.82, 0.81, 0.80) * u_ambientIntensity
+    * material.r * (1.0 - solarBand) * solarResponse * 0.10;
+  // A narrow contact shadow tracks the registered skin boundary immediately
+  // below the bangs. Restrict it to the upper forehead so eye/cheek mask
+  // holes cannot turn into dirty patches.
+  float skinAbove = texture(u_materialMask, sampleUv - vec2(0.0, texel.y * 11.0)).r;
+  float bangContact = max(material.r - skinAbove, 0.0)
+    * (1.0 - smoothstep(199.0, 219.0, characterPixel.y));
+  float neckSkin = smoothstep(0.40, 0.55, base.rgb.g)
+    * smoothstep(0.015, 0.055, base.rgb.r - base.rgb.g);
+  float chinContact = max(skinAbove - material.r, 0.0) * neckSkin
+    * smoothstep(276.0, 296.0, characterPixel.y)
+    * (1.0 - smoothstep(322.0, 340.0, characterPixel.y));
+  illumination *= 1.0 - solarResponse * (bangContact * 0.13 + chinContact * 0.12);
+  // Deepen only folds already drawn into the shirt, rather than tinting the
+  // whole sleeve or drawing a detached contact-shadow shape over the outfit.
+  float paintedFold = 1.0 - smoothstep(0.52, 0.78, dot(base.rgb, vec3(0.30, 0.59, 0.11)));
+  illumination *= 1.0 - sleeves * paintedFold * solarResponse * 0.065;
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;

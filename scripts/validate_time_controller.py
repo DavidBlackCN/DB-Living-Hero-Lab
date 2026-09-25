@@ -13,7 +13,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/validation/r2b-time-controller"
-BASELINE = ROOT / "docs/validation/r2a5d-final"
+BASELINE = ROOT / "docs/validation/r3-2c-final"
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 PRESETS = {"Dawn": 390, "Noon": 720, "Dusk": 1050, "Night": 1320}
 
@@ -31,6 +31,7 @@ def main() -> None:
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
         page.get_by_label("Breathing on/off").uncheck()
+        page.get_by_label("Hair Motion on/off").uncheck()
         page.get_by_label("Blink on/off").uncheck()
         page.get_by_label("Leaves").uncheck()
         page.get_by_label("Render view").select_option("lit")
@@ -53,7 +54,8 @@ def main() -> None:
             if not shot.exists():
                 shot.write_bytes(image_bytes)
             current = np.asarray(Image.open(BytesIO(image_bytes)).convert("RGB"))[:, 310:]
-            frozen = np.asarray(Image.open(BASELINE / f"{name.lower()}.png").convert("RGB"))[:, 310:]
+            baseline_name = "night-after.png" if name == "Night" else f"{name.lower()}.png"
+            frozen = np.asarray(Image.open(BASELINE / baseline_name).convert("RGB"))[:, 310:]
             assert current.shape == frozen.shape
             assert np.max(np.abs(current.astype(np.int16) - frozen.astype(np.int16))) <= 1, name
 

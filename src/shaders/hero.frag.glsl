@@ -5,6 +5,7 @@ uniform sampler2D u_base;
 uniform sampler2D u_normal;
 uniform sampler2D u_sky[4];
 uniform sampler2D u_skyEdgeTone;
+uniform sampler2D u_hairMask;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
 uniform int u_view;
@@ -32,6 +33,9 @@ uniform float u_upperSceneAttenuation;
 uniform float u_breathPhase;
 uniform float u_breathStrength;
 uniform int u_breathOverlay;
+uniform float u_hairTime;
+uniform float u_hairStrength;
+uniform int u_hairOverlay;
 out vec4 outColor;
 float softEllipse(vec2 p, vec2 center, vec2 radius) {
   return 1.0 - smoothstep(0.30, 1.0, length((p - center) / radius));
@@ -53,6 +57,13 @@ vec3 showBreathRegions(vec3 color, vec3 regions) {
   vec3 tint = mix(vec3(0.14, 0.69, 0.90), vec3(0.24, 1.0, 0.58), regions.x);
   vec3 shaded = mix(color, tint, max(regions.x, regions.y * 0.55) * 0.56);
   return mix(shaded, vec3(1.0, 0.22, 0.37), regions.z * 0.36);
+}
+vec3 showMotionRegions(vec3 color, vec3 breath, vec2 hair) {
+  color = showBreathRegions(color, breath);
+  if (u_hairOverlay == 0) return color;
+  color = mix(color, vec3(1.0, 0.12, 0.69), hair.x * 0.60);
+  color = mix(color, vec3(1.0, 0.79, 0.06), hair.y * 0.60);
+  return color;
 }
 vec3 srgbToLinear(vec3 color) {
   vec3 low = color / 12.92;
@@ -91,6 +102,23 @@ void main() {
     sampleUv.y += inhale * weight * u_breathStrength / 941.0;
     sampleUv.x -= inhale * weight * (v_uv.x * 1672.0 - 1152.0) / 103.0 * u_breathStrength * 0.30 / 1672.0;
   }
+  vec2 hairRegion = texture(u_hairMask, v_uv).rg;
+  if (u_hairStrength > 0.0) {
+    vec2 p = v_uv * vec2(1672.0, 941.0);
+    float primary = 6.2831853 * u_hairTime / 6.4;
+    float secondary = 6.2831853 * u_hairTime / 9.1;
+    float rightSway = 0.72 * sin(primary + p.y * 0.013)
+      + 0.28 * sin(secondary + p.y * 0.022 + 1.3);
+    float leftSway = 0.67 * sin(primary + p.y * 0.011 + 0.95)
+      + 0.25 * sin(secondary + p.x * 0.010 + 2.1);
+    vec2 flowPx = vec2(rightSway * hairRegion.y + leftSway * hairRegion.x * 0.83,
+      0.12 * cos(secondary + p.x * 0.018) * hairRegion.y
+      + 0.09 * cos(primary + p.y * 0.009 + 0.8) * hairRegion.x);
+    vec2 candidate = sampleUv + flowPx * u_hairStrength / vec2(1672.0, 941.0);
+    vec2 candidateRegion = texture(u_hairMask, candidate).rg;
+    float protection = min(1.0, (candidateRegion.x + candidateRegion.y) / max(hairRegion.x + hairRegion.y, 0.001));
+    sampleUv += flowPx * protection * u_hairStrength / vec2(1672.0, 941.0);
+  }
   vec4 base = texture(u_base, sampleUv);
   // Closed-eye sprites replace local Albedo before the existing Normal-driven
   // lighting transform. Base inspection retains its registered DOM overlay.
@@ -105,10 +133,10 @@ void main() {
       base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a);
     }
   }
-  if (u_view == 0) { outColor = vec4(showBreathRegions(base.rgb, regions), base.a); return; }
+  if (u_view == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
   vec3 normalColor = texture(u_normal, sampleUv).rgb;
-  if (u_view == 1) { outColor = vec4(showBreathRegions(normalColor, regions), 1.0); return; }
-  if (u_lightingEnabled == 0) { outColor = vec4(showBreathRegions(base.rgb, regions), base.a); return; }
+  if (u_view == 1) { outColor = vec4(showMotionRegions(normalColor, regions, hairRegion), 1.0); return; }
+  if (u_lightingEnabled == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
   vec3 baseLinear = srgbToLinear(base.rgb);
   vec3 decodedNormal = normalColor * 2.0 - 1.0;
   vec3 normal = normalize(vec3(decodedNormal.x, -decodedNormal.y, decodedNormal.z));
@@ -151,5 +179,5 @@ void main() {
     float edgeTone = texture(u_skyEdgeTone, v_uv).a * u_skyNightWeight;
     displayColor *= 1.0 - edgeTone;
   }
-  outColor = vec4(showBreathRegions(displayColor, regions), base.a);
+  outColor = vec4(showMotionRegions(displayColor, regions, hairRegion), base.a);
 }

@@ -69,3 +69,7 @@ A 3 to 5 source-pixel trimap, local soft-alpha estimate, and small registered ov
 ## R3.2c Registered sky-edge material
 
 The clarified upper-right target contains pale foreground canopy/building pixels next to sky that is already fully covered. A fixed 1672×941 local tone asset now corrects that foreground at Night without changing sky alpha/RGB or any time, lighting, or motion curve. Night before/after, 4× target, Neon, matte, four anchors, and late-night hold are documented in [`validation/R3_2C_MANUAL_SKY_EDGE_MATERIAL.md`](validation/R3_2C_MANUAL_SKY_EDGE_MATERIAL.md). Await human review before freezing R3; do not begin Hair Motion.
+
+## R3 accepted and frozen; R4 Hair Motion
+
+Human review accepted R3 Breathing, local Blink, Leaves, their Lit/Sky combination, the R2A/R2B lighting/time baseline, and the current Sky edge correction. A small top-leaf Sky residual is accepted and deferred to R5/R7 polish; R4 does not change Sky, Lighting, or Timeline. R4 now adds registered left/right lower-hair motion using one shared Albedo/Normal UV warp and the existing 30-draw/s WebGL motion driver. Three visual rounds, four 22-second full-composition checks, dynamic previews, lifecycle and pixel regressions are documented in [`validation/R4_HAIR_MOTION.md`](validation/R4_HAIR_MOTION.md). R4 awaits human visual acceptance before Character Motion Core is formally frozen. Do not begin R5 yet.

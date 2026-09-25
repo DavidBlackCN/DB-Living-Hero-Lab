@@ -6,9 +6,10 @@ import { BaseRenderer } from '../engine/renderer/BaseRenderer'
 import type { SkyState } from '../config/sky'
 import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
+import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -19,6 +20,9 @@ let motionFrame: number | null = null
 let lastTick: number | null = null
 let lastDraw = 0
 let phaseSeconds = 0
+let hairSeconds = 0
+
+function needsMotion(): boolean { return props.breathing.enabled || props.hair.enabled }
 
 function stopMotion(): void {
   if (motionFrame !== null) cancelAnimationFrame(motionFrame)
@@ -27,8 +31,12 @@ function stopMotion(): void {
 }
 
 function motionTick(time: number): void {
-  if (!props.breathing.enabled || document.hidden || !renderer) { stopMotion(); return }
-  if (lastTick !== null) phaseSeconds = (phaseSeconds + Math.min((time - lastTick) / 1000, 0.05)) % breathingConfig.periodSeconds
+  if (!needsMotion() || document.hidden || !renderer) { stopMotion(); return }
+  if (lastTick !== null) {
+    const delta = Math.min((time - lastTick) / 1000, 0.05)
+    if (props.breathing.enabled) phaseSeconds = (phaseSeconds + delta) % breathingConfig.periodSeconds
+    if (props.hair.enabled) hairSeconds = (hairSeconds + delta) % hairConfig.loopSeconds
+  }
   lastTick = time
   if (time - lastDraw >= 1000 / 30) {
     lastDraw = time
@@ -39,7 +47,7 @@ function motionTick(time: number): void {
 
 function scheduleMotion(): void {
   stopMotion()
-  if (props.breathing.enabled && !document.hidden && renderer) motionFrame = requestAnimationFrame(motionTick)
+  if (needsMotion() && !document.hidden && renderer) motionFrame = requestAnimationFrame(motionTick)
 }
 
 function draw(): void {
@@ -49,7 +57,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.blinkClosed)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -63,10 +71,11 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, edgeTone, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeTone, hairMask, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
       loadImage(props.skyEdgeToneUrl),
+      loadImage(props.hairMaskUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
     ])
     if (!mounted || current !== generation || !canvas.value) return
@@ -83,11 +92,14 @@ async function initialize(): Promise<void> {
     if (edgeTone.naturalWidth !== props.artwork.width || edgeTone.naturalHeight !== props.artwork.height) {
       throw new Error('Sky edge tone image dimensions do not match Artwork Space')
     }
+    if (hairMask.naturalWidth !== props.artwork.width || hairMask.naturalHeight !== props.artwork.height) {
+      throw new Error('Hair mask dimensions do not match Artwork Space')
+    }
     if (leftBlink.naturalWidth !== props.blinkEyes[0].width || leftBlink.naturalHeight !== props.blinkEyes[0].height
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, [leftBlink, rightBlink])
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, hairMask, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
@@ -125,10 +137,11 @@ onMounted(() => {
 watch(() => props.fit, draw)
 watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
-watch(() => props.lighting, () => { if (!props.breathing.enabled) draw() }, { deep: true })
-watch(() => props.sky, () => { if (!props.breathing.enabled) draw() }, { deep: true })
+watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true })
+watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.blinkClosed, draw)
 watch(() => props.breathing, () => { draw(); scheduleMotion() }, { deep: true })
+watch(() => props.hair, () => { draw(); scheduleMotion() }, { deep: true })
 
 onBeforeUnmount(() => {
   mounted = false

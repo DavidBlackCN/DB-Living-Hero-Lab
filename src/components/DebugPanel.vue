@@ -2,6 +2,7 @@
 import { formatLightingTime, lightingPresets } from '../config/lighting'
 import type { TimeMode } from '../engine/time/TimeController'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
+import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const props = defineProps<{
   leavesCount: number
   leavesFpsCap: number
   breathing: BreathingState
+  hair: HairState
 }>()
 
 const emit = defineEmits<{
@@ -43,12 +45,15 @@ const emit = defineEmits<{
   (e: 'update:leavesEnabled', value: boolean): void
   (e: 'update:skyEnabled', value: boolean): void
   (e: 'update:breathing', value: BreathingState): void
+  (e: 'update:hair', value: HairState): void
 }>()
-
-const futureModules = ['Hair Motion']
 
 function updateBreathing(patch: Partial<BreathingState>): void {
   emit('update:breathing', { ...props.breathing, ...patch })
+}
+
+function updateHair(patch: Partial<HairState>): void {
+  emit('update:hair', { ...props.hair, ...patch })
 }
 
 function updateLighting(patch: Partial<LightingState>): void {
@@ -182,15 +187,24 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       </label>
       <small>Normal ×1 · Stress ×2 · {{ breathingConfig.periodSeconds }}s cycle</small>
     </details>
-    <div class="debug-future" aria-label="Future modules">
-      <label v-for="name in futureModules" :key="name" :title="`${name}: Not implemented`">
-        <input type="checkbox" disabled /> {{ name }} <small>Not implemented</small>
+    <details class="lighting-controls" open>
+      <summary>Hair Motion</summary>
+      <label><input type="checkbox" :checked="hair.enabled && !reducedMotion && quality !== 'static' && rendererEnabled"
+        :disabled="reducedMotion || quality === 'static' || !rendererEnabled"
+        @change="updateHair({ enabled: ($event.target as HTMLInputElement).checked })" /> Hair Motion on/off</label>
+      <label><input type="checkbox" :checked="hair.showRegion" :disabled="quality === 'static' || !rendererEnabled"
+        @change="updateHair({ showRegion: ($event.target as HTMLInputElement).checked })" /> Show Hair Region</label>
+      <label class="range-control">Hair Strength {{ (hair.strength * hairConfig.maxDisplacementPx).toFixed(1) }} source px
+        <input type="range" min="0" max="2" step="0.1" :value="hair.strength"
+          :disabled="reducedMotion || quality === 'static' || !rendererEnabled"
+          @input="updateHair({ strength: Number(($event.target as HTMLInputElement).value) })" />
       </label>
-    </div>
+      <small>Normal ×1 · Stress ×2 · {{ hairConfig.primaryPeriodSeconds }}s + {{ hairConfig.secondaryPeriodSeconds }}s</small>
+    </details>
     <footer>
       <div>Mode: {{ rendererStatus }}</div>
       <div>Motion: {{ reducedMotion ? 'reduced' : 'normal' }}</div>
-      <div>Base frame: {{ frameTime === null ? 'idle' : `${frameTime.toFixed(1)} ms (${breathing.enabled && !reducedMotion && quality !== 'static' ? 'Breathing ≤30 FPS' : 'on demand'})` }}</div>
+      <div>Base frame: {{ frameTime === null ? 'idle' : `${frameTime.toFixed(1)} ms (${(breathing.enabled || hair.enabled) && !reducedMotion && quality !== 'static' ? 'Motion ≤30 FPS' : 'on demand'})` }}</div>
       <div>Leaves: {{ leavesCount ? `≤ ${leavesFpsCap} FPS` : 'off' }}</div>
     </footer>
   </aside>

@@ -16,3 +16,7 @@ Leaves 第一版用独立的 `engine/animation/LeafField.ts` 在 Canvas 2D 中�
 Debug Panel 已可开关 Leaves 并查看粒子数量。`prefers-reduced-motion` 或 Static quality 时默认关闭；页面后台停止 RAF，恢复时清零时间差以免跳帧；resize 更新画布和桌面／移动端数量。后续可按实际观感优化局部发射区、层次、遮挡与配色；若需要 atlas 再从四张 master 派生并保留透明 padding。
 
 参考 [KumengScreen 的透明花瓣纹理粒子方案](https://github.com/buger404/KumengScreen#%E5%8A%A8%E6%95%88%E4%B8%8E%E8%8A%B1%E7%93%A3)：后续可用 Alpha Blend 绘制独立秋叶，并借鉴共同阵风与个体旋转、翻转、起落的分层思路；本项目的轨迹、密度和画面遮挡须按 Base 单独设计。
+
+## R4 Hair Motion v1 update
+
+The earlier Hair Motion TBD row is superseded. A registered two-channel 1672x941 lower-hair mask drives independent left/right sway (6.4 s primary, 9.1 s secondary, 5.2 source-pixel configured maximum). Albedo and Normal share one UV displacement; Breathing uses the existing capped WebGL motion driver. Blink, Leaves, reduced motion, Static quality, and hidden-tab behavior were checked. R3 is formally frozen; its small Sky edge residual is accepted and deferred to R5/R7. See [R4 validation](validation/R4_HAIR_MOTION.md). R4 awaits human visual acceptance before Character Motion Core freeze.

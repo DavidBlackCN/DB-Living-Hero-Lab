@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 
 
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-BASELINE = Path(__file__).resolve().parents[1] / "docs/validation/r2b-time-controller/noon.png"
+BASELINE = Path(__file__).resolve().parents[1] / "docs/validation/r3-2c-final/noon.png"
 
 
 def frame(page) -> np.ndarray:
@@ -31,6 +31,7 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+        page.get_by_label("Hair Motion on/off").uncheck()
         page.get_by_label("Blink on/off").uncheck()
         page.get_by_label("Leaves").uncheck()
         page.get_by_role("button", name="Noon", exact=True).click()

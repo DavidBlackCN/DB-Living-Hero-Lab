@@ -10,6 +10,7 @@ import { skyFor } from '../config/sky'
 import { leafToneFor } from '../config/leafTone'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import type { BreathingState } from '../engine/animation/breathing'
+import type { HairState } from '../engine/animation/hair'
 import { useStaticRendering } from '../engine/quality/policy'
 import { TimeController, clockMinutes } from '../engine/time/TimeController'
 import type { TimeSnapshot } from '../engine/time/TimeController'
@@ -39,6 +40,7 @@ const showBlinkRegions = ref(false)
 const leavesEnabled = ref(true)
 const leavesCount = ref(0)
 const breathing = ref<BreathingState>({ enabled: true, strength: 1, showRegion: false })
+const hair = ref<HairState>({ enabled: true, strength: 1, showRegion: false })
 const frameTime = ref<number | null>(null)
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
@@ -50,6 +52,7 @@ const sceneView = computed(() => renderView.value === 'base' || renderView.value
 const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && quality.value !== 'static' && sceneView.value)
 const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && quality.value !== 'static' && sceneView.value)
 const breathingState = computed<BreathingState>(() => ({ ...breathing.value, enabled: breathing.value.enabled && !reducedMotion.value && wantsRenderer.value }))
+const hairState = computed<HairState>(() => ({ ...hair.value, enabled: hair.value.enabled && !reducedMotion.value && wantsRenderer.value }))
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
 let observer: ResizeObserver | null = null
@@ -114,8 +117,8 @@ onBeforeUnmount(() => {
 <template>
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
-    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-tone-url="heroConfig.sky.edgeToneUrl"
-      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :blink-eyes="heroConfig.blink.eyes"
+    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-tone-url="heroConfig.sky.edgeToneUrl" :hair-mask-url="heroConfig.hair.maskUrl"
+      :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
       :blink-closed="blinkClosed && blinkActive && renderView === 'lit'" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
@@ -129,6 +132,7 @@ onBeforeUnmount(() => {
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
       v-model:breathing="breathing"
+      v-model:hair="hair"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"
       :frame-time="wantsRenderer ? frameTime : null" :reduced-motion="reducedMotion" :leaves-count="leavesCount" :leaves-fps-cap="heroConfig.leaves.fpsCap" />
   </main>

@@ -4,7 +4,7 @@ import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import { defaultLighting } from './lighting'
 import { skyAssets } from './sky'
 
-export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; sky: { urls: typeof skyAssets; edgeToneUrl: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; sky: { urls: typeof skyAssets; edgeToneUrl: string }; hair: { maskUrl: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -25,6 +25,7 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
     url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v3.png`,
   },
   sky: { urls: skyAssets, edgeToneUrl: `${import.meta.env.BASE_URL}assets/hero/sky/sky-edge-tone.png` },
+  hair: { maskUrl: `${import.meta.env.BASE_URL}assets/hero/motion/hair-motion-mask.png` },
   lighting: defaultLighting,
   dprCap: 2,
   leaves: {

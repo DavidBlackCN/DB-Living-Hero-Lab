@@ -62,6 +62,10 @@ Human review accepted the R3 Breathing v1 motion. The remaining Lit integration 
 
 The narrow, source-color-gated correction was rejected after human review found its before/after Night edge difference negligible. The earlier screenshots are archived in [`validation/R3_2_SKY_EDGE_CLEANUP.md`](validation/R3_2_SKY_EDGE_CLEANUP.md).
 
-## R3.2b Edge-aware Sky Rematte
+## R3.2b Edge-aware Sky Rematte (rejected)
 
-A 3 to 5 source-pixel trimap, local soft-alpha estimate, and small registered override replace the R3.2 edge-only result. Sky RGB, Lighting, timelines, and accepted motion modules remain unchanged. Four Lit anchors and 4x Night/Neon/matte audits are in [`validation/R3_2B_SKY_EDGE_REMATTE.md`](validation/R3_2B_SKY_EDGE_REMATTE.md). Await human visual acceptance before freezing R3; do not begin Hair Motion.
+A 3 to 5 source-pixel trimap, local soft-alpha estimate, and small registered override replaced the R3.2 edge-only result, but human review still found no sufficient Night improvement. The result and audit remain in [`validation/R3_2B_SKY_EDGE_REMATTE.md`](validation/R3_2B_SKY_EDGE_REMATTE.md).
+
+## R3.2c Registered sky-edge material
+
+The clarified upper-right target contains pale foreground canopy/building pixels next to sky that is already fully covered. A fixed 1672×941 local tone asset now corrects that foreground at Night without changing sky alpha/RGB or any time, lighting, or motion curve. Night before/after, 4× target, Neon, matte, four anchors, and late-night hold are documented in [`validation/R3_2C_MANUAL_SKY_EDGE_MATERIAL.md`](validation/R3_2C_MANUAL_SKY_EDGE_MATERIAL.md). Await human review before freezing R3; do not begin Hair Motion.

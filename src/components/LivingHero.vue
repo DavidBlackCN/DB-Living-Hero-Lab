@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
 <template>
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
-    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls"
+    <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-tone-url="heroConfig.sky.edgeToneUrl"
       :sky="sky" :render-view="renderView" :lighting="lighting" :breathing="breathingState" :blink-eyes="heroConfig.blink.eyes"
       :blink-closed="blinkClosed && blinkActive && renderView === 'lit'" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />

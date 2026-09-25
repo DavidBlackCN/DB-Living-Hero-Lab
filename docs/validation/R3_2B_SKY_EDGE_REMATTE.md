@@ -1,6 +1,6 @@
 # R3.2b Edge-aware Sky Rematte
 
-Status: implementation complete; **awaiting human visual acceptance**. R3.2's one-pixel color-gated fringe was rejected because its before/after views were nearly indistinguishable.
+Status: **rejected in human review**. R3.2's one-pixel color-gated fringe and this later automatic rematte both left the reported Night discontinuity visibly unresolved. The earlier claim of an acceptable visual improvement is withdrawn. See [R3.2c](R3_2C_MANUAL_SKY_EDGE_MATERIAL.md) for the subsequent fixed-artwork correction.
 
 ## Cause and repair
 

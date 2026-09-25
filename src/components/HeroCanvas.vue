@@ -8,7 +8,7 @@ import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; sky: SkyState; renderView: RenderView; lighting: LightingState; breathing: BreathingState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -63,9 +63,10 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeTone, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
+      loadImage(props.skyEdgeToneUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
     ])
     if (!mounted || current !== generation || !canvas.value) return
@@ -79,11 +80,14 @@ async function initialize(): Promise<void> {
     if (skyImages.some(skyImage => skyImage.naturalWidth !== props.artwork.width || skyImage.naturalHeight !== props.artwork.height)) {
       throw new Error('Sky image dimensions do not match Artwork Space')
     }
+    if (edgeTone.naturalWidth !== props.artwork.width || edgeTone.naturalHeight !== props.artwork.height) {
+      throw new Error('Sky edge tone image dimensions do not match Artwork Space')
+    }
     if (leftBlink.naturalWidth !== props.blinkEyes[0].width || leftBlink.naturalHeight !== props.blinkEyes[0].height
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, [leftBlink, rightBlink])
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {

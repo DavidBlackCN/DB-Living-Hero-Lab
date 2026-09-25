@@ -4,6 +4,7 @@ in vec2 v_uv;
 uniform sampler2D u_base;
 uniform sampler2D u_normal;
 uniform sampler2D u_sky[4];
+uniform sampler2D u_skyEdgeTone;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
 uniform int u_view;
@@ -13,6 +14,7 @@ uniform int u_blinkClosed;
 uniform int u_skyPhaseA;
 uniform int u_skyPhaseB;
 uniform float u_skyMix;
+uniform float u_skyNightWeight;
 uniform float u_exposure;
 uniform float u_relightStrength;
 uniform vec3 u_lightDirection;
@@ -142,5 +144,12 @@ void main() {
     vec3 skyLinear = srgbToLinear(sky.rgb);
     displayLinear = mix(displayLinear, skyLinear, clamp(sky.a, 0.0, 1.0));
   }
-  outColor = vec4(showBreathRegions(linearToSrgb(displayLinear), regions), base.a);
+  vec3 displayColor = linearToSrgb(displayLinear);
+  if (u_skyEnabled != 0) {
+    // Registered edge material shades only the bright foreground bordering
+    // Night sky. Its alpha is zero across open sky and the main artwork.
+    float edgeTone = texture(u_skyEdgeTone, v_uv).a * u_skyNightWeight;
+    displayColor *= 1.0 - edgeTone;
+  }
+  outColor = vec4(showBreathRegions(displayColor, regions), base.a);
 }

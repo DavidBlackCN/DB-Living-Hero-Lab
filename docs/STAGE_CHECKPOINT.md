@@ -77,3 +77,7 @@ Human review accepted R3 Breathing, local Blink, Leaves, their Lit/Sky combinati
 ## R4.1 Head mass and nearby hair motion
 
 Human review accepted R4 lower-hair motion and requested a more complete but still restrained head response. R4.1 adds near-rigid whole-head micro translation and protected secondary motion in bangs and side locks, while preserving lower-hair mask channels exactly. Base/Lit Blink, Breathing, four Lit phases, and lifecycle checks passed. See [`validation/R4_1_HEAD_MOTION.md`](validation/R4_1_HEAD_MOTION.md). Await human visual acceptance before formally freezing Hair Motion / Character Motion Core; no R5 work has begun.
+
+## R4.1b Head motion gain
+
+Whole-head gain is now 1.8 source px and nearby-hair gain 3.0 source px after three small tuning rounds. Lower hair, masks, rhythm, and all other systems remain unchanged. The stronger nearby-hair trial exposed mild image-left upper-clothing pull, so that gain was reduced for the final candidate. Four Lit phases, Blink/Breathing coexistence, Hair browser regression, build, and typecheck passed. See [`validation/R4_1B_HEAD_GAIN.md`](validation/R4_1B_HEAD_GAIN.md). Await human visual acceptance; do not start R5.

@@ -3,8 +3,8 @@ export const hairConfig = {
   secondaryPeriodSeconds: 9.1,
   loopSeconds: 582.4,
   maxDisplacementPx: 5.2,
-  headMassDisplacementPx: 0.9,
-  headHairDisplacementPx: 2.1,
+  headMassDisplacementPx: 1.8,
+  headHairDisplacementPx: 3.0,
 } as const
 
 export interface HairState {

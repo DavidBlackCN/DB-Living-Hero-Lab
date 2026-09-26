@@ -113,3 +113,7 @@ The Dawn face/eyes have a broader local soft fill and lighter directional shadow
 ## R6 Final head lighting polish
 
 Dawn's head receives softer face-plane shading and under-eye skin fill. Dusk's bright eye highlight is locally compressed without changing its sunset environment. Night's face and eyes gain a gentler directional Moon fill, while nearby hair sheen is narrowed. Noon remains pixel-identical, and changed artwork pixels are confined to the head. Four head phases, before/after crops, time-boundary captures and validation are recorded in [`validation/R6_FINAL_HEAD_LIGHTING_POLISH.md`](validation/R6_FINAL_HEAD_LIGHTING_POLISH.md). Await human acceptance; do not begin R7.
+
+## Character Lighting Core rebuild — current review candidate
+
+Human review rejected the accumulated R6.5 face and eye patches. The Lit shader now gives the character one continuous Sun/Moon key and ambient field, then varies the response of face, hair, clothing, and head accessories with the existing registered masks. The Dawn eye/under-eye spot fills, left-hair fill, face-only Moon fills, bang/chin multipliers, and one-eye sunset white correction have been removed. The previous R6 Final note remains historical. Four clean full frames, four head crops, before/after pairs, seven visual/continuity rounds, and regressions are in [`validation/CHARACTER_LIGHTING_CORE.md`](validation/CHARACTER_LIGHTING_CORE.md). Base/Normal, R5 assets, lighting and sky curves, Post, and motion remain unchanged. Await human acceptance; do not begin R7.

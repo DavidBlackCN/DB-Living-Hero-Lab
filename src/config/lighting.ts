@@ -218,6 +218,13 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
   const state = solarLightingFor(minutes)
   const time = Math.max(0, Math.min(1440, Number.isFinite(minutes) ? minutes : 720))
 
+  // The Night sky and Moon key begin fading at 05:00, before the solar key
+  // becomes useful. A small, eased cool fill bridges that short overlap so
+  // early twilight does not dip below the late-night hold. It vanishes by
+  // the accepted 06:30 Dawn anchor and leaves all other phases untouched.
+  const predawnFill = smooth(300, 330, time) * (1 - smooth(330, 390, time))
+  state.ambientIntensity += predawnFill * 0.025
+
   // Solar direction, colors and sky keep their continuous curves. Balance only
   // light energy through the morning peak, afternoon peak, and dusk-to-night dip.
   const endpoints = time > 390 && time < 600

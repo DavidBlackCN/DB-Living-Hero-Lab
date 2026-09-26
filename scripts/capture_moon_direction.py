@@ -5,13 +5,16 @@ import csv
 import re
 from pathlib import Path
 
+from PIL import Image, ImageChops, ImageStat
 from playwright.sync_api import sync_playwright
 
 
 TIMES = (
     ("dawn", 390), ("noon", 720), ("dusk", 1050),
     ("20h", 1200), ("22h", 1320), ("00h", 0),
-    ("02h", 120), ("04h30", 270), ("24h", 1440),
+    ("02h", 120), ("04h30", 270), ("04h59", 299),
+    ("05h", 300), ("05h01", 301), ("05h30", 330),
+    ("06h", 360), ("24h", 1440),
 )
 
 
@@ -50,6 +53,15 @@ def main() -> None:
     assert all(readings[a][0] < readings[b][0] for a, b in zip(("20h", "22h", "00h", "02h"), ("22h", "00h", "02h", "04h30")))
     assert readings["20h"][1] < readings["00h"][1] and readings["04h30"][1] < readings["00h"][1]
     assert readings["00h"] == readings["24h"], "Moon direction must wrap at midnight"
+    assert max(abs(a - b) for a, b in zip(readings["04h59"], readings["05h"])) <= 1
+    assert max(abs(a - b) for a, b in zip(readings["05h"], readings["05h01"])) <= 1
+    def artwork(name: str) -> Image.Image:
+        return Image.open(args.output / f"{name}.png").convert("RGB").crop((310, 0, 1440, 900))
+
+    for before, after in (("04h59", "05h"), ("05h", "05h01")):
+        difference = ImageChops.difference(artwork(before), artwork(after))
+        assert max(ImageStat.Stat(difference).mean) < 0.25, f"Visible one-minute jump: {before} -> {after}"
+    assert ImageChops.difference(artwork("00h"), artwork("24h")).getbbox() is None
     with (args.output / "moon-directions.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(("name", "minutes", "debug_readout"))

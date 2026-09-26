@@ -105,3 +105,7 @@ Dawn's character shadow band now receives a softer cool fill on the left hair, f
 ## R6.5D Moon direction and Dawn eye
 
 The Moon now has an independent 20:00–05:00 direction arc that rises opposite the Dusk sun, crosses high near midnight, and fades through twilight. Dawn's screen-left eye has a feathered iris/upper-lid protection, while Night receives a stronger cool directional key on hair, face, cloth, stone, and architecture. Noon/Dusk images remain unchanged, and the 24H continuity scan passes. Review images and regressions are recorded in [`validation/R6_5D_MOON_DIRECTION_EYE_NIGHT.md`](validation/R6_5D_MOON_DIRECTION_EYE_NIGHT.md). Await human review; do not begin R7.
+
+## R6.5E Dawn face and twilight continuity
+
+The Dawn face/eyes have a broader local soft fill and lighter directional shadow. The Moon direction now joins continuously at 05:00 and 20:00, with a small ambient overlap after 05:00 to prevent a pre-sunrise brightness dip. Night hair moon sheen follows selected outer locks instead of a broad glossy mask. Noon and Dusk images are unchanged. Review images and validation are in [`validation/R6_5E_DAWN_TRANSITION_NIGHT_HAIR.md`](validation/R6_5E_DAWN_TRANSITION_NIGHT_HAIR.md). Await human review; do not begin R7.

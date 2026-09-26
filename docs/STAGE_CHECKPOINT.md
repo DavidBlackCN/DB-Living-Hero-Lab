@@ -109,3 +109,7 @@ The Moon now has an independent 20:00–05:00 direction arc that rises opposite 
 ## R6.5E Dawn face and twilight continuity
 
 The Dawn face/eyes have a broader local soft fill and lighter directional shadow. The Moon direction now joins continuously at 05:00 and 20:00, with a small ambient overlap after 05:00 to prevent a pre-sunrise brightness dip. Night hair moon sheen follows selected outer locks instead of a broad glossy mask. Noon and Dusk images are unchanged. Review images and validation are in [`validation/R6_5E_DAWN_TRANSITION_NIGHT_HAIR.md`](validation/R6_5E_DAWN_TRANSITION_NIGHT_HAIR.md). Await human review; do not begin R7.
+
+## R6 Final head lighting polish
+
+Dawn's head receives softer face-plane shading and under-eye skin fill. Dusk's bright eye highlight is locally compressed without changing its sunset environment. Night's face and eyes gain a gentler directional Moon fill, while nearby hair sheen is narrowed. Noon remains pixel-identical, and changed artwork pixels are confined to the head. Four head phases, before/after crops, time-boundary captures and validation are recorded in [`validation/R6_FINAL_HEAD_LIGHTING_POLISH.md`](validation/R6_FINAL_HEAD_LIGHTING_POLISH.md). Await human acceptance; do not begin R7.

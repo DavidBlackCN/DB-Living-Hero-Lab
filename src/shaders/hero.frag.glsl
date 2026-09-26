@@ -301,6 +301,13 @@ void main() {
   float rawFace = max(material.r, texture(u_materialMask, sampleUv).b);
   float faceCore = softEllipse(characterPixel, vec2(1153.0, 235.0), vec2(107.0, 88.0));
   float dawnFace = dawnEase * rawFace * faceCore;
+  // The low morning sun can drive the filtered face Normal into one large
+  // dark plane. Blend only that receiving side toward a soft local key, while
+  // the painted brow/lid and the lit side retain their shape.
+  vec3 softMorningFace = u_ambientColor * u_ambientIntensity
+    + u_lightColor * u_lightIntensity * 0.48;
+  illumination = mix(illumination, softMorningFace,
+    dawnFace * (1.0 - solarBand) * 0.53);
   contrast = mix(contrast, max(contrast, -0.015), dawnFace * 0.92);
   vec2 leftEyeOffset = (characterPixel - vec2(1123.0, 219.0)) / vec2(48.0, 35.0);
   vec2 rightEyeOffset = (characterPixel - vec2(1187.0, 238.0)) / vec2(43.0, 32.0);
@@ -308,6 +315,19 @@ void main() {
     1.0 - smoothstep(0.38, 1.0, length(rightEyeOffset)));
   float dawnEye = dawnEase * rawFace * eyes;
   contrast = mix(contrast, max(contrast, 0.06), dawnEye);
+  vec4 rawMaterial = texture(u_materialMask, sampleUv);
+  float eyeCore = max(
+    softEllipse(characterPixel, vec2(1123.0, 219.0), vec2(32.0, 23.0)),
+    softEllipse(characterPixel, vec2(1187.0, 238.0), vec2(30.0, 22.0)));
+  float paintedEye = smoothstep(0.16, 0.43,
+    dot(base.rgb, vec3(0.2126, 0.7152, 0.0722)));
+  float eyeSurface = eyeCore * paintedEye
+    * max(rawMaterial.b, 1.0 - rawMaterial.r);
+  float underEyeSkin = max(
+    softEllipse(characterPixel, vec2(1123.0, 242.0), vec2(38.0, 18.0)),
+    softEllipse(characterPixel, vec2(1187.0, 259.0), vec2(35.0, 18.0)))
+    * rawMaterial.r;
+  contrast = mix(contrast, max(contrast, 0.09), dawnEase * underEyeSkin * 0.85);
   illumination *= 1.0 + contrast * solarResponse;
   float dawnShadowFill = dawnEase * max(leftHair * (0.34 + 0.66 * (1.0 - solarBand)) * 0.48,
     (1.0 - solarBand) * max(material.r * 0.14, garment * 0.15));
@@ -315,6 +335,14 @@ void main() {
   illumination += vec3(0.78, 0.82, 0.91) * u_ambientIntensity * dawnEye * 0.42;
   illumination += vec3(0.80, 0.83, 0.89) * u_ambientIntensity * dawnFace
     * (0.10 + 0.12 * (1.0 - solarBand));
+  // Lift painted eye whites and irises under the morning fringe, without
+  // lifting the dark pupil, lashes, or skin around the eye sockets.
+  illumination += vec3(0.75, 0.77, 0.82) * u_ambientIntensity
+    * dawnEase * eyeSurface * 0.22;
+  // Soften the shaded skin just below each iris; keep the upper lid and
+  // lashes out of this correction so it does not erase their painted edge.
+  illumination += vec3(0.83, 0.81, 0.80) * u_ambientIntensity
+    * dawnEase * underEyeSkin * 0.42;
   // Preserve a clean skin fill on the side away from the low sun. The painted
   // fringe, brow and cheek shadows remain in the albedo and filtered Normal.
   illumination += vec3(0.82, 0.81, 0.80) * u_ambientIntensity
@@ -362,6 +390,13 @@ void main() {
     moonPresence * (0.006 + 0.45 * moonReceive) * (1.0 + sleeves * 0.12),
     moonEnvelope * (0.012 + 0.24 * moonFaceReceive), moonFace);
   illumination += vec3(0.34, 0.51, 0.88) * moonKey;
+  // A restrained face-only moon fill keeps the painted nose, cheeks and eyes
+  // readable on the shadow side. Its receiving side follows the Moon vector.
+  illumination += vec3(0.46, 0.58, 0.77) * moonEnvelope * moonFace * faceCore
+    * (0.070 + 0.090 * moonFaceReceive);
+  illumination += vec3(0.47, 0.57, 0.73) * moonEnvelope * eyeSurface
+    * (0.070 + 0.050 * moonFaceReceive);
+  illumination += vec3(0.51, 0.58, 0.70) * moonEnvelope * underEyeSkin * 0.12;
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
@@ -388,9 +423,9 @@ void main() {
     hairRegion.g * rightRibbon * moonRightSide);
   float faceSideLocks = hairRegion.a * max(
     (1.0 - smoothstep(1055.0, 1090.0, characterPixel.x)) * moonLeftSide,
-    smoothstep(1260.0, 1295.0, characterPixel.x) * moonRightSide) * 0.55;
+    smoothstep(1260.0, 1295.0, characterPixel.x) * moonRightSide) * 0.42;
   float crownEdge = moonCrown * crownRibbon(characterPixel)
-    * mix(moonLeftSide, moonRightSide, smoothstep(1130.0, 1190.0, characterPixel.x)) * 0.45;
+    * mix(moonLeftSide, moonRightSide, smoothstep(1130.0, 1190.0, characterPixel.x)) * 0.30;
   float moonHair = max(sideLocks, max(faceSideLocks, crownEdge))
     * hairPigment * moonHairFacing * moonPresence;
   relitLinear += vec3(0.28, 0.43, 0.72) * moonHair * 0.065;
@@ -407,10 +442,30 @@ void main() {
     float glint = max(irisGlint(sourcePixel, vec2(1123.0, 219.0), lightDirection),
       irisGlint(sourcePixel, vec2(1187.0, 238.0), lightDirection));
     float dayVisibility = smoothstep(0.22, 0.48, u_lightIntensity);
-    vec3 reflection = u_lightColor * u_lightIntensity * (0.075 * dayVisibility)
+    float duskGlintSoftening = (1.0 - smoothstep(-0.48, -0.08, lightDirection.x))
+      * lowSun * solarPresence * clamp(u_directionalStrength, 0.0, 1.0);
+    vec3 reflection = u_lightColor * u_lightIntensity
+      * (0.075 * dayVisibility * mix(1.0, 0.40, duskGlintSoftening))
       + u_ambientColor * u_ambientIntensity * (0.012 * (1.0 - dayVisibility));
     relitLinear += reflection * glint * material.b;
+    // The painted iris already carries a warm glint. Compress only its
+    // brightest sunset pixels, leaving the dark pupil and Noon unchanged.
+    float irisBrightness = dot(relitLinear, vec3(0.2126, 0.7152, 0.0722));
+    float hotIris = smoothstep(0.12, 0.50, irisBrightness);
+    relitLinear *= 1.0 - duskGlintSoftening * material.b * hotIris * 0.38;
   }
+  // The screen-left eye also has a broad bright eye-white baked into Base.
+  // Tame that small non-skin highlight under the low sunset, without casting
+  // a dark oval over the surrounding eyelid or cheek.
+  float duskEyeWindow = softEllipse(characterPixel, vec2(1123.0, 219.0), vec2(45.0, 31.0))
+    * smoothstep(197.0, 210.0, characterPixel.y)
+    * (1.0 - smoothstep(237.0, 251.0, characterPixel.y));
+  float duskEyeGate = (1.0 - smoothstep(-0.48, -0.08, lightDirection.x))
+    * lowSun * solarPresence * clamp(u_directionalStrength, 0.0, 1.0);
+  float eyeWhitePeak = smoothstep(0.26, 0.66,
+    dot(relitLinear, vec3(0.2126, 0.7152, 0.0722)));
+  relitLinear *= 1.0 - duskEyeGate * duskEyeWindow * (1.0 - material.r)
+    * eyeWhitePeak * 0.30;
   vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
   if (u_sceneLinear != 0) {
     float skyAlpha = 0.0;

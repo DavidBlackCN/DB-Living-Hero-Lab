@@ -5,6 +5,7 @@ import { breathingConfig, type BreathingState } from '../engine/animation/breath
 import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 import type { PostView } from '../config/post'
+import type { MoonDirection } from '../config/moonlight'
 
 const props = defineProps<{
   rendererEnabled: boolean
@@ -20,6 +21,7 @@ const props = defineProps<{
   bloomEnabled: boolean
   postView: PostView
   lightingMinutes: number
+  moonDirection: MoonDirection
   timeMode: TimeMode
   showBounds: boolean
   showGrid: boolean
@@ -138,6 +140,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
       <label><input type="checkbox" :checked="lightingDetailEnabled" @change="emit('update:lightingDetailEnabled', ($event.target as HTMLInputElement).checked)" /> Lighting Detail on/off</label>
       <label><input type="checkbox" :checked="directionalEnabled" @change="emit('update:directionalEnabled', ($event.target as HTMLInputElement).checked)" /> Directional Shading on/off</label>
+      <small>Moon Direction {{ directionAngle(moonDirection) }}° · Elevation {{ directionElevation(moonDirection) }}°</small>
       <label class="range-control">Directional Strength {{ directionalGain.toFixed(2) }}
         <input type="range" min="0" max="1.6" step="0.05" :value="directionalGain" :disabled="!directionalEnabled"
           @input="emit('update:directionalGain', Number(($event.target as HTMLInputElement).value))" />

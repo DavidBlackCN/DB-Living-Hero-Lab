@@ -3,6 +3,7 @@ import fragmentSource from '../../shaders/hero.frag.glsl?raw'
 import type { ArtworkLayout } from '../coordinates/artwork'
 import type { LightingState, RenderView } from '../types'
 import type { SkyPhaseId, SkyState } from '../../config/sky'
+import type { MoonDirection } from '../../config/moonlight'
 import type { BreathingState } from '../animation/breathing'
 import { breathingConfig } from '../animation/breathing'
 import { hairConfig, type HairState } from '../animation/hair'
@@ -44,6 +45,7 @@ export class BaseRenderer {
   private exposureLocation: WebGLUniformLocation
   private relightStrengthLocation: WebGLUniformLocation
   private lightLocation: WebGLUniformLocation
+  private moonDirectionLocation: WebGLUniformLocation
   private lightIntensityLocation: WebGLUniformLocation
   private lightColorLocation: WebGLUniformLocation
   private ambientIntensityLocation: WebGLUniformLocation
@@ -106,6 +108,7 @@ export class BaseRenderer {
     const viewLocation = gl.getUniformLocation(program, 'u_view')
     const locations = {
       light: gl.getUniformLocation(program, 'u_lightDirection'),
+      moonDirection: gl.getUniformLocation(program, 'u_moonDirection'),
       lightingEnabled: gl.getUniformLocation(program, 'u_lightingEnabled'),
       exposure: gl.getUniformLocation(program, 'u_exposure'),
       relightStrength: gl.getUniformLocation(program, 'u_relightStrength'),
@@ -153,6 +156,7 @@ export class BaseRenderer {
     this.exposureLocation = locations.exposure!
     this.relightStrengthLocation = locations.relightStrength!
     this.lightLocation = locations.light!
+    this.moonDirectionLocation = locations.moonDirection!
     this.lightIntensityLocation = locations.lightIntensity!
     this.lightColorLocation = locations.lightColor!
     this.ambientIntensityLocation = locations.ambientIntensity!
@@ -251,7 +255,7 @@ export class BaseRenderer {
     this.post = new PostPipeline(gl)
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState, directionalStrength: number): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, moonDirection: MoonDirection, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState, directionalStrength: number): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -296,6 +300,7 @@ export class BaseRenderer {
     gl.uniform1f(this.exposureLocation, lighting.exposureStops)
     gl.uniform1f(this.relightStrengthLocation, lighting.relightStrength)
     gl.uniform3f(this.lightLocation, lighting.direction.x, lighting.direction.y, lighting.direction.z)
+    gl.uniform3f(this.moonDirectionLocation, moonDirection.x, moonDirection.y, moonDirection.z)
     gl.uniform1f(this.lightIntensityLocation, lighting.enabled ? lighting.intensity : 0)
     gl.uniform3f(this.lightColorLocation, lighting.color.r, lighting.color.g, lighting.color.b)
     gl.uniform1f(this.ambientIntensityLocation, lighting.ambientIntensity)

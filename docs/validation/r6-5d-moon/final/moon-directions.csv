@@ -1,0 +1,10 @@
+name,minutes,debug_readout
+dawn,390,Moon Direction 35° · Elevation 12°
+noon,720,Moon Direction 35° · Elevation 12°
+dusk,1050,Moon Direction 35° · Elevation 12°
+20h,1200,Moon Direction 35° · Elevation 12°
+22h,1320,Moon Direction 49° · Elevation 40°
+00h,0,Moon Direction 81° · Elevation 54°
+02h,120,Moon Direction 116° · Elevation 49°
+04h30,270,Moon Direction 144° · Elevation 19°
+24h,1440,Moon Direction 81° · Elevation 54°

@@ -101,3 +101,7 @@ Human feedback found that R6.5's broad directional response still tinted and fla
 ## R6.5C Dawn polish and directional moonlight
 
 Dawn's character shadow band now receives a softer cool fill on the left hair, face, and upper clothing, while the receiving side and architecture retain their morning direction. Night gains low-contrast cold moon shaping driven by the existing continuously rotating nighttime Direction vector, with stable Night-hold energy. Noon and Dusk static output remain unchanged. Four visual rounds, final 24H and combined captures, and validation are recorded in [`validation/R6_5C_DAWN_MOONLIGHT.md`](validation/R6_5C_DAWN_MOONLIGHT.md). Await human review; do not begin R7 or left-lamp lighting.
+
+## R6.5D Moon direction and Dawn eye
+
+The Moon now has an independent 20:00–05:00 direction arc that rises opposite the Dusk sun, crosses high near midnight, and fades through twilight. Dawn's screen-left eye has a feathered iris/upper-lid protection, while Night receives a stronger cool directional key on hair, face, cloth, stone, and architecture. Noon/Dusk images remain unchanged, and the 24H continuity scan passes. Review images and regressions are recorded in [`validation/R6_5D_MOON_DIRECTION_EYE_NIGHT.md`](validation/R6_5D_MOON_DIRECTION_EYE_NIGHT.md). Await human review; do not begin R7.

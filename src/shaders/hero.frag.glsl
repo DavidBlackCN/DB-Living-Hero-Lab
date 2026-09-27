@@ -443,8 +443,8 @@ void main() {
   if (u_skyEnabled != 0) {
     // Registered edge material shades only the bright foreground bordering
     // Night sky. Its alpha is zero across open sky and the main artwork.
-    float edgeTone = texture(u_skyEdgeTone, v_uv).a * u_skyNightWeight;
-    displayColor *= 1.0 - edgeTone;
+    vec4 edgeTone = texture(u_skyEdgeTone, v_uv);
+    displayColor *= 1.0 - edgeTone.rgb * edgeTone.a * u_skyNightWeight;
   }
   outColor = vec4(showMotionRegions(displayColor, regions, hairRegion), base.a);
 }

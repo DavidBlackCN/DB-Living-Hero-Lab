@@ -90,6 +90,6 @@ void main() {
     color *= u_tint;
   }
   // Frozen registered foreground edge tone remains a display-space correction.
-  float edge = texture(u_edgeTone, vec2(artwork.x, 1.0 - artwork.y)).a * u_nightWeight;
-  outColor = vec4(clamp(color * (1.0 - edge), 0.0, 1.0), 1.0);
+  vec4 edge = texture(u_edgeTone, vec2(artwork.x, 1.0 - artwork.y));
+  outColor = vec4(clamp(color * (1.0 - edge.rgb * edge.a * u_nightWeight), 0.0, 1.0), 1.0);
 }

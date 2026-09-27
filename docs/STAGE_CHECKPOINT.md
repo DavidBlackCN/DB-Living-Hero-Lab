@@ -117,3 +117,13 @@ Dawn's head receives softer face-plane shading and under-eye skin fill. Dusk's b
 ## Character Lighting Core rebuild — current review candidate
 
 Human review rejected the accumulated R6.5 face and eye patches. The Lit shader now gives the character one continuous Sun/Moon key and ambient field, then varies the response of face, hair, clothing, and head accessories with the existing registered masks. The Dawn eye/under-eye spot fills, left-hair fill, face-only Moon fills, bang/chin multipliers, and one-eye sunset white correction have been removed. The previous R6 Final note remains historical. Four clean full frames, four head crops, before/after pairs, seven visual/continuity rounds, and regressions are in [`validation/CHARACTER_LIGHTING_CORE.md`](validation/CHARACTER_LIGHTING_CORE.md). Base/Normal, R5 assets, lighting and sky curves, Post, and motion remain unchanged. Await human acceptance; do not begin R7.
+
+## Local Sky seam repair after character lighting review
+
+The current review prioritizes Night Sky/foreground junctions before further
+character lighting. Registered local repairs now darken and cool only the
+marked left vine opening, right roof canopy/spires, ribbon-side background,
+and top leaves at Night; open Sky and all three daylight anchors are unchanged.
+Before/after crops, four-phase captures, and limitations are recorded in
+[`validation/SKY_SEAM_LOCAL_REPAIR.md`](validation/SKY_SEAM_LOCAL_REPAIR.md).
+Await human acceptance; do not resume character lighting or start R7 yet.

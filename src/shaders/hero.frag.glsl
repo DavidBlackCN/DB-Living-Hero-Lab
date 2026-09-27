@@ -351,14 +351,19 @@ void main() {
   float characterMoonSide = clamp((1150.0 - characterPixel.x) * moonDirection.x / 260.0, -0.45, 0.45);
   // Center the lunar response on the figure, so the Moon can cross from one
   // side to the other without lifting the whole portrait after midnight.
-  float characterMoonReceive = clamp(0.34 + (moonBand - 0.5) * 0.30
-    + characterMoonSide * 0.38, 0.10, 0.70);
+  float characterMoonReceive = clamp(0.39 + (moonBand - 0.5) * 0.48
+    + characterMoonSide * 1.00, 0.06, 0.86);
+  // The whole figure sees the same receiving plane. Skin compresses its
+  // contrast around the shared midpoint; hair and clothing keep the broad
+  // light/shade split even without their optional material highlights.
+  float materialMoonReceive = mix(characterMoonReceive,
+    mix(0.39, characterMoonReceive, 0.52), faceRegion);
   float moonMaterialGain = mix(1.0, 1.12, clothing);
   moonMaterialGain = mix(moonMaterialGain, 1.30, vest);
   moonMaterialGain = mix(moonMaterialGain, 1.08, hairRegionWeight);
   moonMaterialGain = mix(moonMaterialGain, 0.78, accessory);
   moonMaterialGain = mix(moonMaterialGain, 1.00, faceRegion);
-  float moonDiffuse = 0.075 + 0.44 * characterMoonReceive;
+  float moonDiffuse = max(0.04, 0.22 + (materialMoonReceive - 0.39) * 1.05);
   vec3 nightCharacter = u_ambientColor * u_ambientIntensity
     + vec3(0.35, 0.51, 0.82) * moonMaterialGain * moonDiffuse;
   illumination = mix(illumination, nightCharacter, character * moonHandoff);

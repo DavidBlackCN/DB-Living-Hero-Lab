@@ -13,12 +13,14 @@ PHASES = (("dawn", 390), ("noon", 720), ("dusk", 1050), ("night", 1320))
 HEAD_BOX = (1050, 0, 1620, 500)
 FIGURE_BOX = (930, 0, 1770, 1033)
 EDGE_BOX = (950, 0, 1210, 420)
+ROSE_BOX = (1160, 0, 1430, 360)
 
 
 def capture(page, output: Path, name: str) -> None:
     frame = Image.open(BytesIO(page.screenshot())).convert("RGB")
     frame.save(output / f"{name}-full.png")
-    for suffix, box in (("head", HEAD_BOX), ("figure", FIGURE_BOX), ("head-left-edge", EDGE_BOX)):
+    for suffix, box in (("head", HEAD_BOX), ("figure", FIGURE_BOX),
+                        ("head-left-edge", EDGE_BOX), ("rose-background", ROSE_BOX)):
         frame.crop(box).save(output / f"{name}-{suffix}.png")
 
 

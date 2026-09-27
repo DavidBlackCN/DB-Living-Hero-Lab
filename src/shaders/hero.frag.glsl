@@ -319,8 +319,8 @@ void main() {
     faceRegion);
   // Hair, clothing and accessories retain progressively stronger directional
   // volume; morning has a softer receiving side than sunset.
-  float characterGain = mix(0.56, 0.76, hairRegionWeight);
-  characterGain = mix(characterGain, 0.58, clothing);
+  float characterGain = mix(0.56, 0.90, hairRegionWeight);
+  characterGain = mix(characterGain, 0.72, clothing);
   characterGain = mix(characterGain, 0.50, accessory);
   characterGain = mix(characterGain, 0.25, faceRegion);
   float characterBand = (solarBand - 0.5) * characterGain * mix(1.0, 0.54, morning);
@@ -346,30 +346,35 @@ void main() {
   float moonSide = clamp((0.53 - v_uv.x) * moonDirection.x * 1.0
     + (0.46 - v_uv.y) * moonDirection.y * 0.16, -0.30, 0.30);
   float moonReceive = pow(clamp(moonBand * 0.65 + moonSide * 1.3 - 0.12, 0.0, 1.0), 1.5);
-  // One Moon receiving side for face, hair, shirt, skirt and head accessories.
-  // Material response adjusts softness and gain without changing the direction.
+  // The figure receives the Moon through its broad painted Normal. The XY
+  // slope turns hair locks and cloth folds without making downward-facing
+  // painted planes on the face collapse into a hard shadow.
+  float characterMoonFacing = dot(broadNormal.xy, moonDirection.xy) * 14.0;
+  float faceMoonFacing = broadNormal.x * moonDirection.x * 14.0
+    + broadNormal.y * moonDirection.y * 2.0;
+  float characterMoonBand = mix(smoothstep(-0.95, 0.95, characterMoonFacing),
+    smoothstep(-1.15, 1.15, faceMoonFacing), faceRegion);
   float characterMoonSide = clamp((1150.0 - characterPixel.x) * moonDirection.x / 260.0, -0.45, 0.45);
-  // Center the lunar response on the figure, so the Moon can cross from one
-  // side to the other without lifting the whole portrait after midnight.
-  float characterMoonReceive = clamp(0.39 + (moonBand - 0.5) * 0.48
-    + characterMoonSide * 1.00, 0.06, 0.86);
+  float characterMoonReceive = clamp(0.39 + (characterMoonBand - 0.5) * 0.82
+    + characterMoonSide * 0.08, 0.06, 0.80);
   // The whole figure sees the same receiving plane. Skin compresses its
   // contrast around the shared midpoint; hair and clothing keep the broad
   // light/shade split even without their optional material highlights.
   float materialMoonReceive = mix(characterMoonReceive,
-    mix(0.39, characterMoonReceive, 0.52), faceRegion);
-  float moonMaterialGain = mix(1.0, 1.12, clothing);
-  moonMaterialGain = mix(moonMaterialGain, 1.30, vest);
-  moonMaterialGain = mix(moonMaterialGain, 1.08, hairRegionWeight);
+    mix(0.43, characterMoonReceive, 0.25), faceRegion);
+  float moonMaterialGain = mix(1.0, 1.20, clothing);
+  moonMaterialGain = mix(moonMaterialGain, 1.45, vest);
+  moonMaterialGain = mix(moonMaterialGain, 1.35, hairRegionWeight);
   moonMaterialGain = mix(moonMaterialGain, 0.78, accessory);
   moonMaterialGain = mix(moonMaterialGain, 1.00, faceRegion);
-  float moonDiffuse = max(0.04, 0.22 + (materialMoonReceive - 0.39) * 1.05);
+  float moonDiffuse = max(0.07, 0.25 + (materialMoonReceive - 0.39) * 1.00);
   vec3 nightCharacter = u_ambientColor * u_ambientIntensity
     + vec3(0.35, 0.51, 0.82) * moonMaterialGain * moonDiffuse;
   illumination = mix(illumination, nightCharacter, character * moonHandoff);
-  // Existing architecture remains on its established Night response.
+  // Architecture retains its broad-Normal Moon response with a quieter key,
+  // so the tower beside the head stays moonlit without competing with it.
   illumination += vec3(0.34, 0.51, 0.88) * moonPresence
-    * (0.006 + 0.45 * moonReceive) * (1.0 - character);
+    * (0.006 + 0.34 * moonReceive) * (1.0 - character);
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;

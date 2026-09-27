@@ -4,7 +4,8 @@ in vec2 v_uv;
 uniform sampler2D u_base;
 uniform sampler2D u_normal;
 uniform sampler2D u_sky[4];
-uniform sampler2D u_skyEdgeTone;
+uniform sampler2D u_skyEdgeReconstruction;
+uniform sampler2D u_skyEdgeCoverage;
 uniform sampler2D u_hairMask;
 uniform sampler2D u_materialMask;
 uniform sampler2D u_blinkLeft;
@@ -211,6 +212,12 @@ void main() {
   vec3 normalColor = texture(u_normal, sampleUv).rgb;
   if (u_view == 1) { outColor = vec4(showMotionRegions(normalColor, regions, hairRegion), 1.0); return; }
   if (u_lightingEnabled == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
+  // Recover foreground pigment from old-sky-contaminated edge pixels before
+  // the regular lighting and Sky composition. No display-space edge shading.
+  vec4 edgeRepair = texture(u_skyEdgeReconstruction, sampleUv);
+  if (u_skyEnabled != 0) base.rgb = mix(base.rgb, edgeRepair.rgb, edgeRepair.a);
+  vec4 edgeSkyfill = texture(u_skyEdgeCoverage, sampleUv);
+  if (u_skyEnabled != 0) base.rgb = mix(base.rgb, edgeSkyfill.rgb, edgeSkyfill.a * u_skyNightWeight);
   vec4 material = u_detailEnabled != 0 ? texture(u_materialMask, sampleUv) : vec4(0.0);
   vec3 baseLinear = srgbToLinear(base.rgb);
   // Skin is a slightly warmer reflectance, never a light source.
@@ -414,7 +421,7 @@ void main() {
     vec3 sceneLinear = blendedLinear;
     if (u_skyEnabled != 0) {
       vec4 sky = mix(sampleSky(u_skyPhaseA), sampleSky(u_skyPhaseB), clamp(u_skyMix, 0.0, 1.0));
-      skyAlpha = clamp(sky.a, 0.0, 1.0);
+      skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, v_uv).a * u_skyNightWeight);
       // The frozen Sky RGB is display-referred. Place its inverse display value
       // in the linear scene so the one Post ACES pass recovers the same plate.
       vec3 skyLinear = inverseAces(srgbToLinear(sky.rgb)) / exp2(u_exposure);
@@ -437,14 +444,9 @@ void main() {
     vec4 skyB = sampleSky(u_skyPhaseB);
     vec4 sky = mix(skyA, skyB, clamp(u_skyMix, 0.0, 1.0));
     vec3 skyLinear = srgbToLinear(sky.rgb);
-    displayLinear = mix(displayLinear, skyLinear, clamp(sky.a, 0.0, 1.0));
+    float skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, v_uv).a * u_skyNightWeight);
+    displayLinear = mix(displayLinear, skyLinear, skyAlpha);
   }
   vec3 displayColor = linearToSrgb(displayLinear);
-  if (u_skyEnabled != 0) {
-    // Registered edge material shades only the bright foreground bordering
-    // Night sky. Its alpha is zero across open sky and the main artwork.
-    vec4 edgeTone = texture(u_skyEdgeTone, v_uv);
-    displayColor *= 1.0 - edgeTone.rgb * edgeTone.a * u_skyNightWeight;
-  }
   outColor = vec4(showMotionRegions(displayColor, regions, hairRegion), base.a);
 }

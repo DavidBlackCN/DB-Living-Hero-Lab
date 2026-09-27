@@ -40,7 +40,7 @@ export class PostPipeline {
     this.buffer = buffer
     gl.useProgram(program)
     for (const [name, unit] of [['u_source', 0], ['u_gate', 1], ['u_scene', 2],
-      ['u_bloom0', 3], ['u_bloom1', 4], ['u_bloom2', 5], ['u_bloom3', 6], ['u_edgeTone', 7]] as const) {
+      ['u_bloom0', 3], ['u_bloom1', 4], ['u_bloom2', 5], ['u_bloom3', 6]] as const) {
       gl.uniform1i(gl.getUniformLocation(program, name), unit)
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -133,7 +133,7 @@ export class PostPipeline {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
-  render(post: PostState, sceneExposureStops: number, rect: { x: number; y: number; width: number; height: number }, edgeTone: WebGLTexture, nightWeight: number): void {
+  render(post: PostState, sceneExposureStops: number, rect: { x: number; y: number; width: number; height: number }): void {
     const gl = this.gl
     gl.useProgram(this.program)
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
@@ -157,11 +157,9 @@ export class PostPipeline {
     this.bind(2, this.scene!.texture)
     this.bind(0, this.raw[0].texture)
     this.bloom.forEach((target, i) => this.bind(3 + i, target.texture))
-    this.bind(7, edgeTone)
     gl.uniform1i(this.uniform('u_mode'), 3)
     gl.uniform1i(this.uniform('u_preview'), post.view === 'bright' ? 1 : post.view === 'bloom' ? 2 : post.view === 'grade' ? 3 : 0)
     gl.uniform1f(this.uniform('u_bloomStrength'), post.bloomEnabled ? post.bloomStrength : 0)
-    gl.uniform1f(this.uniform('u_nightWeight'), nightWeight)
     gl.uniform1f(this.uniform('u_saturation'), post.saturation)
     gl.uniform1f(this.uniform('u_contrast'), post.contrast)
     gl.uniform3f(this.uniform('u_tint'), ...post.tint)

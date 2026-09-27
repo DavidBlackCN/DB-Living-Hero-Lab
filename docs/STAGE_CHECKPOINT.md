@@ -127,3 +127,7 @@ and top leaves at Night; open Sky and all three daylight anchors are unchanged.
 Before/after crops, four-phase captures, and limitations are recorded in
 [`validation/SKY_SEAM_LOCAL_REPAIR.md`](validation/SKY_SEAM_LOCAL_REPAIR.md).
 Await human acceptance; do not resume character lighting or start R7 yet.
+
+## Sky edge decontamination review candidate
+
+Human review rejected the preceding Night display-tone seam suppression. That final-color multiplier is now disabled in both Lit and Post. Two registered 1672×941 reconstruction assets recover local foreground pigment and replace the old-sky mixture in selected distant foliage openings before/within normal Sky composition. The strongest visible improvement is at the right roof treeline and ribbon-side tree; a faint soft-air residual remains in the lower left distant branches. Dawn, Noon, Dusk, and Night review images and limitations are in [`validation/SKY_EDGE_DECONTAMINATION.md`](validation/SKY_EDGE_DECONTAMINATION.md). Await human review; do not resume character lighting or begin R7.

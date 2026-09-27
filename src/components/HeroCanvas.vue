@@ -11,7 +11,7 @@ import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import type { PostState } from '../config/post'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeToneUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; moonDirection: MoonDirection; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; moonDirection: MoonDirection; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -73,10 +73,11 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, edgeTone, hairMask, materialMask, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeReconstruction, edgeCoverage, hairMask, materialMask, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
-      loadImage(props.skyEdgeToneUrl),
+      loadImage(props.skyEdgeReconstructionUrl),
+      loadImage(props.skyEdgeCoverageUrl),
       loadImage(props.hairMaskUrl),
       loadImage(props.materialMaskUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
@@ -92,8 +93,11 @@ async function initialize(): Promise<void> {
     if (skyImages.some(skyImage => skyImage.naturalWidth !== props.artwork.width || skyImage.naturalHeight !== props.artwork.height)) {
       throw new Error('Sky image dimensions do not match Artwork Space')
     }
-    if (edgeTone.naturalWidth !== props.artwork.width || edgeTone.naturalHeight !== props.artwork.height) {
-      throw new Error('Sky edge tone image dimensions do not match Artwork Space')
+    if (edgeReconstruction.naturalWidth !== props.artwork.width || edgeReconstruction.naturalHeight !== props.artwork.height) {
+      throw new Error('Sky edge reconstruction image dimensions do not match Artwork Space')
+    }
+    if (edgeCoverage.naturalWidth !== props.artwork.width || edgeCoverage.naturalHeight !== props.artwork.height) {
+      throw new Error('Sky edge coverage image dimensions do not match Artwork Space')
     }
     if (hairMask.naturalWidth !== props.artwork.width || hairMask.naturalHeight !== props.artwork.height) {
       throw new Error('Hair mask dimensions do not match Artwork Space')
@@ -105,7 +109,7 @@ async function initialize(): Promise<void> {
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeTone, hairMask, materialMask, [leftBlink, rightBlink])
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeReconstruction, edgeCoverage, hairMask, materialMask, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {

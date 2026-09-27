@@ -8,7 +8,6 @@ uniform sampler2D u_bloom0;
 uniform sampler2D u_bloom1;
 uniform sampler2D u_bloom2;
 uniform sampler2D u_bloom3;
-uniform sampler2D u_edgeTone;
 uniform vec2 u_texel;
 uniform vec4 u_artworkRect;
 uniform int u_mode;
@@ -18,7 +17,6 @@ uniform float u_postExposure;
 uniform float u_threshold;
 uniform float u_knee;
 uniform float u_bloomStrength;
-uniform float u_nightWeight;
 uniform float u_saturation;
 uniform float u_contrast;
 uniform vec3 u_tint;
@@ -89,7 +87,5 @@ void main() {
     color = (color - 0.5) * u_contrast + 0.5;
     color *= u_tint;
   }
-  // Frozen registered foreground edge tone remains a display-space correction.
-  vec4 edge = texture(u_edgeTone, vec2(artwork.x, 1.0 - artwork.y));
-  outColor = vec4(clamp(color * (1.0 - edge.rgb * edge.a * u_nightWeight), 0.0, 1.0), 1.0);
+  outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

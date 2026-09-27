@@ -1,9 +1,9 @@
-"""Author a registered foreground color-propagation plate for Sky seams.
+"""Author registered pigment and Sky-mixture repair plates for fixed seams.
 
 Fixed polygons select the known defects. Only pale, old-sky-mixed pixels near
 the existing boundary borrow pigment from adjacent interior leaves or stone.
-The asset replaces Albedo before lighting; it does not change Sky alpha or
-multiply final display color.
+The pigment plate replaces Albedo before lighting. A paired Night-only plate
+recovers Sky mixture in distant foliage. Neither multiplies final display color.
 """
 
 from pathlib import Path
@@ -24,13 +24,13 @@ SIZE = (1672, 941)
 AREAS = [
     [(810, 0), (986, 0), (998, 374), (827, 374)],  # left vine / distant column
     [(944, 0), (1105, 0), (1091, 226), (960, 259)],  # upper central pillar
-    [(1300, 173), (1380, 166), (1400, 354), (1303, 370)],  # ribbon-side tree
+    [(1272, 208), (1325, 205), (1325, 310), (1272, 312)],  # ribbon-side gap
     [(1355, 68), (1672, 50), (1672, 345), (1350, 342)],  # roof and spires
     [(1395, 0), (1672, 0), (1672, 139), (1460, 108)],  # upper-right foliage
 ]
 SKY_GAPS = [
     [(902, 175), (961, 170), (970, 343), (900, 345)],
-    [(1306, 213), (1352, 207), (1355, 337), (1307, 342)],
+    [(1271, 214), (1324, 209), (1324, 305), (1271, 307)],
     [(1370, 181), (1416, 175), (1422, 232), (1368, 236)],
     [(1444, 166), (1480, 160), (1490, 225), (1441, 229)],
     [(1537, 140), (1605, 135), (1605, 214), (1535, 215)],
@@ -53,6 +53,20 @@ def main() -> None:
         ImageDraw.Draw(gap_image).polygon(polygon, fill=255)
     gap_soft = cv2.GaussianBlur(np.asarray(gap_image, dtype=np.float32) / 255,
                                 (0, 0), 3.0)
+    # The tower's actual left wall starts around x=1325 in this fixed artwork.
+    # Protect the wall and all three spires while leaving the ribbon-side
+    # opening at x=1271..1324 available for old-sky replacement.
+    tower_image = Image.new("L", SIZE, 0)
+    tower_draw = ImageDraw.Draw(tower_image)
+    tower_draw.rectangle((1320, 40, 1408, 164), fill=255)
+    tower_draw.rectangle((1305, 110, 1324, 164), fill=255)
+    tower_draw.rectangle((1325, 165, 1408, 276), fill=255)
+    tower_core = np.asarray(tower_image, dtype=np.float32) / 255
+    tower_protect = cv2.GaussianBlur(tower_core, (0, 0), 1.2)
+    ribbon_image = Image.new("L", SIZE, 0)
+    ImageDraw.Draw(ribbon_image).polygon(SKY_GAPS[1], fill=255)
+    ribbon_soft = cv2.GaussianBlur(np.asarray(ribbon_image, dtype=np.float32) / 255,
+                                  (0, 0), 2.0)
 
     sky_core = sky >= 0.985
     sky_distance = distance_transform_edt(~sky_core)
@@ -90,6 +104,8 @@ def main() -> None:
     area_soft = cv2.GaussianBlur(area, (0, 0), 4.0)
     edge *= area_soft
     strength = np.clip(edge * (leaf_weight * leaf_band + stone_weight * stone_band * 0.55), 0, 1)
+    strength *= 1 - tower_protect
+    strength[tower_core > 0.5] = 0
     # The distant tree crowns carry a broader old-sky mix than the crisp
     # foreground leaves. Reconstruct only their pale pigment, with a feathered
     # hand located region; no architecture or opaque foliage is selected.
@@ -110,10 +126,15 @@ def main() -> None:
     leaf_connected = np.clip((32 - warm_distance) / 9, 0, 1)
     boundary = np.clip((42 - sky_distance) / 12, 0, 1)
     coverage = gap_soft * projection * material_contrast * luma_gate \
-        * leaf_connected * boundary * (sky < 0.985)
+        * np.maximum(leaf_connected * boundary, ribbon_soft) * (sky < 0.985)
     # One-pixel smoothing removes isolated salt-and-pepper islands without
     # softening the real leaf silhouette in the source picture.
     coverage = cv2.GaussianBlur(coverage.astype(np.float32), (0, 0), 0.7)
+    # The ribbon-side opening contains nearly pure old sky in small gaps;
+    # finish replacing that contribution instead of leaving a pale residue.
+    coverage = np.clip(coverage * (1 + 0.52 * ribbon_soft), 0, 1)
+    coverage *= 1 - tower_protect
+    coverage[tower_core > 0.5] = 0
     coverage_alpha = np.uint8(np.rint(np.clip(coverage, 0, 1) * 255))
     night_foreground = np.uint8(np.rint(np.clip(foliage_color * 0.85 + base * 0.15, 0, 1) * 255))
     Image.fromarray(np.dstack((night_foreground, coverage_alpha)), "RGBA").save(SKY / "sky-edge-skyfill.png")

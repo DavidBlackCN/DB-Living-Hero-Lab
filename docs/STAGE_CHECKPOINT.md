@@ -131,3 +131,5 @@ Await human acceptance; do not resume character lighting or start R7 yet.
 ## Sky edge decontamination review candidate
 
 Human review rejected the preceding Night display-tone seam suppression. That final-color multiplier is now disabled in both Lit and Post. Two registered 1672×941 reconstruction assets recover local foreground pigment and replace the old-sky mixture in selected distant foliage openings before/within normal Sky composition. The strongest visible improvement is at the right roof treeline and ribbon-side tree; a faint soft-air residual remains in the lower left distant branches. Dawn, Noon, Dusk, and Night review images and limitations are in [`validation/SKY_EDGE_DECONTAMINATION.md`](validation/SKY_EDGE_DECONTAMINATION.md). Await human review; do not resume character lighting or begin R7.
+
+The final two-box correction extends the ribbon-side Sky replacement into the actual pale opening and protects the adjacent large tower from both reconstruction assets. Night before/after crops and four-phase recaptures are linked from the same validation note. Await human review before resuming character lighting.

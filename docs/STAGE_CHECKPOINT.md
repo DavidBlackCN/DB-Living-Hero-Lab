@@ -145,3 +145,7 @@ The previous Night character receiving plane leaned too heavily on screen X. It 
 ## Twilight Sun/Moon handoff continuity
 
 The 24H preview's morning shadow swap and evening brightness rebound were traced to separate character Sun/Moon thresholds, a morning energy-curve join, and Dusk colors cooling ahead of the Sky. The character key now crossfades through the existing Sky twilight weight, Dawn energy eases into its accepted 06:30 anchor, and Dusk colors stay aligned with the 17:30–20:00 Sky transition. Fixed Noon/Dusk/Night frames are unchanged and Dawn differs by at most one RGB level. Five-minute before/after captures, the full-day audit, and checks are in [`validation/TWILIGHT_HANDOFF_CONTINUITY.md`](validation/TWILIGHT_HANDOFF_CONTINUITY.md). Await human review; do not begin R7.
+
+## R6 final lighting closure — review candidate
+
+The Night architectural Moon contribution is quieter, removing the overlit impression beside the black rose without a local darkening patch. The existing broad-Normal character Moon response is slightly stronger on hair and clothing, with a softer face share. Dawn's face-wide morning response is marginally softer; Noon and Dusk fixed frames are unchanged. Four-phase screenshots, A/B crops, 24H continuity and checks are recorded in [`validation/R6_FINAL_LIGHTING_CLOSURE.md`](validation/R6_FINAL_LIGHTING_CLOSURE.md). Recommend freezing R6 after human review; R7 has not begun.

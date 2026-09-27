@@ -122,6 +122,10 @@ function colorChannels(values: [number, number, number]): LightingState['color']
   return { r: values[0], g: values[1], b: values[2] }
 }
 
+function mixChannels(a: LightingState['color'], b: LightingState['color'], amount: number): LightingState['color'] {
+  return { r: mix(a.r, b.r, amount), g: mix(a.g, b.g, amount), b: mix(a.b, b.b, amount) }
+}
+
 function solarLightingFor(minutes: number): LightingState & { daylight: number; warmth: number } {
   const inputMinutes = Number.isFinite(minutes) ? Math.max(0, Math.min(1440, minutes)) : 720
   const safeMinutes = inputMinutes === 1440 ? 0 : inputMinutes
@@ -209,6 +213,7 @@ function solarLightingFor(minutes: number): LightingState & { daylight: number; 
 }
 
 const dawnEnergy = solarLightingFor(lightingPresets.dawn.minutes)
+const predawnEnergy = solarLightingFor(330)
 const morningEndEnergy = solarLightingFor(600)
 const afternoonStartEnergy = solarLightingFor(900)
 const duskEnergy = solarLightingFor(lightingPresets.dusk.minutes)
@@ -218,17 +223,17 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
   const state = solarLightingFor(minutes)
   const time = Math.max(0, Math.min(1440, Number.isFinite(minutes) ? minutes : 720))
 
-  // The Night sky and Moon key begin fading at 05:00, before the solar key
-  // becomes useful. A small, eased cool fill bridges that short overlap so
-  // early twilight does not dip below the late-night hold. It vanishes by
-  // the accepted 06:30 Dawn anchor and leaves all other phases untouched.
+  // A small cool fill prevents pre-dawn twilight from dipping below the
+  // late-night hold. It vanishes by the accepted 06:30 Dawn anchor.
   const predawnFill = smooth(300, 330, time) * (1 - smooth(330, 390, time))
-  state.ambientIntensity += predawnFill * 0.025
 
-  // Solar direction, colors and sky keep their continuous curves. Balance only
-  // light energy through the morning peak, afternoon peak, and dusk-to-night dip.
-  const endpoints = time > 390 && time < 600
-    ? { first: dawnEnergy, second: morningEndEnergy, amount: smooth(390, 600, time) }
+  // Approach the Dawn anchor with zero slope rather than letting the raw
+  // sunrise ramp stop abruptly at 06:30. The accepted anchor itself is exact.
+  // Solar direction, colors and Sky retain their continuous curves.
+  const endpoints = time > 330 && time < 390
+    ? { first: predawnEnergy, second: dawnEnergy, amount: smooth(330, 390, time) }
+    : time > 390 && time < 600
+      ? { first: dawnEnergy, second: morningEndEnergy, amount: smooth(390, 600, time) }
     : time > 900 && time < 1050
       ? { first: afternoonStartEnergy, second: duskEnergy, amount: smooth(900, 1050, time) }
       : time > 1050 && time < 1200
@@ -239,6 +244,15 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     state.intensity = mix(endpoints.first.intensity, endpoints.second.intensity, endpoints.amount)
     state.ambientIntensity = mix(endpoints.first.ambientIntensity, endpoints.second.ambientIntensity, endpoints.amount)
   }
+  // The Sky plate stays predominantly Dusk well after 17:30. Fade its warm
+  // key and ambient colors over the same 17:30–20:00 window, rather than
+  // allowing solar elevation alone to turn the key blue by 18:00.
+  if (time > 1050 && time < 1200) {
+    const nightAmount = smooth(1050, 1200, time)
+    state.color = mixChannels(duskEnergy.color, nightHoldEnergy.color, nightAmount)
+    state.ambientColor = mixChannels(duskEnergy.ambientColor, nightHoldEnergy.ambientColor, nightAmount)
+  }
+  state.ambientIntensity += predawnFill * 0.025
   return state
 }
 

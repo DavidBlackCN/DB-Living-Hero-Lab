@@ -259,7 +259,11 @@ void main() {
   // Broad solar separation follows the existing continuous sun direction. Low
   // daylight angles reveal side-facing planes; overhead sun softens them and
   // the night key fades out before it can cast a false solar shadow.
-  float solarPresence = smoothstep(0.25, 0.48, u_lightIntensity);
+  // Sky sets the twilight window. The Sun can take over only once its key is
+  // strong enough, preventing an early-Dawn dip while the Moon fades out.
+  float skyNight = clamp(u_skyNightWeight, 0.0, 1.0);
+  float solarReady = smoothstep(0.20, 0.53, u_lightIntensity);
+  float solarPresence = (1.0 - skyNight) * solarReady;
   float lowSun = 1.0 - smoothstep(0.54, 0.89, lightDirection.z);
   float solarResponse = u_directionalStrength * solarPresence * (0.15 + 0.85 * lowSun);
   vec2 directionalSlope = broadDecoded.xy;
@@ -330,16 +334,8 @@ void main() {
   // add a second face-specific light on top of a leftover solar key.
   vec3 moonDirection = normalize(u_moonDirection);
   float moonHeightGain = mix(0.55, 1.0, smoothstep(0.20, 0.80, moonDirection.z));
-  float moonEnvelope = u_skyNightWeight * (1.0 - smoothstep(0.24, 0.38, u_lightIntensity))
-    * clamp(u_directionalStrength, 0.0, 1.0);
-  float moonPresence = moonEnvelope * moonHeightGain;
-  // Sun and Moon exchange the same character key before the solar energy is
-  // exhausted at dusk, and keep the lunar key until the dawn Sun can carry it.
-  float duskMoonBridge = (1.0 - smoothstep(0.35, 0.60, u_lightIntensity))
-    * (1.0 - smoothstep(-0.10, 0.25, lightDirection.x));
-  float dawnMoonBridge = (1.0 - smoothstep(0.22, 0.45, u_lightIntensity))
-    * smoothstep(0.0, 0.35, lightDirection.x);
-  float moonHandoff = max(moonEnvelope, max(duskMoonBridge, dawnMoonBridge) * directionalControl);
+  float moonHandoff = (1.0 - solarPresence) * directionalControl;
+  float moonPresence = skyNight * directionalControl * moonHeightGain;
   float moonFacing = broadDecoded.x * moonDirection.x * 13.0
     + broadDecoded.y * moonDirection.y * 3.5;
   float moonBand = smoothstep(-0.50, 0.50, moonFacing);

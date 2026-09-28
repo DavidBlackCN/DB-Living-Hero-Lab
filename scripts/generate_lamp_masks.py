@@ -1,5 +1,6 @@
 """Generate fixed 1672x941 two-lamp source and corridor influence masks."""
 
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -20,18 +21,28 @@ def source_channel(panes: list[list[tuple[int, int]]]) -> Image.Image:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source-only", action="store_true", help="Leave the frozen influence asset untouched")
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
+    # Each lantern has three separate glass faces. The dark vertical mullions
+    # and the roof/base remain outside the source mask.
     near = source_channel([
-        [(40, 121), (49, 123), (49, 163), (40, 160)],
-        [(53, 123), (62, 121), (62, 160), (53, 163)],
+        [(35, 132), (39, 130), (39, 167), (36, 168)],  # left, narrow
+        [(43, 129), (51, 129), (51, 168), (44, 168)],  # front
+        [(56, 131), (62, 133), (61, 167), (56, 168)],  # right
     ])
     far = source_channel([
-        [(151, 244), (157, 246), (157, 276), (151, 273)],
-        [(161, 246), (167, 244), (167, 273), (161, 276)],
+        [(146, 248), (149, 247), (149, 274), (147, 274)],  # left, narrow
+        [(153, 247), (160, 247), (160, 275), (153, 275)],  # front
+        [(164, 248), (168, 249), (168, 274), (165, 275)],  # right
     ])
     zero = Image.new("L", SIZE)
     opaque = Image.new("L", SIZE, 255)
     Image.merge("RGBA", (near, far, zero, opaque)).save(OUT / "lamp-source-mask.png")
+
+    if args.source_only:
+        return
 
     y, x = np.ogrid[:SIZE[1], :SIZE[0]]
     influence = []

@@ -86,3 +86,32 @@ wait timed out. The R7.1 browser regression performs the relevant current R6
 OFF, Bloom, and motion checks directly.
 
 Await human visual acceptance before proceeding to R7.2.
+
+## R7.1 source registration correction
+
+The frozen Base shows three distinct glass faces on **each** lantern. The
+initial source asset covered only two per lamp and missed the narrow left
+face. `generate_lamp_masks.py --source-only` now registers six perspective
+polygons in the same 1672×941 artwork coordinates: near lamp in R, far lamp
+in G. The metal mullions and lantern caps/base remain outside the source.
+The existing influence asset, local surface response, strength, timing,
+Bloom, and R6 lighting were left unchanged.
+
+The Debug Panel now has a local Hide/Debug visibility toggle. It keeps the
+same mounted controls and renderer; the 22:00 time and Lamps state survive
+the toggle, and Play continues while the panel is hidden.
+
+Review: [near Base / source / overlay](r7-1-lamps/source-registration/near-base-source-overlay.png),
+[far Base / source / overlay](r7-1-lamps/source-registration/far-base-source-overlay.png),
+[source debug](r7-1-lamps/source-registration/lamp-source-debug.png),
+[Night 22:00 unobstructed](r7-1-lamps/source-registration/22h00-panel-hidden.png),
+[panel visible](r7-1-lamps/source-registration/22h00-panel-visible.png),
+[Lamps OFF / ON](r7-1-lamps/source-registration/22h00-off-on.png).
+The yellow overlay in the close crops marks the source areas; runtime debug
+uses red/green to distinguish the two texture channels.
+
+`validate_local_lamps.py` now asserts three separated panes per lamp and
+checks panel visibility, retained renderer/time/Lamps state, and Play while
+hidden. `pnpm typecheck`, `pnpm build`, and the lamp validator pass. Lamps OFF
+remains pixel identical to frozen R6 at all four anchors, Noon ON is identical,
+and 00:00/24:00 remains exact. Await human acceptance; R7.2 has not started.

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { formatLightingTime, lightingPresets } from '../config/lighting'
 import type { TimeMode } from '../engine/time/TimeController'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
@@ -40,6 +41,8 @@ const props = defineProps<{
   breathing: BreathingState
   hair: HairState
 }>()
+
+const panelHidden = ref(false)
 
 const emit = defineEmits<{
   (e: 'update:rendererEnabled', value: boolean): void
@@ -108,8 +111,9 @@ function withDirection(angle: number, elevation: number): LightingState['directi
 </script>
 
 <template>
-  <aside class="debug-panel" aria-label="Living Hero debug controls">
-    <header><strong>DB Living Hero 2.0</strong><small>Base + Blink + Leaves + Runtime Lighting</small></header>
+  <button v-if="panelHidden" class="debug-reopen" type="button" @click="panelHidden = false">Debug</button>
+  <aside v-show="!panelHidden" class="debug-panel" aria-label="Living Hero debug controls">
+    <header><div><strong>DB Living Hero 2.0</strong><small>Base + Blink + Leaves + Runtime Lighting</small></div><button type="button" @click="panelHidden = true">Hide</button></header>
     <label><input type="checkbox" :checked="rendererEnabled" @change="emit('update:rendererEnabled', ($event.target as HTMLInputElement).checked)" /> Renderer</label>
     <label>Fit
       <select :value="fit" @change="emit('update:fit', ($event.target as HTMLSelectElement).value as FitMode)">

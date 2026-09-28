@@ -153,3 +153,7 @@ The Night architectural Moon contribution is quieter, removing the overlit impre
 ## R7.1 local lamp lighting — review candidate
 
 Human review froze the R6 visual baseline at `3241d76`. R7.1 adds two fixed registered corridor lamp source/influence masks and one continuous dusk-to-dawn weight. Emissive glass enters the existing HDR/Bloom path; nearby stone and vine surfaces receive a separate broad-Normal warm key that remains visible with Bloom OFF. The figure and distant Sky stay pixel identical at Night, while Lamps OFF restores the frozen R6 frame exactly. Twelve timeline captures, A/B and Bloom comparisons, 24H continuity, current-stage motion smoke checks, build and typecheck are in [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Await human acceptance; do not begin R7.2.
+
+## R7.1 source registration correction
+
+The R7.1 lamp source mask now covers three individually registered glass faces on each existing corridor lantern (near R, far G). The local influence asset and all lighting/time/Post/motion parameters remain unchanged. A local Debug Panel Hide/Debug button permits unobstructed preview without changing renderer state or interrupting Play. The mask close-ups, 22:00 images, and verification results are in [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Await human acceptance; do not enter R7.2.

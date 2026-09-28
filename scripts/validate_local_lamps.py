@@ -17,6 +17,14 @@ for mask_name in ("lamp-source-mask.png", "lamp-influence-mask.png"):
     assert registered.shape == (941, 1672, 4)
     assert not np.any(registered[:, 390:, :2]) and not np.any(registered[548:, :, :2]), "Lamp mask escaped corridor"
 
+# At a horizontal cut through each lantern the source must resolve into three
+# separate panes, leaving the dark metal mullions unlit.
+source = np.asarray(Image.open(ROOT / "public/assets/hero/lighting/lamp-source-mask.png"))
+for channel, row, left, right in ((0, 150, 30, 68), (1, 260, 142, 172)):
+    lit = source[row, left:right, channel] > 128
+    runs = np.diff(np.r_[False, lit, False].astype(np.int8))
+    assert np.count_nonzero(runs == 1) == 3, "Each lamp needs three distinct glass panes"
+
 
 def frame(page) -> Image.Image:
     page.wait_for_timeout(130)
@@ -52,7 +60,7 @@ def main() -> None:
         for label in ("Breathing on/off", "Hair Motion on/off", "Blink on/off", "Leaves"):
             page.get_by_label(label).uncheck()
         page.get_by_label("Render view").select_option("lit")
-        page.add_style_tag(content=".debug-panel { opacity: 0 !important; }")
+        hidden_for_captures = page.add_style_tag(content=".debug-panel { opacity: 0 !important; }")
         slider = page.locator(".time-control input[type=range]")
 
         def set_time(minutes: int) -> None:
@@ -154,6 +162,28 @@ def main() -> None:
         page.wait_for_timeout(1100)
         assert int(slider.input_value()) > 1050, "Play did not advance through lamp fade"
         assert page.get_by_text("Mode: WebGL2").count() == 1, "Play lost the renderer"
+        page.get_by_role("button", name="Pause", exact=True).click()
+        hidden_for_captures.evaluate("node => node.remove()")
+        set_time(1320)
+        assert page.get_by_label("Lamps on/off").is_checked()
+        page.screenshot(path=str(args.output / "22h00-panel-visible.png"))
+        canvas = page.locator(".hero-canvas").element_handle()
+        assert canvas is not None
+        page.get_by_role("button", name="Hide", exact=True).click()
+        assert not page.locator(".debug-panel").is_visible()
+        assert page.get_by_role("button", name="Debug", exact=True).is_visible()
+        assert int(slider.input_value()) == 1320
+        assert canvas.evaluate("node => node.isConnected && node.isSameNode(document.querySelector('.hero-canvas'))")
+        page.screenshot(path=str(args.output / "22h00-panel-hidden.png"))
+        page.get_by_role("button", name="Debug", exact=True).click()
+        assert page.locator(".debug-panel").is_visible()
+        assert int(slider.input_value()) == 1320
+        assert page.get_by_label("Lamps on/off").is_checked()
+        page.get_by_role("button", name="Play", exact=True).click()
+        page.get_by_role("button", name="Hide", exact=True).click()
+        page.wait_for_timeout(800)
+        assert int(slider.input_value()) > 1320, "Hiding debug controls stopped Play"
+        page.get_by_role("button", name="Debug", exact=True).click()
         page.get_by_role("button", name="Pause", exact=True).click()
         browser.close()
         print(f"R6 four phases OFF and Noon ON exact; 00:00/24:00 exact; corridor gain {np.mean(nearby - baseline):.2f} RGB; Bloom OFF and motion passed")

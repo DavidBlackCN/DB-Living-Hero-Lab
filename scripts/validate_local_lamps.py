@@ -24,6 +24,8 @@ for channel, row, left, right in ((0, 150, 30, 68), (1, 260, 142, 172)):
     lit = source[row, left:right, channel] > 128
     runs = np.diff(np.r_[False, lit, False].astype(np.int8))
     assert np.count_nonzero(runs == 1) == 3, "Each lamp needs three distinct glass panes"
+assert source[150, 63, 0] > 200 and source[150, 64, 0] > 128, "Near right pane still misses its outer edge"
+assert source[260, 147, 1] < 32 and source[260, 148, 1] < 32, "Far left pane spills into its metal rim"
 
 
 def frame(page) -> Image.Image:
@@ -181,8 +183,8 @@ def main() -> None:
         assert page.get_by_label("Lamps on/off").is_checked()
         page.get_by_role("button", name="Play", exact=True).click()
         page.get_by_role("button", name="Hide", exact=True).click()
-        page.wait_for_timeout(800)
-        assert int(slider.input_value()) > 1320, "Hiding debug controls stopped Play"
+        # The 60-second day can wrap past midnight while SwiftShader is busy.
+        page.wait_for_function("Number(document.querySelector('.time-control input[type=range]').value) !== 1320", timeout=5000)
         page.get_by_role("button", name="Debug", exact=True).click()
         page.get_by_role("button", name="Pause", exact=True).click()
         browser.close()

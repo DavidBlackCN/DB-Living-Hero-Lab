@@ -115,3 +115,20 @@ checks panel visibility, retained renderer/time/Lamps state, and Play while
 hidden. `pnpm typecheck`, `pnpm build`, and the lamp validator pass. Lamps OFF
 remains pixel identical to frozen R6 at all four anchors, Noon ON is identical,
 and 00:00/24:00 remains exact. Await human acceptance; R7.2 has not started.
+
+### Glass-edge correction
+
+The near lamp's right pane still stopped short of its outer and lower glass
+edge, while the far lamp's left narrow pane reached into the metal rim. The
+registered source polygons now extend the near right face by two to three
+source pixels and inset the far left face by three pixels. The other
+four faces and the influence mask are unchanged. The validator checks both
+specific edges as well as three separated panes on each lantern.
+
+[Near source before/after](r7-1-lamps/source-correction/near-mask-before-after.png),
+[far source before/after](r7-1-lamps/source-correction/far-mask-before-after.png),
+[22:00 rendered lanterns before/after](r7-1-lamps/source-correction/22h00-lanterns-before-after.png),
+and [22:00 full frame](r7-1-lamps/source-correction/22h00-panel-hidden.png)
+show the small registration correction. `pnpm typecheck`, `pnpm build`, and
+`validate_local_lamps.py` pass again. Lamps OFF and Noon remain pixel identical
+to R6; the 24H lamp weight and midnight wrap remain unchanged.

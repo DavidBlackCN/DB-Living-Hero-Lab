@@ -157,3 +157,7 @@ Human review froze the R6 visual baseline at `3241d76`. R7.1 adds two fixed regi
 ## R7.1 source registration correction
 
 The R7.1 lamp source mask now covers three individually registered glass faces on each existing corridor lantern (near R, far G). The local influence asset and all lighting/time/Post/motion parameters remain unchanged. A local Debug Panel Hide/Debug button permits unobstructed preview without changing renderer state or interrupting Play. The mask close-ups, 22:00 images, and verification results are in [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Await human acceptance; do not enter R7.2.
+
+### R7.1 glass-edge follow-up
+
+Near lamp right glass coverage and far lamp left metal-rim spill were corrected in the same fixed source mask; all influence, lighting, timing, and Post behavior remains frozen. Enlarged before/after crops and the 22:00 frame are linked from [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Build, typecheck, and the R7.1 validator pass. Await human acceptance; do not enter R7.2.

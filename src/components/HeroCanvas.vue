@@ -5,13 +5,14 @@ import { layoutArtwork } from '../engine/coordinates/artwork'
 import { BaseRenderer } from '../engine/renderer/BaseRenderer'
 import type { SkyState } from '../config/sky'
 import type { MoonDirection } from '../config/moonlight'
+import type { LampState } from '../config/lamps'
 import type { ArtworkSpec, FitMode, LightingState, RenderView } from '../engine/types'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
 import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import type { PostState } from '../config/post'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; sky: SkyState; moonDirection: MoonDirection; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; lampSourceUrl: string; lampInfluenceUrl: string; sky: SkyState; moonDirection: MoonDirection; lamps: LampState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -59,7 +60,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky, props.moonDirection,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled, props.post, props.directionalStrength)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled, props.post, props.directionalStrength, props.lamps)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -73,13 +74,14 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, edgeReconstruction, edgeCoverage, hairMask, materialMask, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, leftBlink, rightBlink] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
       loadImage(props.skyEdgeReconstructionUrl),
       loadImage(props.skyEdgeCoverageUrl),
       loadImage(props.hairMaskUrl),
       loadImage(props.materialMaskUrl),
+      loadImage(props.lampSourceUrl), loadImage(props.lampInfluenceUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
     ])
     if (!mounted || current !== generation || !canvas.value) return
@@ -105,11 +107,14 @@ async function initialize(): Promise<void> {
     if (materialMask.naturalWidth !== props.artwork.width || materialMask.naturalHeight !== props.artwork.height) {
       throw new Error('Material mask dimensions do not match Artwork Space')
     }
+    if ([lampSource, lampInfluence].some(mask => mask.naturalWidth !== props.artwork.width || mask.naturalHeight !== props.artwork.height)) {
+      throw new Error('Lamp mask dimensions do not match Artwork Space')
+    }
     if (leftBlink.naturalWidth !== props.blinkEyes[0].width || leftBlink.naturalHeight !== props.blinkEyes[0].height
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeReconstruction, edgeCoverage, hairMask, materialMask, [leftBlink, rightBlink])
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, [leftBlink, rightBlink])
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
@@ -154,6 +159,7 @@ watch(() => props.post, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.moonDirection, () => { if (!needsMotion()) draw() }, { deep: true })
+watch(() => props.lamps, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.blinkClosed, draw)
 watch(() => props.breathing, () => { draw(); scheduleMotion() }, { deep: true })
 watch(() => props.hair, () => { draw(); scheduleMotion() }, { deep: true })

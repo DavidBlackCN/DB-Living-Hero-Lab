@@ -149,3 +149,7 @@ The 24H preview's morning shadow swap and evening brightness rebound were traced
 ## R6 final lighting closure — review candidate
 
 The Night architectural Moon contribution is quieter, removing the overlit impression beside the black rose without a local darkening patch. The existing broad-Normal character Moon response is slightly stronger on hair and clothing, with a softer face share. Dawn's face-wide morning response is marginally softer; Noon and Dusk fixed frames are unchanged. Four-phase screenshots, A/B crops, 24H continuity and checks are recorded in [`validation/R6_FINAL_LIGHTING_CLOSURE.md`](validation/R6_FINAL_LIGHTING_CLOSURE.md). Recommend freezing R6 after human review; R7 has not begun.
+
+## R7.1 local lamp lighting — review candidate
+
+Human review froze the R6 visual baseline at `3241d76`. R7.1 adds two fixed registered corridor lamp source/influence masks and one continuous dusk-to-dawn weight. Emissive glass enters the existing HDR/Bloom path; nearby stone and vine surfaces receive a separate broad-Normal warm key that remains visible with Bloom OFF. The figure and distant Sky stay pixel identical at Night, while Lamps OFF restores the frozen R6 frame exactly. Twelve timeline captures, A/B and Bloom comparisons, 24H continuity, current-stage motion smoke checks, build and typecheck are in [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Await human acceptance; do not begin R7.2.

@@ -8,6 +8,8 @@ uniform sampler2D u_skyEdgeReconstruction;
 uniform sampler2D u_skyEdgeCoverage;
 uniform sampler2D u_hairMask;
 uniform sampler2D u_materialMask;
+uniform sampler2D u_lampSource;
+uniform sampler2D u_lampInfluence;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
 uniform int u_view;
@@ -44,6 +46,8 @@ uniform float u_headHairStrength;
 uniform int u_hairOverlay;
 uniform int u_detailEnabled;
 uniform int u_sceneLinear;
+uniform float u_lampWeight;
+uniform int u_lampMaskView;
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outBloomGate;
 vec4 encodeHDR(vec3 color) {
@@ -212,6 +216,12 @@ void main() {
   vec3 normalColor = texture(u_normal, sampleUv).rgb;
   if (u_view == 1) { outColor = vec4(showMotionRegions(normalColor, regions, hairRegion), 1.0); return; }
   if (u_lightingEnabled == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
+  if (u_lampMaskView != 0) {
+    vec2 channels = u_lampMaskView == 1 ? texture(u_lampSource, sampleUv).rg
+      : texture(u_lampInfluence, sampleUv).rg;
+    outColor = vec4(channels.r, channels.g, 0.0, 1.0);
+    return;
+  }
   // Recover foreground pigment from old-sky-contaminated edge pixels before
   // the regular lighting and Sky composition. No display-space edge shading.
   vec4 edgeRepair = texture(u_skyEdgeReconstruction, sampleUv);
@@ -421,7 +431,33 @@ void main() {
     float hotIris = smoothstep(0.12, 0.50, irisBrightness);
     relitLinear *= 1.0 - duskGlintSoftening * material.b * hotIris * 0.38;
   }
-  vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0));
+  vec3 lampEmissive = vec3(0.0);
+  vec3 lampGlow = vec3(0.0);
+  if (u_lampWeight > 0.0) {
+    vec2 lampPixel = sampleUv * vec2(1672.0, 941.0);
+    vec2 source = texture(u_lampSource, sampleUv).rg;
+    vec2 reach = texture(u_lampInfluence, sampleUv).rg;
+    vec3 lampA = normalize(vec3((52.0 - lampPixel.x) / 185.0, (lampPixel.y - 146.0) / 185.0, 0.62));
+    vec3 lampB = normalize(vec3((159.0 - lampPixel.x) / 170.0, (lampPixel.y - 262.0) / 170.0, 0.62));
+    float receiveA = smoothstep(-0.22, 0.70, dot(broadNormal, lampA));
+    float receiveB = smoothstep(-0.22, 0.70, dot(broadNormal, lampB));
+    float surfaceA = reach.r * mix(0.25, 1.0, receiveA);
+    float surfaceB = reach.g * mix(0.25, 1.0, receiveB);
+    // Registered masks bound the light to corridor stone and ivy. The broad
+    // Normal shapes the actual surface response even when Bloom is disabled.
+    relitLinear += baseLinear * u_lampWeight
+      * (vec3(0.43, 0.20, 0.070) * surfaceA
+        + vec3(0.38, 0.16, 0.045) * surfaceB);
+    lampEmissive = u_lampWeight * (vec3(0.85, 0.44, 0.15) * source.r
+      + vec3(0.78, 0.35, 0.10) * source.g);
+    vec2 nearDist = (lampPixel - vec2(52.0, 146.0)) / vec2(34.0, 50.0);
+    vec2 farDist = (lampPixel - vec2(159.0, 262.0)) / vec2(29.0, 44.0);
+    lampGlow = u_lampWeight * vec3(0.65, 0.25, 0.06)
+      * (0.012 * exp(-dot(nearDist, nearDist) * 1.8)
+        + 0.010 * exp(-dot(farDist, farDist) * 1.8));
+  }
+  vec3 blendedLinear = mix(baseLinear, relitLinear, clamp(u_relightStrength, 0.0, 1.0))
+    + lampEmissive + lampGlow;
   if (u_sceneLinear != 0) {
     float skyAlpha = 0.0;
     vec3 sceneLinear = blendedLinear;

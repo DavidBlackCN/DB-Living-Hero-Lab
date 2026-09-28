@@ -6,6 +6,7 @@ import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderView, RGBColor } from '../engine/types'
 import type { PostView } from '../config/post'
 import type { MoonDirection } from '../config/moonlight'
+import type { LampMaskView } from '../config/lamps'
 
 const props = defineProps<{
   rendererEnabled: boolean
@@ -17,6 +18,10 @@ const props = defineProps<{
   lightingDetailEnabled: boolean
   directionalEnabled: boolean
   directionalGain: number
+  lampsEnabled: boolean
+  lampStrength: number
+  lampMaskView: LampMaskView
+  lampWeight: number
   postEnabled: boolean
   bloomEnabled: boolean
   postView: PostView
@@ -45,6 +50,9 @@ const emit = defineEmits<{
   (e: 'update:lightingDetailEnabled', value: boolean): void
   (e: 'update:directionalEnabled', value: boolean): void
   (e: 'update:directionalGain', value: number): void
+  (e: 'update:lampsEnabled', value: boolean): void
+  (e: 'update:lampStrength', value: number): void
+  (e: 'update:lampMaskView', value: LampMaskView): void
   (e: 'update:postEnabled', value: boolean): void
   (e: 'update:bloomEnabled', value: boolean): void
   (e: 'update:postView', value: PostView): void
@@ -140,6 +148,16 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <label><input type="checkbox" :checked="lighting.enabled" @change="updateLighting({ enabled: ($event.target as HTMLInputElement).checked })" /> Lighting on/off</label>
       <label><input type="checkbox" :checked="lightingDetailEnabled" @change="emit('update:lightingDetailEnabled', ($event.target as HTMLInputElement).checked)" /> Lighting Detail on/off</label>
       <label><input type="checkbox" :checked="directionalEnabled" @change="emit('update:directionalEnabled', ($event.target as HTMLInputElement).checked)" /> Directional Shading on/off</label>
+      <label><input type="checkbox" :checked="lampsEnabled" @change="emit('update:lampsEnabled', ($event.target as HTMLInputElement).checked)" /> Lamps on/off</label>
+      <label class="range-control">Lamp strength {{ lampStrength.toFixed(2) }} · time {{ lampWeight.toFixed(2) }}
+        <input type="range" min="0" max="2" step="0.05" :value="lampStrength" :disabled="!lampsEnabled"
+          @input="emit('update:lampStrength', Number(($event.target as HTMLInputElement).value))" />
+      </label>
+      <label>Lamp mask preview
+        <select :value="lampMaskView" @change="emit('update:lampMaskView', ($event.target as HTMLSelectElement).value as LampMaskView)">
+          <option value="none">Off</option><option value="source">Source</option><option value="influence">Influence</option>
+        </select>
+      </label>
       <small>Moon Direction {{ directionAngle(moonDirection) }}° · Elevation {{ directionElevation(moonDirection) }}°</small>
       <label class="range-control">Directional Strength {{ directionalGain.toFixed(2) }}
         <input type="range" min="0" max="1.6" step="0.05" :value="directionalGain" :disabled="!directionalEnabled"

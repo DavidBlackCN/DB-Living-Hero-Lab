@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "Noon",
+    "seconds": 27.01,
+    "drawCalls": 13266,
+    "estimatedLeafFps": 27.3,
+    "obviousEyeOverlapEvents": 0,
+    "eyeOverlapBins150ms": 0
+  },
+  {
+    "phase": "Dusk",
+    "seconds": 27.02,
+    "drawCalls": 13715,
+    "estimatedLeafFps": 27.0,
+    "obviousEyeOverlapEvents": 0,
+    "eyeOverlapBins150ms": 0
+  },
+  {
+    "phase": "Night",
+    "seconds": 27.01,
+    "drawCalls": 14188,
+    "estimatedLeafFps": 27.2,
+    "obviousEyeOverlapEvents": 0,
+    "eyeOverlapBins150ms": 0
+  }
+]

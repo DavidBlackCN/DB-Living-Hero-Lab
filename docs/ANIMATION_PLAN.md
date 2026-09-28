@@ -28,3 +28,7 @@ The accepted R4 lower-hair masks remain unchanged. The same registered RGBA asse
 ## R5 material detail
 
 Human review subsequently accepted and froze R4/R4.1b Character Motion Core, including the final 1.8 px head and 3.0 px nearby-hair gains. R5 changes no animation paths or parameters. Its face, crown-hair, and iris mask is sampled at the same deformed UV as Base and Normal, so the material response follows Breathing and Hair; iris reflection is suppressed while the integrated Blink is closed. See [R5 validation](validation/R5_LIGHTING_DETAIL.md).
+
+## R7.2 Leaves v2
+
+The earlier Leaves v1 numbers above are historical. The Canvas2D implementation still draws 18 desktop / 10 mobile leaves from the same four masters, now allocated to background, midground, and foreground layers. Independent deterministic phases, turbulence, lift, rotation, and respawn variation reduce mechanical repetition. An artwork-space soft ellipse steers and attenuates leaves near the face; the left corridor gives Night leaves a faint response to the existing R7.1 lamp weight. Precomputed 256px sprites avoid per-frame Canvas filters. Reduced motion, Static quality, hidden-tab pause, resize, and the existing 30 FPS / 1.5 DPR caps remain. See [R7.2 validation](validation/R7_2_LEAVES_V2.md).

@@ -3,7 +3,7 @@ const smooth = (start: number, end: number, value: number): number => {
   return t * t * (3 - 2 * t)
 }
 
-// CSS compositing bridge for the accepted Canvas2D leaves; LeafField is unchanged.
+// Existing CSS time-of-day tone remains the outer grade for Canvas2D leaves.
 export function leafToneFor(minutes: number): { brightness: number; saturation: number } {
   const time = Number.isFinite(minutes) ? ((minutes % 1440) + 1440) % 1440 : 720
   const daylight = time < 300 || time >= 1200 ? 0

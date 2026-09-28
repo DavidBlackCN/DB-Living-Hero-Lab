@@ -4,6 +4,7 @@ import DebugPanel from './DebugPanel.vue'
 import BlinkLayer from './BlinkLayer.vue'
 import HeroCanvas from './HeroCanvas.vue'
 import LeavesLayer from './LeavesLayer.vue'
+import type { LeafDebugView } from '../engine/animation/LeafField'
 import { heroConfig } from '../config/hero'
 import { createLightingStateForTime } from '../config/lighting'
 import { skyFor } from '../config/sky'
@@ -47,6 +48,7 @@ const blinkPreviewToken = ref(0)
 const blinkClosed = ref(false)
 const showBlinkRegions = ref(false)
 const leavesEnabled = ref(true)
+const leafDebugView = ref<LeafDebugView>('none')
 const leavesCount = ref(0)
 const breathing = ref<BreathingState>({ enabled: true, strength: 1, showRegion: false })
 const hair = ref<HairState>({ enabled: true, strength: 1, showRegion: false })
@@ -140,14 +142,14 @@ onBeforeUnmount(() => {
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
       :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base' && !hairState.enabled" @closed="blinkClosed = $event" />
-    <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" :style="leafStyle" @count="leavesCount = $event" />
+    <LeavesLayer v-if="leavesActive" :layout="layout" :config="heroConfig.leaves" :lamp-weight="lampsEnabled ? lamps.weight * lampStrength : 0" :debug-view="leafDebugView" :style="leafStyle" @count="leavesCount = $event" />
     <div v-if="showBounds || showGrid" class="artwork-overlay" :class="{ 'show-bounds': showBounds, 'show-grid': showGrid }" :style="imageStyle" aria-hidden="true" />
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
       v-model:lighting="lighting" v-model:lighting-detail-enabled="lightingDetailEnabled" v-model:directional-enabled="directionalEnabled" v-model:directional-gain="directionalGain" v-model:lamps-enabled="lampsEnabled" v-model:lamp-strength="lampStrength" v-model:lamp-mask-view="lampMaskView" :lamp-weight="lamps.weight" v-model:post-enabled="postEnabled" v-model:bloom-enabled="bloomEnabled" v-model:post-view="postView" :lighting-minutes="lightingMinutes" :moon-direction="moonDirection" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"
       @select-lighting-time="selectLightingTime"
       @back-to-now="timeController.backToNow()" @toggle-playback="timeMode === 'playing' ? timeController.pause() : timeController.play()"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
-      v-model:leaves-enabled="leavesEnabled" @preview-blink="blinkPreviewToken++"
+      v-model:leaves-enabled="leavesEnabled" v-model:leaf-debug-view="leafDebugView" @preview-blink="blinkPreviewToken++"
       v-model:breathing="breathing"
       v-model:hair="hair"
       v-model:show-bounds="showBounds" v-model:show-grid="showGrid" :renderer-status="rendererStatus"

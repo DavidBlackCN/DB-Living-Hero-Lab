@@ -8,6 +8,7 @@ import type { FitMode, LightingPresetId, LightingState, QualityPreset, RenderVie
 import type { PostView } from '../config/post'
 import type { MoonDirection } from '../config/moonlight'
 import type { LampMaskView } from '../config/lamps'
+import type { LeafDebugView } from '../engine/animation/LeafField'
 
 const props = defineProps<{
   rendererEnabled: boolean
@@ -36,6 +37,7 @@ const props = defineProps<{
   blinkEnabled: boolean
   showBlinkRegions: boolean
   leavesEnabled: boolean
+  leafDebugView: LeafDebugView
   leavesCount: number
   leavesFpsCap: number
   breathing: BreathingState
@@ -69,6 +71,7 @@ const emit = defineEmits<{
   (e: 'update:showBlinkRegions', value: boolean): void
   (e: 'previewBlink'): void
   (e: 'update:leavesEnabled', value: boolean): void
+  (e: 'update:leafDebugView', value: LeafDebugView): void
   (e: 'update:skyEnabled', value: boolean): void
   (e: 'update:breathing', value: BreathingState): void
   (e: 'update:hair', value: HairState): void
@@ -224,6 +227,11 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     <label :title="renderView === 'normal' ? 'Available in Base and Lit views' : reducedMotion ? 'Disabled by reduced motion' : quality === 'static' ? 'Disabled by Static quality' : 'Toggle drifting leaves'">
       <input type="checkbox" :checked="leavesEnabled && !reducedMotion && quality !== 'static' && renderView !== 'normal'" :disabled="renderView === 'normal' || reducedMotion || quality === 'static'"
         @change="emit('update:leavesEnabled', ($event.target as HTMLInputElement).checked)" /> Leaves <small>{{ leavesCount }} active</small>
+    </label>
+    <label>Leaf debug
+      <select :value="leafDebugView" aria-label="Leaf debug" @change="emit('update:leafDebugView', ($event.target as HTMLSelectElement).value as LeafDebugView)">
+        <option value="none">Off</option><option value="depth">Depth + face</option><option value="lamp-off">Lamp tint off</option>
+      </select>
     </label>
     <details class="lighting-controls" open>
       <summary>Breathing</summary>

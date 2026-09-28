@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { LeafField } from '../engine/animation/LeafField'
-import type { LeafConfig } from '../engine/animation/LeafField'
+import type { LeafConfig, LeafDebugView } from '../engine/animation/LeafField'
 import type { ArtworkLayout } from '../engine/coordinates/artwork'
 
-const props = defineProps<{ layout: ArtworkLayout; config: LeafConfig }>()
+const props = defineProps<{ layout: ArtworkLayout; config: LeafConfig; lampWeight: number; debugView: LeafDebugView }>()
 const emit = defineEmits<{ (e: 'count', count: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let field: LeafField | null = null
@@ -13,6 +13,8 @@ onMounted(() => {
   if (!canvas.value) return
   try {
     field = new LeafField(canvas.value, props.config, props.layout, count => emit('count', count))
+    field.updateLighting(props.lampWeight)
+    field.updateDebugView(props.debugView)
     void field.start()
   } catch (error) {
     console.warn('Living Hero leaves unavailable:', error)
@@ -21,6 +23,8 @@ onMounted(() => {
 })
 
 watch(() => props.layout, layout => field?.updateLayout(layout))
+watch(() => props.lampWeight, weight => field?.updateLighting(weight))
+watch(() => props.debugView, view => field?.updateDebugView(view))
 
 onBeforeUnmount(() => {
   field?.destroy()

@@ -1,24 +1,24 @@
 [
   {
     "phase": "Noon",
-    "seconds": 27.01,
-    "drawCalls": 13266,
-    "estimatedLeafFps": 27.3,
+    "seconds": 27.0,
+    "drawCalls": 13230,
+    "estimatedLeafFps": 27.2,
     "obviousEyeOverlapEvents": 0,
     "eyeOverlapBins150ms": 0
   },
   {
     "phase": "Dusk",
-    "seconds": 27.02,
-    "drawCalls": 13715,
-    "estimatedLeafFps": 27.0,
+    "seconds": 27.0,
+    "drawCalls": 13728,
+    "estimatedLeafFps": 27.2,
     "obviousEyeOverlapEvents": 0,
     "eyeOverlapBins150ms": 0
   },
   {
     "phase": "Night",
     "seconds": 27.01,
-    "drawCalls": 14188,
+    "drawCalls": 14190,
     "estimatedLeafFps": 27.2,
     "obviousEyeOverlapEvents": 0,
     "eyeOverlapBins150ms": 0

@@ -167,3 +167,5 @@ The far lamp's left/front metal separator was then restored after review found t
 ## R7.2 Leaves v2 — review candidate
 
 The accepted four leaf masters and Canvas2D overlay now use three restrained depth layers without increasing the desktop/mobile counts (18/10). Per-leaf motion rhythms and deterministic respawns reduce repeated paths; a soft artwork-space face guard protects the eyes; a slight Night warm response follows the existing left-corridor lamp weight. Time-of-day leaf grading, R6/R7.1 lighting, and other motion systems remain unchanged. Four static phases, three 25-second videos, debug/A-B views, lifecycle and performance checks are in [`validation/R7_2_LEAVES_V2.md`](validation/R7_2_LEAVES_V2.md). Await human visual acceptance; do not begin R7.3.
+
+Follow-up size calibration raised the dynamic leaf sizes to match the distinct painted single leaves more closely: midground 26–46 CSS px, background 18–27 CSS px, and rare foreground 52–60 CSS px. Density, paths, face guard, and lighting remain unchanged. The four frames and three 25-second videos were recaptured; the updated size A/B and checks are in the same R7.2 record.

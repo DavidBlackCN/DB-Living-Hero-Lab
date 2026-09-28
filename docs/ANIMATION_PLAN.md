@@ -32,3 +32,5 @@ Human review subsequently accepted and froze R4/R4.1b Character Motion Core, inc
 ## R7.2 Leaves v2
 
 The earlier Leaves v1 numbers above are historical. The Canvas2D implementation still draws 18 desktop / 10 mobile leaves from the same four masters, now allocated to background, midground, and foreground layers. Independent deterministic phases, turbulence, lift, rotation, and respawn variation reduce mechanical repetition. An artwork-space soft ellipse steers and attenuates leaves near the face; the left corridor gives Night leaves a faint response to the existing R7.1 lamp weight. Precomputed 256px sprites avoid per-frame Canvas filters. Reduced motion, Static quality, hidden-tab pause, resize, and the existing 30 FPS / 1.5 DPR caps remain. See [R7.2 validation](validation/R7_2_LEAVES_V2.md).
+
+Size follow-up: the main midground is now 26–46 CSS px (mean 36), with smaller background 18–27 and rare foreground 52–60. This brings the typical leaf closer to a clear single leaf painted in the original artwork; density and motion rates are unchanged.

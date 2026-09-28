@@ -33,7 +33,7 @@ def main() -> None:
         [(56, 131), (65, 133), (64, 169), (56, 169)],  # right: reach the outer and lower glass edges
     ])
     far = source_channel([
-        [(149, 249), (152, 248), (152, 273), (150, 273)],  # left: stay inside the metal rim
+        [(148, 248), (151, 247), (151, 274), (149, 274)],  # left: preserve the dark mullion to the front pane
         [(153, 247), (160, 247), (160, 275), (153, 275)],  # front
         [(164, 248), (168, 249), (168, 274), (165, 275)],  # right
     ])

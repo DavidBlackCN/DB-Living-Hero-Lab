@@ -161,3 +161,5 @@ The R7.1 lamp source mask now covers three individually registered glass faces o
 ### R7.1 glass-edge follow-up
 
 Near lamp right glass coverage and far lamp left metal-rim spill were corrected in the same fixed source mask; all influence, lighting, timing, and Post behavior remains frozen. Enlarged before/after crops and the 22:00 frame are linked from [`validation/R7_1_LOCAL_LAMP_LIGHTING.md`](validation/R7_1_LOCAL_LAMP_LIGHTING.md). Build, typecheck, and the R7.1 validator pass. Await human acceptance; do not enter R7.2.
+
+The far lamp's left/front metal separator was then restored after review found the two glass faces too close. The R7.1 validation record includes the corrected 22:00 close-up and explicit source-alpha separator check.

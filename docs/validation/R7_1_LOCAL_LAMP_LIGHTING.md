@@ -132,3 +132,16 @@ and [22:00 full frame](r7-1-lamps/source-correction/22h00-panel-hidden.png)
 show the small registration correction. `pnpm typecheck`, `pnpm build`, and
 `validate_local_lamps.py` pass again. Lamps OFF and Noon remain pixel identical
 to R6; the 24H lamp weight and midnight wrap remain unchanged.
+
+### Far lamp mullion follow-up
+
+The far lamp's inset left pane had moved too close to the front pane. At the
+lantern midline, the prior mask left only a subpixel dark separator. The
+left pane now occupies the narrow glass strip at x=149–150; x=151–152 stays
+below half source alpha so the metal mullion remains visible between it and
+the front pane. The near lamp and all other source polygons are unchanged.
+[Source before/after](r7-1-lamps/far-separator/far-left-separator-before-after.png),
+[22:00 rendered crop before/after](r7-1-lamps/far-separator/22h00-far-lamp-before-after.png),
+and [22:00 full frame](r7-1-lamps/far-separator/22h00-panel-hidden.png)
+record the correction. The lamp validator now checks the separator explicitly;
+typecheck, build, and the full lamp regression pass.

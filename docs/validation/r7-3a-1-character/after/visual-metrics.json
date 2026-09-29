@@ -1,0 +1,18 @@
+{
+  "dawn": {
+    "wholeMeanRgbDelta": 0.032,
+    "figureMeanRgbDelta": 0.088
+  },
+  "noon": {
+    "wholeMeanRgbDelta": 0.002,
+    "figureMeanRgbDelta": 0.006
+  },
+  "dusk": {
+    "wholeMeanRgbDelta": 0.065,
+    "figureMeanRgbDelta": 0.175
+  },
+  "night": {
+    "wholeMeanRgbDelta": 0.237,
+    "figureMeanRgbDelta": 0.644
+  }
+}

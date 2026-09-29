@@ -69,7 +69,7 @@ float softEllipse(vec2 p, vec2 center, vec2 radius) {
 }
 vec3 breathRegions(vec2 sourcePixel) {
   float core = softEllipse(sourcePixel, vec2(1152.0, 461.0), vec2(103.0, 137.0));
-  float shoulder = softEllipse(sourcePixel, vec2(1151.0, 385.0), vec2(145.0, 93.0));
+  float shoulder = softEllipse(sourcePixel, vec2(1151.0, 385.0), vec2(155.0, 99.0));
   float protected = max(
     softEllipse(sourcePixel, vec2(1154.0, 229.0), vec2(177.0, 135.0)),
     max(softEllipse(sourcePixel, vec2(987.0, 501.0), vec2(87.0, 194.0)),
@@ -322,6 +322,20 @@ void main() {
   float accessory = hairRegion.b * (1.0 - max(faceRegion, hairRegionWeight));
   float character = max(max(faceRegion, hairRegionWeight), max(clothing, accessory));
 
+  // One broad receiving plane for both solar and lunar character shading.
+  // Wider taps calm individual painted strokes without changing the Normal asset.
+  vec3 characterBroadDecoded = broadDecoded;
+  if (character > 0.001) {
+    vec3 characterBroad = broadEncoded
+      + texture(u_normal, sampleUv + vec2(texel.x * 14.0, 0.0)).rgb
+      + texture(u_normal, sampleUv - vec2(texel.x * 14.0, 0.0)).rgb
+      + texture(u_normal, sampleUv + vec2(0.0, texel.y * 14.0)).rgb
+      + texture(u_normal, sampleUv - vec2(0.0, texel.y * 14.0)).rgb;
+    characterBroadDecoded = characterBroad / 12.0 * 2.0 - 1.0;
+  }
+  vec3 characterBroadNormal = normalize(vec3(characterBroadDecoded.x,
+    -characterBroadDecoded.y, characterBroadDecoded.z));
+
   // A shared soft morning key lifts the receiving side across all materials.
   // It replaces the former hair/face/shirt-specific Dawn fill patches.
   float characterDiffuse = mix(shapedDiffuse, 0.54, morning * 0.32);
@@ -340,7 +354,12 @@ void main() {
   characterGain = mix(characterGain, 0.72, clothing);
   characterGain = mix(characterGain, 0.50, accessory);
   characterGain = mix(characterGain, mix(0.25, 0.21, morning), faceRegion);
-  float characterBand = (solarBand - 0.5) * characterGain * mix(1.0, 0.54, morning);
+  float characterSolarFacing = characterBroadDecoded.x * lightDirection.x * 11.0
+    + characterBroadDecoded.y * lightDirection.y * 2.5;
+  float characterSolarBand = smoothstep(-0.47, 0.47, characterSolarFacing);
+  float sharedSolarBand = mix(solarBand, characterSolarBand,
+    0.65 * (1.0 - faceRegion));
+  float characterBand = (sharedSolarBand - 0.5) * characterGain * mix(1.0, 0.54, morning);
   float sceneBand = (solarBand - 0.5) * 1.10 + paintedSide;
   illumination *= 1.0 + mix(sceneBand, characterBand, character) * solarResponse;
   // The Moon takes over the same character core during twilight. It does not
@@ -355,37 +374,24 @@ void main() {
   float moonSide = clamp((0.53 - v_uv.x) * moonDirection.x * 1.0
     + (0.46 - v_uv.y) * moonDirection.y * 0.16, -0.30, 0.30);
   float moonReceive = pow(clamp(moonBand * 0.65 + moonSide * 1.3 - 0.12, 0.0, 1.0), 1.5);
-  // One broad receiving plane for the figure. A second, wider Normal sample
-  // removes small painted slopes before the Moon reaches any material gain.
-  vec3 characterBroadDecoded = broadDecoded;
-  if (character > 0.001) {
-    vec3 characterBroad = broadEncoded
-      + texture(u_normal, sampleUv + vec2(texel.x * 11.0, 0.0)).rgb
-      + texture(u_normal, sampleUv - vec2(texel.x * 11.0, 0.0)).rgb
-      + texture(u_normal, sampleUv + vec2(0.0, texel.y * 11.0)).rgb
-      + texture(u_normal, sampleUv - vec2(0.0, texel.y * 11.0)).rgb;
-    characterBroadDecoded = characterBroad / 12.0 * 2.0 - 1.0;
-  }
-  vec3 characterBroadNormal = normalize(vec3(characterBroadDecoded.x,
-    -characterBroadDecoded.y, characterBroadDecoded.z));
-  float characterMoonFacing = dot(characterBroadNormal.xy, moonDirection.xy) * 11.0;
-  float characterMoonBand = smoothstep(-1.05, 1.05, characterMoonFacing);
+  float characterMoonFacing = dot(characterBroadNormal.xy, moonDirection.xy) * 10.0;
+  float characterMoonBand = smoothstep(-1.15, 1.15, characterMoonFacing);
   // Face uses the same Moon vector, but its filtered front-facing Normal
   // suppresses steep vertical eye/cheek transitions rather than adding fill.
   vec3 faceMoonLight = normalize(vec3(moonDirection.x, moonDirection.y * 0.24,
     max(moonDirection.z, 0.85)));
   float faceMoonFacing = dot(faceNormal, faceMoonLight) - 0.70;
   float faceMoonBand = smoothstep(-0.30, 0.30, faceMoonFacing);
-  float characterMoonReceive = clamp(0.39 + (characterMoonBand - 0.5) * 0.76,
+  float characterMoonReceive = clamp(0.39 + (characterMoonBand - 0.5) * 0.70,
     0.08, 0.78);
   float faceMoonReceive = 0.43 + (faceMoonBand - 0.5) * 0.28;
   float materialMoonReceive = mix(characterMoonReceive, faceMoonReceive, faceRegion);
-  float moonMaterialGain = mix(1.0, 1.20, clothing);
-  moonMaterialGain = mix(moonMaterialGain, 1.30, vest);
-  moonMaterialGain = mix(moonMaterialGain, 1.27, hairRegionWeight);
+  float moonMaterialGain = mix(1.0, 1.17, clothing);
+  moonMaterialGain = mix(moonMaterialGain, 1.25, vest);
+  moonMaterialGain = mix(moonMaterialGain, 1.22, hairRegionWeight);
   moonMaterialGain = mix(moonMaterialGain, 0.88, accessory);
   moonMaterialGain = mix(moonMaterialGain, 1.00, faceRegion);
-  float moonDiffuse = max(0.09, 0.28 + (materialMoonReceive - 0.39) * 0.88);
+  float moonDiffuse = max(0.10, 0.28 + (materialMoonReceive - 0.39) * 0.80);
   vec3 nightCharacter = u_ambientColor * u_ambientIntensity
     + vec3(0.35, 0.51, 0.82) * moonMaterialGain * moonDiffuse;
   illumination = mix(illumination, nightCharacter, character * moonHandoff);

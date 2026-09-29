@@ -1,0 +1,62 @@
+{
+  "midnightMaxRgbDelta": 0,
+  "headMotionChangedRgbSamples": 53528,
+  "blink": "passed",
+  "hiddenTab": "passed",
+  "staticQuality": "passed",
+  "resize": "passed",
+  "reducedMotion": "passed",
+  "twilightContinuity": {
+    "04:30-07:00": {
+      "maxAdjacent10mMeanRgbDelta": 10.381,
+      "deltas": [
+        0.132,
+        0.095,
+        0.212,
+        1.075,
+        1.886,
+        2.618,
+        3.794,
+        7.183,
+        8.946,
+        10.381,
+        9.982,
+        7.023,
+        3.762,
+        3.381,
+        3.265
+      ]
+    },
+    "16:30-20:00": {
+      "maxAdjacent10mMeanRgbDelta": 5.099,
+      "deltas": [
+        3.277,
+        3.735,
+        4.378,
+        4.869,
+        5.099,
+        4.68,
+        4.713,
+        5.047,
+        5.056,
+        4.865,
+        4.574,
+        4.262,
+        4.26,
+        4.281,
+        4.284,
+        4.097,
+        3.429,
+        2.852,
+        2.265,
+        1.497,
+        0.539
+      ]
+    }
+  },
+  "lampCorridorMeanRgbDelta": 24.345,
+  "lampFigureMeanRgbDelta": 0.0,
+  "lamps": "passed",
+  "leaves": "passed",
+  "post": "passed"
+}

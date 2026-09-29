@@ -43,6 +43,7 @@ uniform float u_hairTime;
 uniform float u_hairStrength;
 uniform float u_headMassStrength;
 uniform float u_headHairStrength;
+uniform float u_hairSheenStrength;
 uniform int u_hairOverlay;
 uniform int u_detailEnabled;
 uniform int u_sceneLinear;
@@ -125,8 +126,8 @@ vec3 filteredFaceNormal(vec2 uv, vec2 texel, vec3 centerEncoded) {
   vec3 encoded = centerEncoded * 3.0;
   float weight = 3.0;
   for (int index = 0; index < 4; index++) {
-    vec2 offset = index == 0 ? vec2(4.0, 0.0) : index == 1 ? vec2(-4.0, 0.0)
-      : index == 2 ? vec2(0.0, 4.0) : vec2(0.0, -4.0);
+    vec2 offset = index == 0 ? vec2(7.0, 0.0) : index == 1 ? vec2(-7.0, 0.0)
+      : index == 2 ? vec2(0.0, 7.0) : vec2(0.0, -7.0);
     vec2 neighbor = uv + offset * texel;
     float sameFace = texture(u_materialMask, neighbor).r;
     encoded += texture(u_normal, neighbor).rgb * sameFace;
@@ -162,10 +163,12 @@ void main() {
     vec2 p = v_uv * vec2(1672.0, 941.0);
     float primary = 6.2831853 * u_hairTime / 6.4;
     float secondary = 6.2831853 * u_hairTime / 9.1;
-    float breathLink = u_breathStrength > 0.0 ? sin(u_breathPhase - 0.35) : 0.0;
+    float breathLink = u_breathStrength > 0.0 ? 1.0 : 0.0;
+    float headInhale = 0.5 - 0.5 * cos(u_breathPhase - 0.24);
     vec2 headPx = vec2(
-      0.66 * sin(primary + 0.45) + 0.22 * sin(secondary + 1.05) + 0.12 * breathLink,
-      0.34 * sin(secondary + 0.85) + 0.12 * breathLink
+      breathLink * 0.32 * sin(u_breathPhase - 0.34)
+        + 0.12 * sin(primary + 0.45) + 0.06 * sin(secondary + 1.05),
+      breathLink * 0.74 * headInhale + 0.08 * sin(secondary + 0.85)
     ) * u_headMassStrength;
     vec2 headCandidate = sampleUv + headPx / vec2(1672.0, 941.0);
     float headProtect = min(hairRegion.b, texture(u_hairMask, headCandidate).b);
@@ -352,28 +355,37 @@ void main() {
   float moonSide = clamp((0.53 - v_uv.x) * moonDirection.x * 1.0
     + (0.46 - v_uv.y) * moonDirection.y * 0.16, -0.30, 0.30);
   float moonReceive = pow(clamp(moonBand * 0.65 + moonSide * 1.3 - 0.12, 0.0, 1.0), 1.5);
-  // The figure receives the Moon through its broad painted Normal. The XY
-  // slope turns hair locks and cloth folds without making downward-facing
-  // painted planes on the face collapse into a hard shadow.
-  float characterMoonFacing = dot(broadNormal.xy, moonDirection.xy) * 14.0;
-  float faceMoonFacing = broadNormal.x * moonDirection.x * 14.0
-    + broadNormal.y * moonDirection.y * 2.0;
-  float characterMoonBand = mix(smoothstep(-0.95, 0.95, characterMoonFacing),
-    smoothstep(-1.15, 1.15, faceMoonFacing), faceRegion);
-  float characterMoonSide = clamp((1150.0 - characterPixel.x) * moonDirection.x / 260.0, -0.45, 0.45);
-  float characterMoonReceive = clamp(0.39 + (characterMoonBand - 0.5) * 0.88
-    + characterMoonSide * 0.08, 0.06, 0.80);
-  // The whole figure sees the same receiving plane. Skin compresses its
-  // contrast around the shared midpoint; hair and clothing keep the broad
-  // light/shade split even without their optional material highlights.
-  float materialMoonReceive = mix(characterMoonReceive,
-    mix(0.43, characterMoonReceive, 0.32), faceRegion);
-  float moonMaterialGain = mix(1.0, 1.26, clothing);
-  moonMaterialGain = mix(moonMaterialGain, 1.50, vest);
-  moonMaterialGain = mix(moonMaterialGain, 1.40, hairRegionWeight);
-  moonMaterialGain = mix(moonMaterialGain, 0.78, accessory);
+  // One broad receiving plane for the figure. A second, wider Normal sample
+  // removes small painted slopes before the Moon reaches any material gain.
+  vec3 characterBroadDecoded = broadDecoded;
+  if (character > 0.001) {
+    vec3 characterBroad = broadEncoded
+      + texture(u_normal, sampleUv + vec2(texel.x * 11.0, 0.0)).rgb
+      + texture(u_normal, sampleUv - vec2(texel.x * 11.0, 0.0)).rgb
+      + texture(u_normal, sampleUv + vec2(0.0, texel.y * 11.0)).rgb
+      + texture(u_normal, sampleUv - vec2(0.0, texel.y * 11.0)).rgb;
+    characterBroadDecoded = characterBroad / 12.0 * 2.0 - 1.0;
+  }
+  vec3 characterBroadNormal = normalize(vec3(characterBroadDecoded.x,
+    -characterBroadDecoded.y, characterBroadDecoded.z));
+  float characterMoonFacing = dot(characterBroadNormal.xy, moonDirection.xy) * 11.0;
+  float characterMoonBand = smoothstep(-1.05, 1.05, characterMoonFacing);
+  // Face uses the same Moon vector, but its filtered front-facing Normal
+  // suppresses steep vertical eye/cheek transitions rather than adding fill.
+  vec3 faceMoonLight = normalize(vec3(moonDirection.x, moonDirection.y * 0.24,
+    max(moonDirection.z, 0.85)));
+  float faceMoonFacing = dot(faceNormal, faceMoonLight) - 0.70;
+  float faceMoonBand = smoothstep(-0.30, 0.30, faceMoonFacing);
+  float characterMoonReceive = clamp(0.39 + (characterMoonBand - 0.5) * 0.76,
+    0.08, 0.78);
+  float faceMoonReceive = 0.43 + (faceMoonBand - 0.5) * 0.28;
+  float materialMoonReceive = mix(characterMoonReceive, faceMoonReceive, faceRegion);
+  float moonMaterialGain = mix(1.0, 1.20, clothing);
+  moonMaterialGain = mix(moonMaterialGain, 1.30, vest);
+  moonMaterialGain = mix(moonMaterialGain, 1.27, hairRegionWeight);
+  moonMaterialGain = mix(moonMaterialGain, 0.88, accessory);
   moonMaterialGain = mix(moonMaterialGain, 1.00, faceRegion);
-  float moonDiffuse = max(0.07, 0.25 + (materialMoonReceive - 0.39) * 1.00);
+  float moonDiffuse = max(0.09, 0.28 + (materialMoonReceive - 0.39) * 0.88);
   vec3 nightCharacter = u_ambientColor * u_ambientIntensity
     + vec3(0.35, 0.51, 0.82) * moonMaterialGain * moonDiffuse;
   illumination = mix(illumination, nightCharacter, character * moonHandoff);
@@ -385,35 +397,18 @@ void main() {
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
-  // Hair pass: a narrow, flow-aligned lunar edge accents the shared Moon
-  // receiving side, without a broad glossy fill across the inner bangs.
-  float moonCrown = responseMask.g;
-  float moonHairFacing = characterMoonReceive;
-  float moonLeftSide = smoothstep(-0.10, 0.35, moonDirection.x);
-  float moonRightSide = 1.0 - smoothstep(-0.35, 0.10, moonDirection.x);
-  // A few narrow ribbons follow the outer locks. The broad motion masks no
-  // longer turn all bangs and inner hair into a continuous glossy sheet.
-  float leftStrandX = 990.0 + 0.24 * (characterPixel.y - 330.0);
-  float rightStrandX = 1328.0 + 0.26 * (characterPixel.y - 330.0);
-  float leftRibbon = 1.0 - smoothstep(13.0, 42.0, abs(characterPixel.x - leftStrandX));
-  float rightRibbon = 1.0 - smoothstep(14.0, 45.0, abs(characterPixel.x - rightStrandX));
-  float sideLocks = max(hairRegion.r * leftRibbon * moonLeftSide,
-    hairRegion.g * rightRibbon * moonRightSide);
-  float faceSideLocks = hairRegion.a * max(
-    (1.0 - smoothstep(1055.0, 1090.0, characterPixel.x)) * moonLeftSide,
-    smoothstep(1260.0, 1295.0, characterPixel.x) * moonRightSide) * 0.42;
-  float crownEdge = moonCrown * crownRibbon(characterPixel)
-    * mix(moonLeftSide, moonRightSide, smoothstep(1130.0, 1190.0, characterPixel.x)) * 0.30;
-  float moonHair = max(sideLocks, max(faceSideLocks, crownEdge))
-    * hairPigment * moonHairFacing * moonPresence;
-  relitLinear += vec3(0.28, 0.43, 0.72) * moonHair * 0.034;
+  // Hair volume is already lit by the shared broad Normal above. Optional
+  // sheen remains only a narrow crown polish, never a second lunar key.
+  relitLinear += vec3(0.28, 0.43, 0.72) * responseMask.g
+    * crownRibbon(characterPixel) * hairPigment * materialMoonReceive
+    * moonPresence * 0.012 * u_hairSheenStrength;
   if (material.g > 0.001) {
     float dayVisibility = smoothstep(0.22, 0.48, u_lightIntensity);
     float facing = 0.35 + 0.65 * smoothstep(-0.10, 0.75, broadFacing);
     float paintedStrand = mix(0.52, 1.0, smoothstep(0.055, 0.24, baseLinear.r));
     float sheen = material.g * crownRibbon(sampleUv * vec2(1672.0, 941.0))
       * facing * paintedStrand * dayVisibility * u_lightIntensity * 0.155;
-    relitLinear += u_lightColor * sheen;
+    relitLinear += u_lightColor * sheen * u_hairSheenStrength;
   }
   if (material.b > 0.001 && u_blinkClosed == 0) {
     vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);

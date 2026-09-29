@@ -75,6 +75,7 @@ export class BaseRenderer {
   private hairStrengthLocation: WebGLUniformLocation
   private headMassStrengthLocation: WebGLUniformLocation
   private headHairStrengthLocation: WebGLUniformLocation
+  private hairSheenStrengthLocation: WebGLUniformLocation
   private hairOverlayLocation: WebGLUniformLocation
   private detailEnabledLocation: WebGLUniformLocation
   private sceneLinearLocation: WebGLUniformLocation
@@ -82,6 +83,9 @@ export class BaseRenderer {
   private lampMaskViewLocation: WebGLUniformLocation
   private post: PostPipeline
   private disposed = false
+  // URL diagnostics are development-only; they do not add product controls.
+  private readonly secondaryHairDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSecondary') === 'off'
+  private readonly hairSheenDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSheen') === 'off'
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeReconstructionImage: HTMLImageElement, skyEdgeCoverageImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, lampSourceImage: HTMLImageElement, lampInfluenceImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
@@ -146,6 +150,7 @@ export class BaseRenderer {
       hairStrength: gl.getUniformLocation(program, 'u_hairStrength'),
       headMassStrength: gl.getUniformLocation(program, 'u_headMassStrength'),
       headHairStrength: gl.getUniformLocation(program, 'u_headHairStrength'),
+      hairSheenStrength: gl.getUniformLocation(program, 'u_hairSheenStrength'),
       hairOverlay: gl.getUniformLocation(program, 'u_hairOverlay'),
       detailEnabled: gl.getUniformLocation(program, 'u_detailEnabled'),
       sceneLinear: gl.getUniformLocation(program, 'u_sceneLinear'),
@@ -196,6 +201,7 @@ export class BaseRenderer {
     this.hairStrengthLocation = locations.hairStrength!
     this.headMassStrengthLocation = locations.headMassStrength!
     this.headHairStrengthLocation = locations.headHairStrength!
+    this.hairSheenStrengthLocation = locations.hairSheenStrength!
     this.hairOverlayLocation = locations.hairOverlay!
     this.detailEnabledLocation = locations.detailEnabled!
     this.sceneLinearLocation = locations.sceneLinear!
@@ -367,9 +373,10 @@ export class BaseRenderer {
     gl.uniform1f(this.breathStrengthLocation, breathing.enabled ? breathing.strength * breathingConfig.maxDisplacementPx : 0)
     gl.uniform1i(this.breathOverlayLocation, breathing.showRegion ? 1 : 0)
     gl.uniform1f(this.hairTimeLocation, hairSeconds)
-    gl.uniform1f(this.hairStrengthLocation, hair.enabled ? hair.strength * hairConfig.maxDisplacementPx : 0)
+    gl.uniform1f(this.hairStrengthLocation, hair.enabled && !this.secondaryHairDiagnosticOff ? hair.strength * hairConfig.maxDisplacementPx : 0)
     gl.uniform1f(this.headMassStrengthLocation, hair.enabled ? hair.strength * hairConfig.headMassDisplacementPx : 0)
-    gl.uniform1f(this.headHairStrengthLocation, hair.enabled ? hair.strength * hairConfig.headHairDisplacementPx : 0)
+    gl.uniform1f(this.headHairStrengthLocation, hair.enabled && !this.secondaryHairDiagnosticOff ? hair.strength * hairConfig.headHairDisplacementPx : 0)
+    gl.uniform1f(this.hairSheenStrengthLocation, this.hairSheenDiagnosticOff ? 0 : 1)
     gl.uniform1i(this.hairOverlayLocation, hair.showRegion ? 1 : 0)
     gl.uniform1i(this.detailEnabledLocation, detailEnabled ? 1 : 0)
     gl.uniform1i(this.sceneLinearLocation, usePost ? 1 : 0)

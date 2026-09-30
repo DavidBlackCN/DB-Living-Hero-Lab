@@ -176,3 +176,7 @@ Head mass now follows the 5.2s master breathing phase with a small lag; its inde
 ## R7.3A.1 Final Character Calibration — awaiting human review
 
 On top of `c97b2c4`, the existing Breath → Head → Hair motion was raised modestly to 5.2 / 2.5 / 3.6 / 5.8 source-px caps (torso / whole head / upper hair / lower hair), with slightly broader shoulder participation. Character solar and moon receive now share a wider broad-Normal sample; Night's Hair, Clothing and Vest gains and receive contrast are compressed slightly. Face, time paths, frozen art, lamps, leaves and Post are unchanged. The 2560×1440 four-phase images, 20s motion comparisons, sheen A/B and regressions are in [R7.3A validation](validation/R7_3A_CHARACTER_COHERENCE.md#r73a1-final-calibration). Recommend freezing Character Motion + Character Lighting after human review. Do not begin R7.3B.
+
+## R7.3A.2 Long-hair light balance — awaiting human review
+
+The Dawn image-left long-hair shadow and Night image-right long-hair pale wash were rebalanced through the existing shared Character Lighting hair response and the existing soft lower-hair regions. No new mask, light direction, time curve or motion behavior was added. Four fixed views, 2× Dawn/Night before/after, build, typecheck and character/motion regressions are in [`validation/R7_3A_2_HAIR_LIGHT_BALANCE.md`](validation/R7_3A_2_HAIR_LIGHT_BALANCE.md). Await visual acceptance; do not begin R7.3B.

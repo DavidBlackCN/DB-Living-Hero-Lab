@@ -339,6 +339,10 @@ void main() {
   // A shared soft morning key lifts the receiving side across all materials.
   // It replaces the former hair/face/shirt-specific Dawn fill patches.
   float characterDiffuse = mix(shapedDiffuse, 0.54, morning * 0.32);
+  // The broad painted back-facing hair normals should still receive a little
+  // clear morning key; keep this tied to the shared light and hair material.
+  characterDiffuse = mix(characterDiffuse, 0.61,
+    hairRegionWeight * morning * 0.42);
   illumination = mix(illumination,
     u_ambientColor * u_ambientIntensity + u_lightColor * u_lightIntensity * characterDiffuse,
     character);
@@ -360,6 +364,7 @@ void main() {
   float sharedSolarBand = mix(solarBand, characterSolarBand,
     0.65 * (1.0 - faceRegion));
   float characterBand = (sharedSolarBand - 0.5) * characterGain * mix(1.0, 0.54, morning);
+  characterBand *= 1.0 - hairRegionWeight * morning * 0.58;
   float sceneBand = (solarBand - 0.5) * 1.10 + paintedSide;
   illumination *= 1.0 + mix(sceneBand, characterBand, character) * solarResponse;
   // The Moon takes over the same character core during twilight. It does not
@@ -386,9 +391,11 @@ void main() {
     0.08, 0.78);
   float faceMoonReceive = 0.43 + (faceMoonBand - 0.5) * 0.28;
   float materialMoonReceive = mix(characterMoonReceive, faceMoonReceive, faceRegion);
+  materialMoonReceive = mix(materialMoonReceive, 0.39,
+    hairRegionWeight * moonPresence * 0.48);
   float moonMaterialGain = mix(1.0, 1.17, clothing);
   moonMaterialGain = mix(moonMaterialGain, 1.25, vest);
-  moonMaterialGain = mix(moonMaterialGain, 1.22, hairRegionWeight);
+  moonMaterialGain = mix(moonMaterialGain, 1.08, hairRegionWeight);
   moonMaterialGain = mix(moonMaterialGain, 0.88, accessory);
   moonMaterialGain = mix(moonMaterialGain, 1.00, faceRegion);
   float moonDiffuse = max(0.10, 0.28 + (materialMoonReceive - 0.39) * 0.80);
@@ -402,6 +409,11 @@ void main() {
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
+  // The lower strands taper out of the character core. Balance their painted
+  // pigment along the existing feathered motion regions, then leave their
+  // broad Normal and the shared Sun/Moon direction intact.
+  illumination *= 1.0 + hairPigment * (
+    hairRegion.r * morning * 2.65 - hairRegion.g * moonPresence * 0.68);
   vec3 relitLinear = max(baseLinear * illumination, vec3(0.0));
   // Hair volume is already lit by the shared broad Normal above. Optional
   // sheen remains only a narrow crown polish, never a second lunar key.

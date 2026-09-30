@@ -23,7 +23,8 @@ def main():
     assert np.array_equal(old_mask[:,:,1:], mask[:,:,1:]), 'Hair/Iris/unused channels changed'
     difference = np.any(mask != old_mask, axis=2)
     ys,xs = np.where(difference)
-    assert xs.min() >= 1070 and xs.max() < 1235 and ys.min() >= 170 and ys.max() < 305
+    # Face coverage now also includes the contiguous exposed neck at the jaw.
+    assert xs.min() >= 1070 and xs.max() < 1235 and ys.min() >= 170 and ys.max() < 326
     assert mask[245,1155,0] >= 250, 'Pale nose still falls through Face receive'
     assert mask[290,1150,0] > 180, 'Pale jaw still falls through Face receive'
     contact([('Legacy Face channel', Image.fromarray(old_mask[:,:,0]).convert('RGB').crop((1060,165,1240,310))),

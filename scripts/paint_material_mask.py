@@ -32,13 +32,16 @@ def main() -> None:
     base = np.asarray(Image.open(ROOT / "public/assets/hero/base/base-albedo.png").convert("RGB"), dtype=np.float32)
     red, green, blue = (base[:, :, index] for index in range(3))
 
-    # The jaw/cheek polygon follows this fixed painting, including the small
-    # exposed forehead and ear. The narrow feather stays off hair and collar.
+    # The skin receive polygon follows the face and exposed neck as one region.
+    # Ending the feather at the jaw mixed skin back into architecture shading,
+    # amplifying the already-painted chin/neck shadow at Dawn and Night.
+    # The narrow outer feather stays off hair and the collar.
     face = polygon([
         (1083, 196), (1091, 184), (1110, 174), (1130, 187),
         (1161, 185), (1180, 194), (1204, 202), (1219, 219),
-        (1222, 248), (1212, 265), (1191, 280), (1150, 293),
-        (1129, 287), (1109, 272), (1091, 250), (1082, 224),
+        (1222, 248), (1212, 265), (1191, 280), (1160, 290),
+        (1159, 307), (1144, 317), (1107, 301), (1109, 272),
+        (1091, 250), (1082, 224),
     ], 2.5)
     face = np.maximum(face, ellipse((1075, 194, 1095, 235), 2.0) * 0.8)
     yy = np.arange(SIZE[1], dtype=np.float32)[:, None]

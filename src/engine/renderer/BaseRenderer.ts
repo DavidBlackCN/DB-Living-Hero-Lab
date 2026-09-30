@@ -63,11 +63,12 @@ export class BaseRenderer {
   private directionalStrengthLocation: WebGLUniformLocation
   private upperSceneAttenuationLocation: WebGLUniformLocation
   private skyEnabledLocation: WebGLUniformLocation
+  private skyRepairEnabledLocation: WebGLUniformLocation
   private skyPhaseALocation: WebGLUniformLocation
   private skyPhaseBLocation: WebGLUniformLocation
   private skyMixLocation: WebGLUniformLocation
   private skyNightWeightLocation: WebGLUniformLocation
-  private blinkClosedLocation: WebGLUniformLocation
+  private blinkAmountLocation: WebGLUniformLocation
   private breathPhaseLocation: WebGLUniformLocation
   private breathStrengthLocation: WebGLUniformLocation
   private breathOverlayLocation: WebGLUniformLocation
@@ -86,6 +87,9 @@ export class BaseRenderer {
   // URL diagnostics are development-only; they do not add product controls.
   private readonly secondaryHairDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSecondary') === 'off'
   private readonly hairSheenDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSheen') === 'off'
+  private readonly skyRepairDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('skyRepair') === 'off'
+  private readonly blinkDiagnosticAmount = import.meta.env.DEV && new URLSearchParams(window.location.search).has('blinkAmount')
+    ? Number(new URLSearchParams(window.location.search).get('blinkAmount')) : NaN
 
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeReconstructionImage: HTMLImageElement, skyEdgeCoverageImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, lampSourceImage: HTMLImageElement, lampInfluenceImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
@@ -138,11 +142,12 @@ export class BaseRenderer {
       directionalStrength: gl.getUniformLocation(program, 'u_directionalStrength'),
       upperSceneAttenuation: gl.getUniformLocation(program, 'u_upperSceneAttenuation'),
       skyEnabled: gl.getUniformLocation(program, 'u_skyEnabled'),
+      skyRepairEnabled: gl.getUniformLocation(program, 'u_skyRepairEnabled'),
       skyPhaseA: gl.getUniformLocation(program, 'u_skyPhaseA'),
       skyPhaseB: gl.getUniformLocation(program, 'u_skyPhaseB'),
       skyMix: gl.getUniformLocation(program, 'u_skyMix'),
       skyNightWeight: gl.getUniformLocation(program, 'u_skyNightWeight'),
-      blinkClosed: gl.getUniformLocation(program, 'u_blinkClosed'),
+      blinkAmount: gl.getUniformLocation(program, 'u_blinkAmount'),
       breathPhase: gl.getUniformLocation(program, 'u_breathPhase'),
       breathStrength: gl.getUniformLocation(program, 'u_breathStrength'),
       breathOverlay: gl.getUniformLocation(program, 'u_breathOverlay'),
@@ -189,11 +194,12 @@ export class BaseRenderer {
     this.directionalStrengthLocation = locations.directionalStrength!
     this.upperSceneAttenuationLocation = locations.upperSceneAttenuation!
     this.skyEnabledLocation = locations.skyEnabled!
+    this.skyRepairEnabledLocation = locations.skyRepairEnabled!
     this.skyPhaseALocation = locations.skyPhaseA!
     this.skyPhaseBLocation = locations.skyPhaseB!
     this.skyMixLocation = locations.skyMix!
     this.skyNightWeightLocation = locations.skyNightWeight!
-    this.blinkClosedLocation = locations.blinkClosed!
+    this.blinkAmountLocation = locations.blinkAmount!
     this.breathPhaseLocation = locations.breathPhase!
     this.breathStrengthLocation = locations.breathStrength!
     this.breathOverlayLocation = locations.breathOverlay!
@@ -298,7 +304,7 @@ export class BaseRenderer {
     this.post = new PostPipeline(gl)
   }
 
-  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, moonDirection: MoonDirection, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkClosed: boolean, detailEnabled: boolean, postState: PostState, directionalStrength: number, lamps: LampState): void {
+  render(layout: ArtworkLayout, dprCap: number, view: RenderView, lighting: LightingState, sky: SkyState, moonDirection: MoonDirection, breathing: BreathingState, breathPhase: number, hair: HairState, hairSeconds: number, blinkAmount: number, detailEnabled: boolean, postState: PostState, directionalStrength: number, lamps: LampState): void {
     if (this.disposed) return
     const gl = this.gl
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
@@ -363,12 +369,14 @@ export class BaseRenderer {
     gl.uniform1f(this.directionalStrengthLocation, directionalStrength)
     gl.uniform1f(this.upperSceneAttenuationLocation, lighting.upperSceneAttenuation)
     gl.uniform1i(this.skyEnabledLocation, lighting.skyEnabled ? 1 : 0)
+    gl.uniform1i(this.skyRepairEnabledLocation, this.skyRepairDiagnosticOff ? 0 : 1)
     gl.uniform1i(this.skyPhaseALocation, skyPhaseIndex(sky.first))
     gl.uniform1i(this.skyPhaseBLocation, skyPhaseIndex(sky.second))
     gl.uniform1f(this.skyMixLocation, sky.mix)
     gl.uniform1f(this.skyNightWeightLocation,
       (sky.first === 'night' ? 1 - sky.mix : 0) + (sky.second === 'night' ? sky.mix : 0))
-    gl.uniform1i(this.blinkClosedLocation, blinkClosed ? 1 : 0)
+    gl.uniform1f(this.blinkAmountLocation, Math.max(0, Math.min(1,
+      Number.isFinite(this.blinkDiagnosticAmount) ? this.blinkDiagnosticAmount : blinkAmount)))
     gl.uniform1f(this.breathPhaseLocation, breathPhase)
     gl.uniform1f(this.breathStrengthLocation, breathing.enabled ? breathing.strength * breathingConfig.maxDisplacementPx : 0)
     gl.uniform1i(this.breathOverlayLocation, breathing.showRegion ? 1 : 0)

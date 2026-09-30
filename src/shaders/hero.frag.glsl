@@ -15,7 +15,8 @@ uniform sampler2D u_blinkRight;
 uniform int u_view;
 uniform int u_lightingEnabled;
 uniform int u_skyEnabled;
-uniform int u_blinkClosed;
+uniform int u_skyRepairEnabled;
+uniform float u_blinkAmount;
 uniform int u_skyPhaseA;
 uniform int u_skyPhaseB;
 uniform float u_skyMix;
@@ -112,11 +113,11 @@ vec3 toneMapAces(vec3 color) {
   const float e = 0.14;
   return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
 }
-vec4 sampleSky(int phase) {
-  if (phase == 0) return texture(u_sky[0], v_uv);
-  if (phase == 1) return texture(u_sky[1], v_uv);
-  if (phase == 2) return texture(u_sky[2], v_uv);
-  return texture(u_sky[3], v_uv);
+vec4 sampleSky(int phase, vec2 uv) {
+  if (phase == 0) return texture(u_sky[0], uv);
+  if (phase == 1) return texture(u_sky[1], uv);
+  if (phase == 2) return texture(u_sky[2], uv);
+  return texture(u_sky[3], uv);
 }
 float bandResponse(float facing) {
   float edge = max(u_bandSoftness, 0.001);
@@ -204,15 +205,15 @@ void main() {
   vec4 base = texture(u_base, sampleUv);
   // Closed-eye sprites replace local Albedo before the existing Normal-driven
   // lighting transform. Base inspection retains its registered DOM overlay.
-  if ((u_view == 2 || (u_view == 0 && u_headMassStrength > 0.0)) && u_blinkClosed != 0) {
+  if ((u_view == 2 || (u_view == 0 && u_headMassStrength > 0.0)) && u_blinkAmount > 0.0) {
     vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
     if (sourcePixel.x >= 1080.0 && sourcePixel.x < 1172.0 && sourcePixel.y >= 177.0 && sourcePixel.y < 250.0) {
       vec4 closedEye = texture(u_blinkLeft, (sourcePixel - vec2(1080.0, 177.0)) / vec2(92.0, 73.0));
-      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a);
+      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a * u_blinkAmount);
     }
     if (sourcePixel.x >= 1152.0 && sourcePixel.x < 1244.0 && sourcePixel.y >= 195.0 && sourcePixel.y < 273.0) {
       vec4 closedEye = texture(u_blinkRight, (sourcePixel - vec2(1152.0, 195.0)) / vec2(92.0, 78.0));
-      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a);
+      base.rgb = mix(base.rgb, closedEye.rgb, closedEye.a * u_blinkAmount);
     }
   }
   if (u_view == 0) { outColor = vec4(showMotionRegions(base.rgb, regions, hairRegion), base.a); return; }
@@ -228,9 +229,9 @@ void main() {
   // Recover foreground pigment from old-sky-contaminated edge pixels before
   // the regular lighting and Sky composition. No display-space edge shading.
   vec4 edgeRepair = texture(u_skyEdgeReconstruction, sampleUv);
-  if (u_skyEnabled != 0) base.rgb = mix(base.rgb, edgeRepair.rgb, edgeRepair.a);
+  if (u_skyEnabled != 0 && u_skyRepairEnabled != 0) base.rgb = mix(base.rgb, edgeRepair.rgb, edgeRepair.a);
   vec4 edgeSkyfill = texture(u_skyEdgeCoverage, sampleUv);
-  if (u_skyEnabled != 0) base.rgb = mix(base.rgb, edgeSkyfill.rgb, edgeSkyfill.a * u_skyNightWeight);
+  if (u_skyEnabled != 0 && u_skyRepairEnabled != 0) base.rgb = mix(base.rgb, edgeSkyfill.rgb, edgeSkyfill.a * u_skyNightWeight);
   vec4 material = u_detailEnabled != 0 ? texture(u_materialMask, sampleUv) : vec4(0.0);
   vec3 baseLinear = srgbToLinear(base.rgb);
   // Skin is a slightly warmer reflectance, never a light source.
@@ -405,7 +406,7 @@ void main() {
   // Architecture retains its broad-Normal Moon response with a quieter key,
   // so the tower beside the head stays moonlit without competing with it.
   illumination += vec3(0.22, 0.33, 0.57) * moonPresence
-    * (0.006 + 0.34 * moonReceive) * (1.0 - character);
+    * (0.006 + 0.24 * moonReceive) * (1.0 - character);
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;
@@ -428,7 +429,7 @@ void main() {
       * facing * paintedStrand * dayVisibility * u_lightIntensity * 0.155;
     relitLinear += u_lightColor * sheen * u_hairSheenStrength;
   }
-  if (material.b > 0.001 && u_blinkClosed == 0) {
+  if (material.b > 0.001 && u_blinkAmount < 1.0) {
     vec2 sourcePixel = sampleUv * vec2(1672.0, 941.0);
     float glint = max(irisGlint(sourcePixel, vec2(1123.0, 219.0), lightDirection),
       irisGlint(sourcePixel, vec2(1187.0, 238.0), lightDirection));
@@ -437,7 +438,7 @@ void main() {
     vec3 reflection = u_lightColor * u_lightIntensity
       * (0.075 * dayVisibility * mix(1.0, 0.40, duskGlintSoftening))
       + u_ambientColor * u_ambientIntensity * (0.012 * (1.0 - dayVisibility));
-    relitLinear += reflection * glint * material.b;
+    relitLinear += reflection * glint * material.b * (1.0 - u_blinkAmount);
     // The painted iris already carries a warm glint. Compress only its
     // brightest sunset pixels, leaving the dark pupil and Noon unchanged.
     float irisBrightness = dot(relitLinear, vec3(0.2126, 0.7152, 0.0722));
@@ -475,8 +476,8 @@ void main() {
     float skyAlpha = 0.0;
     vec3 sceneLinear = blendedLinear;
     if (u_skyEnabled != 0) {
-      vec4 sky = mix(sampleSky(u_skyPhaseA), sampleSky(u_skyPhaseB), clamp(u_skyMix, 0.0, 1.0));
-      skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, v_uv).a * u_skyNightWeight);
+      vec4 sky = mix(sampleSky(u_skyPhaseA, sampleUv), sampleSky(u_skyPhaseB, sampleUv), clamp(u_skyMix, 0.0, 1.0));
+      skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, sampleUv).a * u_skyNightWeight * float(u_skyRepairEnabled));
       // The frozen Sky RGB is display-referred. Place its inverse display value
       // in the linear scene so the one Post ACES pass recovers the same plate.
       vec3 skyLinear = inverseAces(srgbToLinear(sky.rgb)) / exp2(u_exposure);
@@ -495,11 +496,11 @@ void main() {
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);
   vec3 displayLinear = toneMapAces(exposedLinear);
   if (u_skyEnabled != 0) {
-    vec4 skyA = sampleSky(u_skyPhaseA);
-    vec4 skyB = sampleSky(u_skyPhaseB);
+    vec4 skyA = sampleSky(u_skyPhaseA, sampleUv);
+    vec4 skyB = sampleSky(u_skyPhaseB, sampleUv);
     vec4 sky = mix(skyA, skyB, clamp(u_skyMix, 0.0, 1.0));
     vec3 skyLinear = srgbToLinear(sky.rgb);
-    float skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, v_uv).a * u_skyNightWeight);
+    float skyAlpha = max(clamp(sky.a, 0.0, 1.0), texture(u_skyEdgeCoverage, sampleUv).a * u_skyNightWeight * float(u_skyRepairEnabled));
     displayLinear = mix(displayLinear, skyLinear, skyAlpha);
   }
   vec3 displayColor = linearToSrgb(displayLinear);

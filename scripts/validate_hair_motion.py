@@ -2,7 +2,6 @@
 
 from io import BytesIO
 from pathlib import Path
-from datetime import datetime, timezone
 
 import numpy as np
 import cv2
@@ -65,15 +64,13 @@ with sync_playwright() as playwright:
     page.get_by_label("Blink on/off").check()
     for view in ("base", "lit"):
         page.get_by_label("Render view").select_option(view)
-        # Freeze the short closed-eye window before checking its registration.
-        page.clock.pause_at(datetime.fromtimestamp(page.evaluate("Date.now()") / 1000 + 1, tz=timezone.utc))
-        page.get_by_role("button", name="Preview Blink").click()
-        assert page.locator(".blink-layer.is-closed").count() == 1
+        # Drive the same continuous amount event as the timeline so the
+        # registration snapshot is deterministic despite the short envelope.
+        page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 1)")
         if view == "base":
             assert page.locator(".blink-eye").count() == 0, "Moving Base head must use registered shader Blink"
         closed = frame(page)
-        page.clock.resume()
-        page.wait_for_timeout(330)
+        page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 0)")
         opened = frame(page)
         assert np.count_nonzero(np.abs(closed[170:255, 955:1090] - opened[170:255, 955:1090]) > 4) > 500, f"{view} Blink missing"
     page.get_by_label("Blink on/off").uncheck()

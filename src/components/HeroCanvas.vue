@@ -12,7 +12,7 @@ import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import type { PostState } from '../config/post'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; lampSourceUrl: string; lampInfluenceUrl: string; sky: SkyState; moonDirection: MoonDirection; lamps: LampState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkClosed: boolean; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; lampSourceUrl: string; lampInfluenceUrl: string; sky: SkyState; moonDirection: MoonDirection; lamps: LampState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkAmount: number; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -60,7 +60,7 @@ function draw(): void {
   try {
     const start = performance.now()
     renderer.render(layoutArtwork(props.artwork, bounds.width, bounds.height, props.fit), props.dprCap, props.renderView, props.lighting, props.sky, props.moonDirection,
-      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkClosed, props.lightingDetailEnabled, props.post, props.directionalStrength, props.lamps)
+      props.breathing, phaseSeconds / breathingConfig.periodSeconds * Math.PI * 2, props.hair, hairSeconds, props.blinkAmount, props.lightingDetailEnabled, props.post, props.directionalStrength, props.lamps)
     emit('frame', performance.now() - start)
   } catch (error) {
     renderer.destroy()
@@ -160,7 +160,7 @@ watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true }
 watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.moonDirection, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.lamps, () => { if (!needsMotion()) draw() }, { deep: true })
-watch(() => props.blinkClosed, draw)
+watch(() => props.blinkAmount, draw)
 watch(() => props.breathing, () => { draw(); scheduleMotion() }, { deep: true })
 watch(() => props.hair, () => { draw(); scheduleMotion() }, { deep: true })
 

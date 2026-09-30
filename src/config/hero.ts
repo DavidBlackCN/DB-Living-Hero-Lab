@@ -19,7 +19,7 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
     ],
     intervalMinMs: 4200,
     intervalMaxMs: 7600,
-    closedMs: 115,
+    durationMs: 320,
   },
   normal: {
     url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v3.png`,

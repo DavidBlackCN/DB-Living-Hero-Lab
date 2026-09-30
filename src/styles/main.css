@@ -7,8 +7,7 @@ html, body, #app { width: 100%; height: 100%; margin: 0; }
 .hero-canvas.canvas-ready { opacity: 1; }
 .blink-layer { position: absolute; inset: 0; pointer-events: none; }
 .blink-eye, .blink-region { position: absolute; display: block; }
-.blink-eye { opacity: 0; transition: opacity 35ms ease-in-out; }
-.blink-eye.is-closed { opacity: 1; }
+.blink-eye { opacity: 0; }
 .blink-region { border: 1px solid #52edcf; background: #52edcf24; }
 .leaves-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .artwork-overlay { position: absolute; pointer-events: none; }

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
@@ -145,10 +144,9 @@ def regression(browser, output: Path) -> dict:
     page.get_by_label("Show Breathing Region").uncheck()
     page.get_by_label("Show Hair Region").uncheck()
     page.get_by_label("Blink on/off").check()
-    page.clock.pause_at(datetime(2026, 9, 29, 12, 0, 0))
-    page.get_by_role("button", name="Preview Blink").click()
-    assert page.locator(".blink-layer.is-closed").count() == 1
-    page.clock.resume()
+    page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 1)")
+    assert page.locator("canvas.hero-canvas").evaluate("node => node.__vueParentComponent.props.blinkAmount") == 1
+    page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 0)")
     page.evaluate("Object.defineProperty(document, 'hidden', {configurable: true, value: true}); document.dispatchEvent(new Event('visibilitychange'))")
     paused = np.asarray(Image.open(BytesIO(page.screenshot())).convert("RGB"))
     page.wait_for_timeout(500)

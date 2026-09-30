@@ -180,3 +180,7 @@ On top of `c97b2c4`, the existing Breath → Head → Hair motion was raised mod
 ## R7.3A.2 Long-hair light balance — awaiting human review
 
 The Dawn image-left long-hair shadow and Night image-right long-hair pale wash were rebalanced through the existing shared Character Lighting hair response and the existing soft lower-hair regions. No new mask, light direction, time curve or motion behavior was added. Four fixed views, 2× Dawn/Night before/after, build, typecheck and character/motion regressions are in [`validation/R7_3A_2_HAIR_LIGHT_BALANCE.md`](validation/R7_3A_2_HAIR_LIGHT_BALANCE.md). Await visual acceptance; do not begin R7.3B.
+
+## R7.3A.3 Night edge and continuous Blink — awaiting review
+
+Night Sky coverage now follows the same displaced artwork coordinates as Character Motion, and the tower Moon add-on is quieter. Blink uses a 320 ms continuous local-eye blend in the existing lit path. The reported Dawn sky block is deferred at the user's request; it is not marked fixed. Review captures, regression notes, and remaining limits are in [R7.3A.3 validation](validation/R7_3A_3_FINAL_VISUAL_BLINK.md). Do not begin R7.3B.

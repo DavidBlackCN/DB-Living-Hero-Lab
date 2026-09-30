@@ -184,3 +184,7 @@ The Dawn image-left long-hair shadow and Night image-right long-hair pale wash w
 ## R7.3A.3 Night edge and continuous Blink — awaiting review
 
 Night Sky coverage now follows the same displaced artwork coordinates as Character Motion, and the tower Moon add-on is quieter. Blink uses a 320 ms continuous local-eye blend in the existing lit path. The reported Dawn sky block is deferred at the user's request; it is not marked fixed. Review captures, regression notes, and remaining limits are in [R7.3A.3 validation](validation/R7_3A_3_FINAL_VISUAL_BLINK.md). Do not begin R7.3B.
+
+## R7.3B Final Atmosphere — visual polish frozen candidate
+
+The latest user handoff accepted R7.3A and authorized R7.3B, superseding the earlier stop notices above. `eb3a488` is this round's frozen source/visual reference. A registered conservative background depth asset feeds the existing MRT metadata and final Post pass; very mild aerial perspective, continuous final grading, and tighter Bloom eligibility finish Dawn/Dusk/Night. Scene illumination, Character Core, all animation, lamp logic, frozen Sky/Base/Normal and time curves remain unchanged. Atmosphere OFF exactly matches the frozen commit in all four phases; Noon ON is also pixel-identical. Four-phase A/B, three 25s combined previews, 4K GPU timing, 610.8s continuous Play, context restore and key regressions are recorded in [R7.3B validation](validation/R7_3B_FINAL_ATMOSPHERE.md). Await human acceptance before freezing. Do not begin R7.4 Final Integration.

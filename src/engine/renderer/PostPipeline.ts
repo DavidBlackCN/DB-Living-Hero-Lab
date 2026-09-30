@@ -57,7 +57,7 @@ export class PostPipeline {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texImage2D(gl.TEXTURE_2D, 0, format, width, height, 0,
-      format === gl.R8 ? gl.RED : gl.RGBA, gl.UNSIGNED_BYTE, null)
+      format === gl.R8 ? gl.RED : format === gl.RG8 ? gl.RG : gl.RGBA, gl.UNSIGNED_BYTE, null)
     return texture
   }
 
@@ -94,7 +94,7 @@ export class PostPipeline {
     this.height = height
     const gl = this.gl
     this.scene = this.target(width, height)
-    this.gate = this.texture(width, height, gl.R8)
+    this.gate = this.texture(width, height, gl.RG8)
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.scene.framebuffer)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, this.gate, 0)
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1])
@@ -159,7 +159,15 @@ export class PostPipeline {
     this.bloom.forEach((target, i) => this.bind(3 + i, target.texture))
     gl.uniform1i(this.uniform('u_mode'), 3)
     gl.uniform1i(this.uniform('u_preview'), post.view === 'bright' ? 1 : post.view === 'bloom' ? 2 : post.view === 'grade' ? 3 : 0)
-    gl.uniform1f(this.uniform('u_bloomStrength'), post.bloomEnabled ? post.bloomStrength : 0)
+    const atmosphere = post.atmosphere?.enabled ? post.atmosphere : undefined
+    gl.uniform1f(this.uniform('u_bloomStrength'), post.bloomEnabled ? post.bloomStrength * (atmosphere?.bloomScale ?? 1) : 0)
+    gl.uniform1f(this.uniform('u_hazeAmount'), atmosphere?.hazeEnabled ? atmosphere.hazeAmount : 0)
+    gl.uniform1f(this.uniform('u_depthSaturation'), atmosphere?.hazeEnabled ? atmosphere.depthSaturation : 1)
+    const airColor: [number, number, number] = atmosphere?.airColor ?? [0, 0, 0]
+    gl.uniform3f(this.uniform('u_airColor'), ...airColor)
+    gl.uniform1f(this.uniform('u_finalSaturation'), atmosphere?.gradeEnabled ? atmosphere.saturation : 1)
+    const finalTint: [number, number, number] = atmosphere?.gradeEnabled ? atmosphere.tint : [1, 1, 1]
+    gl.uniform3f(this.uniform('u_finalTint'), ...finalTint)
     gl.uniform1f(this.uniform('u_saturation'), post.saturation)
     gl.uniform1f(this.uniform('u_contrast'), post.contrast)
     gl.uniform3f(this.uniform('u_tint'), ...post.tint)

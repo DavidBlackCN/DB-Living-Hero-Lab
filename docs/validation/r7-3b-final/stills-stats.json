@@ -1,0 +1,19 @@
+{
+  "Dawn": {
+    "meanRgbDelta": 0.4416,
+    "maxRgbDelta": 8
+  },
+  "Noon": {
+    "meanRgbDelta": 0.0,
+    "maxRgbDelta": 0
+  },
+  "Dusk": {
+    "meanRgbDelta": 0.3038,
+    "maxRgbDelta": 18
+  },
+  "Night": {
+    "meanRgbDelta": 0.1382,
+    "maxRgbDelta": 4
+  },
+  "midnightMaxRgbDelta": 0
+}

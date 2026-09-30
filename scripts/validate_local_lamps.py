@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 from playwright.sync_api import sync_playwright
+from frozen_baseline import frozen_phases
 
 
 SIZE = (2048, 1033)
@@ -49,6 +50,7 @@ def sheet(images: list[tuple[str, Image.Image]], columns: int, width: int) -> Im
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
+    parser.add_argument("--baseline-url", help="Current frozen commit server, replacing old R6 pixel archive")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
@@ -57,9 +59,12 @@ def main() -> None:
             headless=True,
             args=["--enable-webgl", "--use-gl=angle", "--use-angle=swiftshader"],
         )
+        current_frozen = frozen_phases(browser, args.baseline_url, SIZE, ("Lamps on/off",)) if args.baseline_url else None
         page = browser.new_page(viewport={"width": SIZE[0], "height": SIZE[1]}, device_scale_factor=1)
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+        if current_frozen:
+            page.get_by_label("Atmosphere on/off").uncheck()
         for label in ("Breathing on/off", "Hair Motion on/off", "Blink on/off", "Leaves"):
             page.get_by_label(label).uncheck()
         page.get_by_label("Render view").select_option("lit")
@@ -87,7 +92,7 @@ def main() -> None:
         page.get_by_label("Lamps on/off").uncheck()
         for phase, minutes in (("dawn", 390), ("noon", 720), ("dusk", 1050), ("night", 1320)):
             set_time(minutes)
-            frozen = np.asarray(Image.open(ROOT / f"docs/validation/r6-final-closure/final/{phase}-full.png").convert("RGB"))
+            frozen = current_frozen[phase] if current_frozen else np.asarray(Image.open(ROOT / f"docs/validation/r6-final-closure/final/{phase}-full.png").convert("RGB"))
             assert np.array_equal(np.asarray(frame(page)), frozen), f"Lamps OFF changed R6 {phase}"
         page.get_by_label("Lamps on/off").check()
 
@@ -118,9 +123,9 @@ def main() -> None:
         midnight_24 = frame(page)
         midnight_00 = next(image for label, image in captures if label == "00:00")
         assert np.array_equal(np.asarray(midnight_24), np.asarray(midnight_00)), "Midnight wrap changed"
-        reference = np.asarray(Image.open(ROOT / "docs/validation/r6-final-closure/final/night-full.png").convert("RGB"))
+        reference = current_frozen['night'] if current_frozen else np.asarray(Image.open(ROOT / "docs/validation/r6-final-closure/final/night-full.png").convert("RGB"))
         assert np.array_equal(np.asarray(off), reference), "Lamps OFF did not restore frozen R6"
-        reference_noon = np.asarray(Image.open(ROOT / "docs/validation/r6-final-closure/final/noon-full.png").convert("RGB"))
+        reference_noon = current_frozen['noon'] if current_frozen else np.asarray(Image.open(ROOT / "docs/validation/r6-final-closure/final/noon-full.png").convert("RGB"))
         noon = next(image for label, image in captures if label == "12:00")
         assert np.array_equal(np.asarray(noon), reference_noon), "Noon changed from R6"
         corridor = (slice(60, 600), slice(0, 490))
@@ -157,8 +162,9 @@ def main() -> None:
         assert page.locator(".leaves-canvas").count() == 1, "Leaves layer missing"
         page.get_by_label("Leaves").uncheck()
         page.get_by_label("Blink on/off").check()
-        page.get_by_role("button", name="Preview Blink").click()
-        assert page.locator(".blink-layer.is-closed").count() == 1, "Blink did not close"
+        page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 1)")
+        assert page.locator('.hero-canvas').evaluate("node=>node.__vueParentComponent.props.blinkAmount") == 1, "Blink did not close"
+        page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 0)")
         page.get_by_label("Blink on/off").uncheck()
         set_time(1050)
         page.get_by_role("button", name="Play", exact=True).click()

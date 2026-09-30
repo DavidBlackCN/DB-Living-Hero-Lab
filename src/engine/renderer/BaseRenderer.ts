@@ -42,6 +42,8 @@ export class BaseRenderer {
   private materialMaskTexture: WebGLTexture
   private lampSourceTexture: WebGLTexture
   private lampInfluenceTexture: WebGLTexture
+  private sceneDepthTexture: WebGLTexture
+  private atmosphereProtectionLocation: WebGLUniformLocation
   private blinkTextures: WebGLTexture[]
   private rectLocation: WebGLUniformLocation
   private viewLocation: WebGLUniformLocation
@@ -91,7 +93,7 @@ export class BaseRenderer {
   private readonly blinkDiagnosticAmount = import.meta.env.DEV && new URLSearchParams(window.location.search).has('blinkAmount')
     ? Number(new URLSearchParams(window.location.search).get('blinkAmount')) : NaN
 
-  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeReconstructionImage: HTMLImageElement, skyEdgeCoverageImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, lampSourceImage: HTMLImageElement, lampInfluenceImage: HTMLImageElement, blinkImages: HTMLImageElement[]) {
+  constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeReconstructionImage: HTMLImageElement, skyEdgeCoverageImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, lampSourceImage: HTMLImageElement, lampInfluenceImage: HTMLImageElement, blinkImages: HTMLImageElement[], sceneDepthImage: HTMLImageElement) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
     if (!gl) throw new Error('WebGL2 unavailable')
     this.gl = gl
@@ -120,6 +122,7 @@ export class BaseRenderer {
     const materialMaskTexture = gl.createTexture()
     const lampSourceTexture = gl.createTexture()
     const lampInfluenceTexture = gl.createTexture()
+    const sceneDepthTexture = gl.createTexture()
     const blinkTextures = blinkImages.map(() => gl.createTexture())
     const rectLocation = gl.getUniformLocation(program, 'u_rect')
     const viewLocation = gl.getUniformLocation(program, 'u_view')
@@ -161,8 +164,9 @@ export class BaseRenderer {
       sceneLinear: gl.getUniformLocation(program, 'u_sceneLinear'),
       lampWeight: gl.getUniformLocation(program, 'u_lampWeight'),
       lampMaskView: gl.getUniformLocation(program, 'u_lampMaskView'),
+      atmosphereProtection: gl.getUniformLocation(program, 'u_atmosphereProtection'),
     }
-    if (!buffer || !texture || !normalTexture || !skyEdgeReconstructionTexture || !skyEdgeCoverageTexture || !hairMaskTexture || !materialMaskTexture || !lampSourceTexture || !lampInfluenceTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
+    if (!buffer || !texture || !normalTexture || !skyEdgeReconstructionTexture || !skyEdgeCoverageTexture || !hairMaskTexture || !materialMaskTexture || !lampSourceTexture || !lampInfluenceTexture || !sceneDepthTexture || skyTextures.some(texture => !texture) || blinkTextures.some(texture => !texture) || !rectLocation || !viewLocation || Object.values(locations).some(location => !location)) throw new Error('Could not allocate WebGL resources')
     this.buffer = buffer
     this.texture = texture
     this.normalTexture = normalTexture
@@ -173,6 +177,8 @@ export class BaseRenderer {
     this.materialMaskTexture = materialMaskTexture
     this.lampSourceTexture = lampSourceTexture
     this.lampInfluenceTexture = lampInfluenceTexture
+    this.sceneDepthTexture = sceneDepthTexture
+    this.atmosphereProtectionLocation = locations.atmosphereProtection!
     this.blinkTextures = blinkTextures as WebGLTexture[]
     this.rectLocation = rectLocation
     this.viewLocation = viewLocation
@@ -281,6 +287,7 @@ export class BaseRenderer {
     for (const [unit, lampTexture, lampImage, uniform] of [
       [12, lampSourceTexture, lampSourceImage, 'u_lampSource'],
       [13, lampInfluenceTexture, lampInfluenceImage, 'u_lampInfluence'],
+      [14, sceneDepthTexture, sceneDepthImage, 'u_sceneDepth'],
     ] as const) {
       gl.activeTexture(gl.TEXTURE0 + unit)
       gl.bindTexture(gl.TEXTURE_2D, lampTexture)
@@ -350,6 +357,9 @@ export class BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.lampSourceTexture)
     gl.activeTexture(gl.TEXTURE13)
     gl.bindTexture(gl.TEXTURE_2D, this.lampInfluenceTexture)
+    gl.activeTexture(gl.TEXTURE14)
+    gl.bindTexture(gl.TEXTURE_2D, this.sceneDepthTexture)
+    gl.uniform1f(this.atmosphereProtectionLocation, postState.atmosphere?.enabled ? postState.atmosphere.bloomProtection : 0)
     gl.uniform1i(this.viewLocation, view === 'normal' ? 1 : view === 'lit' ? 2 : 0)
     gl.uniform1i(this.lightingEnabledLocation, lighting.enabled ? 1 : 0)
     gl.uniform1f(this.exposureLocation, lighting.exposureStops)
@@ -413,6 +423,7 @@ export class BaseRenderer {
     gl.deleteTexture(this.materialMaskTexture)
     gl.deleteTexture(this.lampSourceTexture)
     gl.deleteTexture(this.lampInfluenceTexture)
+    gl.deleteTexture(this.sceneDepthTexture)
     this.blinkTextures.forEach(texture => gl.deleteTexture(texture))
     gl.deleteBuffer(this.buffer)
     gl.deleteProgram(this.program)

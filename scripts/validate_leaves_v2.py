@@ -136,8 +136,9 @@ def capture_static(browser, output: Path) -> None:
     page.get_by_label("Hair Motion on/off").check()
     page.get_by_label("Blink on/off").check()
     page.clock.pause_at(datetime(2026, 9, 28, 12, 0, 0))
-    page.get_by_role("button", name="Preview Blink").click()
-    assert page.locator(".blink-layer.is-closed").count() == 1
+    page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 1)")
+    assert page.locator('.hero-canvas').evaluate("node=>node.__vueParentComponent.props.blinkAmount") == 1
+    page.evaluate("() => document.querySelector('.blink-layer').__vueParentComponent.emit('amount', 0)")
     page.clock.resume()
     assert page.locator(".leaves-canvas").count() == 1
     page.get_by_label("Quality").select_option("static")

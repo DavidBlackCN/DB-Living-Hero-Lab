@@ -1,0 +1,17 @@
+{
+  "Dawn": {
+    "seconds": 25,
+    "encodedFps": 30,
+    "note": "actual screenshot frames, resampled; not native 30fps capture"
+  },
+  "Dusk": {
+    "seconds": 25,
+    "encodedFps": 30,
+    "note": "actual screenshot frames, resampled; not native 30fps capture"
+  },
+  "Night": {
+    "seconds": 25,
+    "encodedFps": 30,
+    "note": "actual screenshot frames, resampled; not native 30fps capture"
+  }
+}

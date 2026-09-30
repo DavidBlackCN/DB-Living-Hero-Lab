@@ -4,7 +4,7 @@ import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import { defaultLighting } from './lighting'
 import { skyAssets } from './sky'
 
-export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; sky: { urls: typeof skyAssets; edgeReconstructionUrl: string; edgeCoverageUrl: string }; hair: { maskUrl: string }; material: { maskUrl: string }; lamps: { sourceUrl: string; influenceUrl: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; atmosphere: { depthUrl: string }; sky: { urls: typeof skyAssets; edgeReconstructionUrl: string; edgeCoverageUrl: string }; hair: { maskUrl: string }; material: { maskUrl: string }; lamps: { sourceUrl: string; influenceUrl: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -21,6 +21,7 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
     intervalMaxMs: 7600,
     durationMs: 320,
   },
+  atmosphere: { depthUrl: `${import.meta.env.BASE_URL}assets/hero/atmosphere/scene-depth.png` },
   normal: {
     url: `${import.meta.env.BASE_URL}assets/hero/normal/base-normal-v3.png`,
   },

@@ -1,0 +1,18 @@
+{
+  "Dawn": {
+    "mean": 0.0,
+    "max": 0
+  },
+  "Noon": {
+    "mean": 0.0,
+    "max": 0
+  },
+  "Dusk": {
+    "mean": 0.0,
+    "max": 0
+  },
+  "Night": {
+    "mean": 0.0,
+    "max": 0
+  }
+}

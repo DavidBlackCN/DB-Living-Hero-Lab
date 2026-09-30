@@ -27,6 +27,9 @@ const props = defineProps<{
   postEnabled: boolean
   bloomEnabled: boolean
   postView: PostView
+  atmosphereEnabled: boolean
+  hazeEnabled: boolean
+  finalGradeEnabled: boolean
   lightingMinutes: number
   moonDirection: MoonDirection
   timeMode: TimeMode
@@ -61,6 +64,9 @@ const emit = defineEmits<{
   (e: 'update:postEnabled', value: boolean): void
   (e: 'update:bloomEnabled', value: boolean): void
   (e: 'update:postView', value: PostView): void
+  (e: 'update:atmosphereEnabled', value: boolean): void
+  (e: 'update:hazeEnabled', value: boolean): void
+  (e: 'update:finalGradeEnabled', value: boolean): void
   (e: 'selectLightingPreset', value: LightingPresetId): void
   (e: 'selectLightingTime', value: number): void
   (e: 'backToNow'): void
@@ -172,6 +178,12 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       </label>
       <label><input type="checkbox" :checked="postEnabled" @change="emit('update:postEnabled', ($event.target as HTMLInputElement).checked)" /> Post Processing on/off</label>
       <label><input type="checkbox" :checked="bloomEnabled" @change="emit('update:bloomEnabled', ($event.target as HTMLInputElement).checked)" /> Bloom on/off</label>
+      <label><input type="checkbox" :checked="atmosphereEnabled" :disabled="!postEnabled" @change="emit('update:atmosphereEnabled', ($event.target as HTMLInputElement).checked)" /> Atmosphere on/off</label>
+      <details>
+        <summary>Atmosphere components</summary>
+        <label><input type="checkbox" :checked="hazeEnabled" :disabled="!atmosphereEnabled || !postEnabled" @change="emit('update:hazeEnabled', ($event.target as HTMLInputElement).checked)" /> Haze on/off</label>
+        <label><input type="checkbox" :checked="finalGradeEnabled" :disabled="!atmosphereEnabled || !postEnabled" @change="emit('update:finalGradeEnabled', ($event.target as HTMLInputElement).checked)" /> Final Grade on/off</label>
+      </details>
       <label>Post preview
         <select :value="postView" @change="emit('update:postView', ($event.target as HTMLSelectElement).value as PostView)">
           <option value="final">Final</option><option value="bright">Bright-pass</option>

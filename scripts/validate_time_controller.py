@@ -1,6 +1,7 @@
 """Browser checks for the R2B controller and frozen R2A anchor images."""
 
 from __future__ import annotations
+import argparse
 
 from datetime import datetime
 from io import BytesIO
@@ -9,6 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from playwright.sync_api import sync_playwright
+from frozen_baseline import frozen_phases
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,17 +21,25 @@ PRESETS = {"Dawn": 390, "Noon": 720, "Dusk": 1050, "Night": 1320}
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--baseline-url', help='Current frozen commit server, replacing obsolete R3 pixel archive')
+    parser.add_argument('--angle', default='swiftshader', choices=('swiftshader','d3d11'))
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=EDGE,
             headless=True,
-            args=["--enable-webgl", "--use-gl=angle", "--use-angle=swiftshader"],
+            args=["--enable-webgl", "--use-gl=angle", f"--use-angle={args.angle}"],
         )
+        current_frozen = frozen_phases(browser, args.baseline_url, (1440, 900),
+            ('Lighting Detail on/off', 'Post Processing on/off', 'Directional Shading on/off')) if args.baseline_url else None
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
         page.clock.install(time=datetime(2026, 9, 24, 23, 30, 0))
         page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
         page.get_by_text("Mode: WebGL2").wait_for(timeout=30000)
+        if current_frozen:
+            page.add_style_tag(content='.debug-panel {opacity:0 !important;}')
         page.get_by_label("Breathing on/off").uncheck()
         page.get_by_label("Hair Motion on/off").uncheck()
         page.get_by_label("Blink on/off").uncheck()
@@ -58,7 +68,7 @@ def main() -> None:
                 shot.write_bytes(image_bytes)
             current = np.asarray(Image.open(BytesIO(image_bytes)).convert("RGB"))[:, 310:]
             baseline_name = "night-after.png" if name == "Night" else f"{name.lower()}.png"
-            frozen = np.asarray(Image.open(BASELINE / baseline_name).convert("RGB"))[:, 310:]
+            frozen = (current_frozen[name.lower()] if current_frozen else np.asarray(Image.open(BASELINE / baseline_name).convert("RGB")))[:, 310:]
             assert current.shape == frozen.shape
             assert np.max(np.abs(current.astype(np.int16) - frozen.astype(np.int16))) <= 1, name
 

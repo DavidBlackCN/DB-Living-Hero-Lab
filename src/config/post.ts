@@ -1,3 +1,5 @@
+import type { AtmosphereState } from './atmosphere'
+
 export type PostView = 'final' | 'bright' | 'bloom' | 'grade'
 
 export interface PostState {
@@ -11,6 +13,7 @@ export interface PostState {
   saturation: number
   contrast: number
   tint: [number, number, number]
+  atmosphere?: AtmosphereState
 }
 
 const clamp01 = (v: number): number => Math.max(0, Math.min(1, v))
@@ -20,12 +23,17 @@ const smooth = (a: number, b: number, v: number): number => {
 }
 
 // Continuous hold/transition windows. Both 00:00 and 24:00 are the same Night hold.
-export function postFor(minutes: number): Omit<PostState, 'enabled' | 'bloomEnabled' | 'view'> {
+export function postTimeWeights(minutes: number): { dawn: number; day: number; dusk: number; night: number } {
   const t = ((Number.isFinite(minutes) ? minutes : 720) % 1440 + 1440) % 1440
   const dawn = smooth(300, 390, t) * (1 - smooth(390, 510, t))
   const day = smooth(390, 510, t) * (1 - smooth(960, 1050, t))
   const dusk = smooth(960, 1050, t) * (1 - smooth(1050, 1200, t))
   const night = Math.max(0, 1 - dawn - day - dusk)
+  return { dawn, day, dusk, night }
+}
+
+export function postFor(minutes: number): Omit<PostState, 'enabled' | 'bloomEnabled' | 'view' | 'atmosphere'> {
+  const { dawn, day, dusk, night } = postTimeWeights(minutes)
   return {
     exposureStops: dawn * 0.015 - day * 0.018 + dusk * 0.008,
     threshold: night * 0.60 + dawn * 0.37 + day * 0.43 + dusk * 0.38,

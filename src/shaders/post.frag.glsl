@@ -20,6 +20,11 @@ uniform float u_bloomStrength;
 uniform float u_saturation;
 uniform float u_contrast;
 uniform vec3 u_tint;
+uniform float u_hazeAmount;
+uniform float u_depthSaturation;
+uniform vec3 u_airColor;
+uniform float u_finalSaturation;
+uniform vec3 u_finalTint;
 out vec4 outColor;
 vec4 encodeHDR(vec3 color) {
   color = clamp(color, vec3(0.0), vec3(16.0));
@@ -86,6 +91,17 @@ void main() {
     color = mix(vec3(luma), color, u_saturation);
     color = (color - 0.5) * u_contrast + 0.5;
     color *= u_tint;
+    // Background-only aerial perspective, after the frozen R6 display grade.
+    if (u_hazeAmount > 0.0) {
+      float depth = texture(u_gate, v_uv).g;
+      luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+      color = mix(vec3(luma), color, mix(1.0, u_depthSaturation, depth));
+      color = mix(color, u_airColor, depth * u_hazeAmount);
+    }
+    if (u_finalSaturation != 1.0 || any(notEqual(u_finalTint, vec3(1.0)))) {
+      luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+      color = mix(vec3(luma), color, u_finalSaturation) * u_finalTint;
+    }
   }
   outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }

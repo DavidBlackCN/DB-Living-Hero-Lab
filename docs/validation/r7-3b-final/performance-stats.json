@@ -1,0 +1,99 @@
+{
+  "environment": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5070 Ti (0x00002C05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "maxSamplers": 16,
+    "gpuTimer": true
+  },
+  "measurements": [
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "atmosphere": false,
+      "frameSamples": 120,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.1,
+      "gpuMedianMs": 0.218,
+      "gpuP95Ms": 0.222
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "atmosphere": true,
+      "frameSamples": 120,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.1,
+      "gpuMedianMs": 0.22,
+      "gpuP95Ms": 0.223
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "atmosphere": false,
+      "frameSamples": 120,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.1,
+      "gpuMedianMs": 0.355,
+      "gpuP95Ms": 0.55
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "atmosphere": true,
+      "frameSamples": 121,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.1,
+      "gpuMedianMs": 0.358,
+      "gpuP95Ms": 0.369
+    },
+    {
+      "size": [
+        3840,
+        2160
+      ],
+      "atmosphere": false,
+      "frameSamples": 120,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.05,
+      "gpuMedianMs": 0.749,
+      "gpuP95Ms": 0.942
+    },
+    {
+      "size": [
+        3840,
+        2160
+      ],
+      "atmosphere": true,
+      "frameSamples": 120,
+      "drawsPerFrame": [
+        10
+      ],
+      "observedFps": 26.67,
+      "cpuSubmissionMedianMs": 0.0,
+      "gpuMedianMs": 0.763,
+      "gpuP95Ms": 0.964
+    }
+  ]
+}

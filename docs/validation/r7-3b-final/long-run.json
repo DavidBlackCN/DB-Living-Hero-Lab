@@ -1,0 +1,555 @@
+{
+  "elapsedSeconds": 610.8,
+  "errors": [],
+  "samples": [
+    {
+      "draws": 19610,
+      "leafDraws": 5448,
+      "raf": 4925,
+      "time": "120",
+      "heap": 11140335,
+      "gl": 0,
+      "elapsed": 10.0
+    },
+    {
+      "draws": 39000,
+      "leafDraws": 10742,
+      "raf": 9796,
+      "time": "361",
+      "heap": 9611020,
+      "gl": 0,
+      "elapsed": 20.0
+    },
+    {
+      "draws": 58440,
+      "leafDraws": 15541,
+      "raf": 14673,
+      "time": "601",
+      "heap": 10219868,
+      "gl": 0,
+      "elapsed": 30.0
+    },
+    {
+      "draws": 77800,
+      "leafDraws": 20347,
+      "raf": 19521,
+      "time": "841",
+      "heap": 12853597,
+      "gl": 0,
+      "elapsed": 40.0
+    },
+    {
+      "draws": 97480,
+      "leafDraws": 25235,
+      "raf": 24416,
+      "time": "1081",
+      "heap": 13259282,
+      "gl": 0,
+      "elapsed": 50.0
+    },
+    {
+      "draws": 117190,
+      "leafDraws": 30743,
+      "raf": 29318,
+      "time": "1321",
+      "heap": 17164105,
+      "gl": 0,
+      "elapsed": 60.0
+    },
+    {
+      "draws": 136380,
+      "leafDraws": 36170,
+      "raf": 34173,
+      "time": "121",
+      "heap": 13102908,
+      "gl": 0,
+      "elapsed": 70.0
+    },
+    {
+      "draws": 156110,
+      "leafDraws": 41350,
+      "raf": 39081,
+      "time": "361",
+      "heap": 20842072,
+      "gl": 0,
+      "elapsed": 80.0
+    },
+    {
+      "draws": 175300,
+      "leafDraws": 46156,
+      "raf": 43933,
+      "time": "601",
+      "heap": 26468569,
+      "gl": 0,
+      "elapsed": 90.0
+    },
+    {
+      "draws": 195020,
+      "leafDraws": 50962,
+      "raf": 48840,
+      "time": "842",
+      "heap": 29992275,
+      "gl": 0,
+      "elapsed": 100.0
+    },
+    {
+      "draws": 214200,
+      "leafDraws": 55794,
+      "raf": 53692,
+      "time": "1082",
+      "heap": 21686673,
+      "gl": 0,
+      "elapsed": 110.0
+    },
+    {
+      "draws": 233930,
+      "leafDraws": 60867,
+      "raf": 58600,
+      "time": "1322",
+      "heap": 19866083,
+      "gl": 0,
+      "elapsed": 120.1
+    },
+    {
+      "draws": 253520,
+      "leafDraws": 65838,
+      "raf": 63493,
+      "time": "122",
+      "heap": 15937518,
+      "gl": 0,
+      "elapsed": 130.1
+    },
+    {
+      "draws": 272840,
+      "leafDraws": 70859,
+      "raf": 68359,
+      "time": "362",
+      "heap": 10735726,
+      "gl": 0,
+      "elapsed": 140.1
+    },
+    {
+      "draws": 292560,
+      "leafDraws": 75682,
+      "raf": 73266,
+      "time": "602",
+      "heap": 18139238,
+      "gl": 0,
+      "elapsed": 150.1
+    },
+    {
+      "draws": 312270,
+      "leafDraws": 80470,
+      "raf": 78171,
+      "time": "842",
+      "heap": 13489445,
+      "gl": 0,
+      "elapsed": 160.1
+    },
+    {
+      "draws": 331470,
+      "leafDraws": 85414,
+      "raf": 83026,
+      "time": "1082",
+      "heap": 9601385,
+      "gl": 0,
+      "elapsed": 170.1
+    },
+    {
+      "draws": 351180,
+      "leafDraws": 91168,
+      "raf": 87930,
+      "time": "1322",
+      "heap": 14434020,
+      "gl": 0,
+      "elapsed": 180.1
+    },
+    {
+      "draws": 370750,
+      "leafDraws": 96907,
+      "raf": 92823,
+      "time": "122",
+      "heap": 15493255,
+      "gl": 0,
+      "elapsed": 190.1
+    },
+    {
+      "draws": 390090,
+      "leafDraws": 102255,
+      "raf": 97692,
+      "time": "362",
+      "heap": 11706528,
+      "gl": 0,
+      "elapsed": 200.1
+    },
+    {
+      "draws": 409800,
+      "leafDraws": 107097,
+      "raf": 102596,
+      "time": "602",
+      "heap": 29130099,
+      "gl": 0,
+      "elapsed": 210.1
+    },
+    {
+      "draws": 429000,
+      "leafDraws": 111903,
+      "raf": 107451,
+      "time": "843",
+      "heap": 22817830,
+      "gl": 0,
+      "elapsed": 220.1
+    },
+    {
+      "draws": 448710,
+      "leafDraws": 116803,
+      "raf": 112355,
+      "time": "1083",
+      "heap": 20573673,
+      "gl": 0,
+      "elapsed": 230.1
+    },
+    {
+      "draws": 468420,
+      "leafDraws": 122237,
+      "raf": 117262,
+      "time": "1323",
+      "heap": 11676233,
+      "gl": 0,
+      "elapsed": 240.1
+    },
+    {
+      "draws": 488140,
+      "leafDraws": 127577,
+      "raf": 122167,
+      "time": "123",
+      "heap": 33364539,
+      "gl": 0,
+      "elapsed": 250.1
+    },
+    {
+      "draws": 507340,
+      "leafDraws": 132732,
+      "raf": 127022,
+      "time": "363",
+      "heap": 12481908,
+      "gl": 0,
+      "elapsed": 260.1
+    },
+    {
+      "draws": 527050,
+      "leafDraws": 137538,
+      "raf": 131926,
+      "time": "603",
+      "heap": 13318525,
+      "gl": 0,
+      "elapsed": 270.1
+    },
+    {
+      "draws": 546250,
+      "leafDraws": 142326,
+      "raf": 136782,
+      "time": "843",
+      "heap": 32167302,
+      "gl": 0,
+      "elapsed": 280.1
+    },
+    {
+      "draws": 565970,
+      "leafDraws": 147132,
+      "raf": 141687,
+      "time": "1083",
+      "heap": 17116330,
+      "gl": 0,
+      "elapsed": 290.1
+    },
+    {
+      "draws": 585170,
+      "leafDraws": 151994,
+      "raf": 146542,
+      "time": "1323",
+      "heap": 16225863,
+      "gl": 0,
+      "elapsed": 300.1
+    },
+    {
+      "draws": 604370,
+      "leafDraws": 157072,
+      "raf": 151397,
+      "time": "123",
+      "heap": 9483029,
+      "gl": 0,
+      "elapsed": 310.1
+    },
+    {
+      "draws": 624070,
+      "leafDraws": 162392,
+      "raf": 156301,
+      "time": "363",
+      "heap": 31765549,
+      "gl": 0,
+      "elapsed": 320.1
+    },
+    {
+      "draws": 643270,
+      "leafDraws": 167230,
+      "raf": 161156,
+      "time": "604",
+      "heap": 11919499,
+      "gl": 0,
+      "elapsed": 330.1
+    },
+    {
+      "draws": 662980,
+      "leafDraws": 172036,
+      "raf": 166060,
+      "time": "844",
+      "heap": 10271481,
+      "gl": 0,
+      "elapsed": 340.1
+    },
+    {
+      "draws": 682190,
+      "leafDraws": 176842,
+      "raf": 170916,
+      "time": "1084",
+      "heap": 10055863,
+      "gl": 0,
+      "elapsed": 350.1
+    },
+    {
+      "draws": 701930,
+      "leafDraws": 181648,
+      "raf": 175825,
+      "time": "1324",
+      "heap": 24383804,
+      "gl": 0,
+      "elapsed": 360.1
+    },
+    {
+      "draws": 721620,
+      "leafDraws": 186436,
+      "raf": 180726,
+      "time": "124",
+      "heap": 21824255,
+      "gl": 0,
+      "elapsed": 370.1
+    },
+    {
+      "draws": 741350,
+      "leafDraws": 191447,
+      "raf": 185634,
+      "time": "364",
+      "heap": 19364063,
+      "gl": 0,
+      "elapsed": 380.2
+    },
+    {
+      "draws": 761070,
+      "leafDraws": 196266,
+      "raf": 190542,
+      "time": "604",
+      "heap": 9230239,
+      "gl": 0,
+      "elapsed": 390.2
+    },
+    {
+      "draws": 780260,
+      "leafDraws": 201072,
+      "raf": 195394,
+      "time": "844",
+      "heap": 29299855,
+      "gl": 0,
+      "elapsed": 400.2
+    },
+    {
+      "draws": 799980,
+      "leafDraws": 205897,
+      "raf": 200302,
+      "time": "1084",
+      "heap": 23995854,
+      "gl": 0,
+      "elapsed": 410.2
+    },
+    {
+      "draws": 818310,
+      "leafDraws": 210835,
+      "raf": 204905,
+      "time": "1325",
+      "heap": 11702249,
+      "gl": 0,
+      "elapsed": 420.2
+    },
+    {
+      "draws": 837340,
+      "leafDraws": 215605,
+      "raf": 209625,
+      "time": "125",
+      "heap": 29280276,
+      "gl": 0,
+      "elapsed": 430.2
+    },
+    {
+      "draws": 856000,
+      "leafDraws": 220405,
+      "raf": 214327,
+      "time": "365",
+      "heap": 25383415,
+      "gl": 0,
+      "elapsed": 440.2
+    },
+    {
+      "draws": 875720,
+      "leafDraws": 225211,
+      "raf": 219234,
+      "time": "605",
+      "heap": 28913652,
+      "gl": 0,
+      "elapsed": 450.2
+    },
+    {
+      "draws": 894910,
+      "leafDraws": 230017,
+      "raf": 224084,
+      "time": "845",
+      "heap": 23018493,
+      "gl": 0,
+      "elapsed": 460.2
+    },
+    {
+      "draws": 914100,
+      "leafDraws": 234902,
+      "raf": 228939,
+      "time": "1086",
+      "heap": 27933188,
+      "gl": 0,
+      "elapsed": 470.2
+    },
+    {
+      "draws": 933810,
+      "leafDraws": 240242,
+      "raf": 233843,
+      "time": "1326",
+      "heap": 30539356,
+      "gl": 0,
+      "elapsed": 480.2
+    },
+    {
+      "draws": 953520,
+      "leafDraws": 245546,
+      "raf": 238747,
+      "time": "126",
+      "heap": 25646103,
+      "gl": 0,
+      "elapsed": 490.2
+    },
+    {
+      "draws": 972690,
+      "leafDraws": 250607,
+      "raf": 243593,
+      "time": "366",
+      "heap": 20765918,
+      "gl": 0,
+      "elapsed": 500.2
+    },
+    {
+      "draws": 992410,
+      "leafDraws": 255413,
+      "raf": 248500,
+      "time": "606",
+      "heap": 24516808,
+      "gl": 0,
+      "elapsed": 510.2
+    },
+    {
+      "draws": 1012110,
+      "leafDraws": 260201,
+      "raf": 253404,
+      "time": "846",
+      "heap": 23109400,
+      "gl": 0,
+      "elapsed": 520.2
+    },
+    {
+      "draws": 1031280,
+      "leafDraws": 265054,
+      "raf": 258250,
+      "time": "1086",
+      "heap": 18628432,
+      "gl": 0,
+      "elapsed": 530.2
+    },
+    {
+      "draws": 1051010,
+      "leafDraws": 270127,
+      "raf": 263158,
+      "time": "1326",
+      "heap": 32753138,
+      "gl": 0,
+      "elapsed": 540.2
+    },
+    {
+      "draws": 1070730,
+      "leafDraws": 275400,
+      "raf": 268065,
+      "time": "126",
+      "heap": 28887104,
+      "gl": 0,
+      "elapsed": 550.3
+    },
+    {
+      "draws": 1089920,
+      "leafDraws": 281028,
+      "raf": 272918,
+      "time": "366",
+      "heap": 25064856,
+      "gl": 0,
+      "elapsed": 560.3
+    },
+    {
+      "draws": 1109650,
+      "leafDraws": 285862,
+      "raf": 277826,
+      "time": "607",
+      "heap": 33173299,
+      "gl": 0,
+      "elapsed": 570.3
+    },
+    {
+      "draws": 1129140,
+      "leafDraws": 290668,
+      "raf": 282711,
+      "time": "847",
+      "heap": 26411907,
+      "gl": 0,
+      "elapsed": 580.3
+    },
+    {
+      "draws": 1148560,
+      "leafDraws": 295474,
+      "raf": 287586,
+      "time": "1087",
+      "heap": 18327327,
+      "gl": 0,
+      "elapsed": 590.3
+    },
+    {
+      "draws": 1167760,
+      "leafDraws": 300280,
+      "raf": 292441,
+      "time": "1327",
+      "heap": 8982665,
+      "gl": 0,
+      "elapsed": 600.3
+    },
+    {
+      "draws": 1187460,
+      "leafDraws": 305068,
+      "raf": 297345,
+      "time": "127",
+      "heap": 31470596,
+      "gl": 0,
+      "elapsed": 610.3
+    }
+  ]
+}

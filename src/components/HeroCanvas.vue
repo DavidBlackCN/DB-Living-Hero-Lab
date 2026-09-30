@@ -12,7 +12,7 @@ import { hairConfig, type HairState } from '../engine/animation/hair'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
 import type { PostState } from '../config/post'
 
-const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; lampSourceUrl: string; lampInfluenceUrl: string; sky: SkyState; moonDirection: MoonDirection; lamps: LampState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkAmount: number; fit: FitMode; dprCap: number }>()
+const props = defineProps<{ artwork: ArtworkSpec; normalUrl: string; skyUrls: Record<string, string>; skyEdgeReconstructionUrl: string; skyEdgeCoverageUrl: string; hairMaskUrl: string; materialMaskUrl: string; lampSourceUrl: string; lampInfluenceUrl: string; sceneDepthUrl: string; sky: SkyState; moonDirection: MoonDirection; lamps: LampState; renderView: RenderView; lighting: LightingState; lightingDetailEnabled: boolean; directionalStrength: number; post: PostState; breathing: BreathingState; hair: HairState; blinkEyes: BlinkConfig['eyes']; blinkAmount: number; fit: FitMode; dprCap: number }>()
 const emit = defineEmits<{ (e: 'ready'): void; (e: 'failed', reason: string): void; (e: 'frame', milliseconds: number): void }>()
 const canvas = ref<HTMLCanvasElement | null>(null)
 let renderer: BaseRenderer | null = null
@@ -74,7 +74,7 @@ async function initialize(): Promise<void> {
   renderer?.destroy()
   renderer = null
   try {
-    const [image, normalImage, dawn, noon, dusk, night, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, leftBlink, rightBlink] = await Promise.all([
+    const [image, normalImage, dawn, noon, dusk, night, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, leftBlink, rightBlink, sceneDepth] = await Promise.all([
       loadImage(props.artwork.baseUrl), loadImage(props.normalUrl), loadImage(props.skyUrls.dawn),
       loadImage(props.skyUrls.noon), loadImage(props.skyUrls.dusk), loadImage(props.skyUrls.night),
       loadImage(props.skyEdgeReconstructionUrl),
@@ -83,6 +83,7 @@ async function initialize(): Promise<void> {
       loadImage(props.materialMaskUrl),
       loadImage(props.lampSourceUrl), loadImage(props.lampInfluenceUrl),
       loadImage(props.blinkEyes[0].url), loadImage(props.blinkEyes[1].url),
+      loadImage(props.sceneDepthUrl),
     ])
     if (!mounted || current !== generation || !canvas.value) return
     if (image.naturalWidth !== props.artwork.width || image.naturalHeight !== props.artwork.height) {
@@ -114,7 +115,10 @@ async function initialize(): Promise<void> {
       || rightBlink.naturalWidth !== props.blinkEyes[1].width || rightBlink.naturalHeight !== props.blinkEyes[1].height) {
       throw new Error('Local Blink images do not match registered eye rectangles')
     }
-    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, [leftBlink, rightBlink])
+    if (sceneDepth.naturalWidth !== props.artwork.width || sceneDepth.naturalHeight !== props.artwork.height) {
+      throw new Error('Scene depth dimensions do not match Artwork Space')
+    }
+    renderer = new BaseRenderer(canvas.value, image, normalImage, skyImages, edgeReconstruction, edgeCoverage, hairMask, materialMask, lampSource, lampInfluence, [leftBlink, rightBlink], sceneDepth)
     draw()
     if (renderer) { emit('ready'); scheduleMotion() }
   } catch (error) {
@@ -154,7 +158,8 @@ watch(() => props.dprCap, draw)
 watch(() => props.renderView, draw)
 watch(() => props.lightingDetailEnabled, draw)
 watch(() => props.directionalStrength, draw)
-watch(() => [props.post.enabled, props.post.bloomEnabled, props.post.view], draw)
+watch(() => [props.post.enabled, props.post.bloomEnabled, props.post.view,
+  props.post.atmosphere?.enabled, props.post.atmosphere?.hazeEnabled, props.post.atmosphere?.gradeEnabled], draw)
 watch(() => props.post, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.lighting, () => { if (!needsMotion()) draw() }, { deep: true })
 watch(() => props.sky, () => { if (!needsMotion()) draw() }, { deep: true })

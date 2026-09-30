@@ -10,6 +10,8 @@ uniform sampler2D u_hairMask;
 uniform sampler2D u_materialMask;
 uniform sampler2D u_lampSource;
 uniform sampler2D u_lampInfluence;
+uniform sampler2D u_sceneDepth;
+uniform float u_atmosphereProtection;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
 uniform int u_view;
@@ -490,7 +492,17 @@ void main() {
       * smoothstep(270.0, 340.0, sourcePixel.y)
       * (1.0 - smoothstep(650.0, 720.0, sourcePixel.y));
     float whiteFabric = smoothstep(0.60, 0.84, min(min(base.rgb.r, base.rgb.g), base.rgb.b));
-    outBloomGate = vec4((1.0 - skyAlpha) * (1.0 - 0.82 * shirtArea * whiteFabric), 0.0, 0.0, 1.0);
+    float eligibility = (1.0 - skyAlpha) * (1.0 - 0.82 * shirtArea * whiteFabric);
+    // Only emissive glass should feed a lamp halo; lit masonry is a surface.
+    // This is Bloom metadata. It never changes the frozen scene illumination.
+    float lampReach = max(texture(u_lampInfluence, sampleUv).r,
+      texture(u_lampInfluence, sampleUv).g) * u_lampWeight;
+    float lampGlass = max(texture(u_lampSource, sampleUv).r,
+      texture(u_lampSource, sampleUv).g) * min(u_lampWeight, 1.0);
+    float protectedGate = eligibility * (1.0 - 0.90 * character) * (1.0 - 0.85 * lampReach);
+    eligibility = mix(eligibility, max(protectedGate, lampGlass), u_atmosphereProtection);
+    float depth = texture(u_sceneDepth, sampleUv).r * (1.0 - skyAlpha) * (1.0 - character);
+    outBloomGate = vec4(eligibility, depth, 0.0, 1.0);
     return;
   }
   vec3 exposedLinear = blendedLinear * exp2(u_exposure);

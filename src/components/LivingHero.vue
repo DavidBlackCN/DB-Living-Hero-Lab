@@ -12,6 +12,7 @@ import { moonDirectionFor } from '../config/moonlight'
 import { lampWeightFor, type LampMaskView, type LampState } from '../config/lamps'
 import { leafToneFor } from '../config/leafTone'
 import { postFor, type PostState } from '../config/post'
+import { atmosphereFor } from '../config/atmosphere'
 import { layoutArtwork } from '../engine/coordinates/artwork'
 import type { BreathingState } from '../engine/animation/breathing'
 import type { HairState } from '../engine/animation/hair'
@@ -58,8 +59,13 @@ const directionalGain = ref(1)
 const postEnabled = ref(true)
 const bloomEnabled = ref(true)
 const postView = ref<PostState['view']>('final')
+const atmosphereEnabled = ref(true)
+const hazeEnabled = ref(true)
+const finalGradeEnabled = ref(true)
 const post = computed<PostState>(() => ({ ...postFor(lightingMinutes.value), enabled: postEnabled.value,
-  bloomEnabled: bloomEnabled.value, view: postView.value }))
+  bloomEnabled: bloomEnabled.value, view: postView.value,
+  atmosphere: { ...atmosphereFor(lightingMinutes.value), enabled: atmosphereEnabled.value,
+    hazeEnabled: hazeEnabled.value, gradeEnabled: finalGradeEnabled.value } }))
 const frameTime = ref<number | null>(null)
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 const reducedMotion = ref(motionQuery.matches)
@@ -137,7 +143,7 @@ onBeforeUnmount(() => {
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-reconstruction-url="heroConfig.sky.edgeReconstructionUrl" :sky-edge-coverage-url="heroConfig.sky.edgeCoverageUrl" :hair-mask-url="heroConfig.hair.maskUrl" :material-mask-url="heroConfig.material.maskUrl" :lamp-source-url="heroConfig.lamps.sourceUrl" :lamp-influence-url="heroConfig.lamps.influenceUrl"
-      :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
+      :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
       :blink-amount="blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled)) ? blinkAmount : 0" :lighting-detail-enabled="lightingDetailEnabled" :directional-strength="directionalEnabled ? directionalGain : 0" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"
@@ -147,6 +153,7 @@ onBeforeUnmount(() => {
     <DebugPanel v-model:renderer-enabled="rendererEnabled" v-model:fit="fit" v-model:quality="quality" v-model:render-view="renderView"
       v-model:lighting="lighting" v-model:lighting-detail-enabled="lightingDetailEnabled" v-model:directional-enabled="directionalEnabled" v-model:directional-gain="directionalGain" v-model:lamps-enabled="lampsEnabled" v-model:lamp-strength="lampStrength" v-model:lamp-mask-view="lampMaskView" :lamp-weight="lamps.weight" v-model:post-enabled="postEnabled" v-model:bloom-enabled="bloomEnabled" v-model:post-view="postView" :lighting-minutes="lightingMinutes" :moon-direction="moonDirection" :time-mode="timeMode" @select-lighting-preset="selectLightingPreset"
       @select-lighting-time="selectLightingTime"
+      v-model:atmosphere-enabled="atmosphereEnabled" v-model:haze-enabled="hazeEnabled" v-model:final-grade-enabled="finalGradeEnabled"
       @back-to-now="timeController.backToNow()" @toggle-playback="timeMode === 'playing' ? timeController.pause() : timeController.play()"
       v-model:blink-enabled="blinkEnabled" v-model:show-blink-regions="showBlinkRegions"
       v-model:leaves-enabled="leavesEnabled" v-model:leaf-debug-view="leafDebugView" @preview-blink="blinkPreviewToken++"

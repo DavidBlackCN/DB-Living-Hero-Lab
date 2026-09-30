@@ -69,9 +69,10 @@ def stills(browser, out):
         after = capture(page, out / f"{phase.lower()}.png")
         delta = np.abs(np.asarray(after, dtype=np.int16) - np.asarray(before, dtype=np.int16))
         stats[phase] = {"meanRgbDelta": round(float(delta.mean()), 4), "maxRgbDelta": int(delta.max())}
-        if phase == "Noon":
-            assert delta.max() == 0, stats
-        pairs.extend([(phase + " frozen / OFF", before), (phase + " polish / ON", after)])
+        far_delta = delta[350:560, 1480:1560]
+        stats[phase]['farSceneMeanRgbDelta'] = round(float(far_delta.mean()), 4)
+        assert far_delta.mean() > 1.5, f'{phase} atmosphere remains imperceptible in the far scene: {stats[phase]}'
+        pairs.extend([(phase + " Atmosphere OFF", before), (phase + " Atmosphere ON", after)])
         for name, box in (("head", (990, 10, 1370, 335)), ("far-scene", (1360, 80, 1610, 590)),
                           ("lamp", (15, 70, 220, 425))):
             contact([(phase + " OFF", before.crop(box)), (phase + " ON", after.crop(box))],

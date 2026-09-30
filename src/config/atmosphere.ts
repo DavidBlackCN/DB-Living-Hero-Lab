@@ -14,16 +14,16 @@ export interface AtmosphereState {
 }
 
 // Final display polish, independent of the frozen scene/character light field.
-// Noon is identity. Other phases use the same continuous windows as R6 Post.
+// All phases have background depth; R6 Scene and Bloom settings stay intact.
 export function atmosphereFor(minutes: number): Omit<AtmosphereState, 'enabled' | 'hazeEnabled' | 'gradeEnabled'> {
   const { dawn, day, dusk, night } = postTimeWeights(minutes)
   return {
-    hazeAmount: dawn * 0.045 + dusk * 0.035 + night * 0.050,
-    depthSaturation: 1 - dawn * 0.025 - dusk * 0.015 - night * 0.045,
+    hazeAmount: dawn * 0.090 + day * 0.120 + dusk * 0.160 + night * 0.200,
+    depthSaturation: 1 - dawn * 0.050 - day * 0.040 - dusk * 0.065 - night * 0.080,
     airColor: [
-      dawn * 0.60 + day * 0.62 + dusk * 0.57 + night * 0.15,
-      dawn * 0.65 + day * 0.65 + dusk * 0.43 + night * 0.18,
-      dawn * 0.72 + day * 0.69 + dusk * 0.36 + night * 0.23,
+      dawn * 0.60 + day * 0.67 + dusk * 0.60 + night * 0.21,
+      dawn * 0.65 + day * 0.68 + dusk * 0.45 + night * 0.235,
+      dawn * 0.72 + day * 0.70 + dusk * 0.38 + night * 0.27,
     ],
     saturation: 1 - dawn * 0.004 + dusk * 0.003 - night * 0.010,
     tint: [1 - dawn * 0.002 - night * 0.003 + dusk * 0.003,

@@ -1,0 +1,92 @@
+{
+  "contextRestore": true,
+  "staticQuality": true,
+  "resizeBuffers": [
+    [
+      1920,
+      1080,
+      0
+    ],
+    [
+      2560,
+      1440,
+      0
+    ],
+    [
+      3840,
+      2160,
+      0
+    ],
+    [
+      390,
+      844,
+      0
+    ]
+  ],
+  "mobileDpr3Buffers": [
+    780,
+    1688
+  ],
+  "reducedMotion": true,
+  "character": {
+    "headMotionChangedRgbSamples": 69257,
+    "lampCorridorMeanRgbDelta": 24.398,
+    "lampFigureMeanRgbDelta": 0.0,
+    "blink": "passed",
+    "lamps": "passed",
+    "leaves": "passed",
+    "post": "passed",
+    "hiddenTab": "passed",
+    "staticQuality": "passed",
+    "resize": "passed",
+    "reducedMotion": "passed"
+  },
+  "continuity": {
+    "04:30-07:00": {
+      "maxAdjacent10mMeanRgbDelta": 10.352,
+      "deltas": [
+        0.098,
+        0.07,
+        0.195,
+        0.914,
+        1.744,
+        2.39,
+        4.178,
+        7.404,
+        9.017,
+        10.352,
+        10.036,
+        6.948,
+        3.634,
+        3.241,
+        3.162
+      ]
+    },
+    "16:30-20:00": {
+      "maxAdjacent10mMeanRgbDelta": 5.015,
+      "deltas": [
+        3.336,
+        3.851,
+        4.468,
+        4.9,
+        5.015,
+        4.508,
+        4.503,
+        4.878,
+        4.944,
+        4.792,
+        4.527,
+        4.24,
+        4.247,
+        4.271,
+        4.215,
+        4.017,
+        3.408,
+        2.869,
+        2.294,
+        1.518,
+        0.542
+      ]
+    }
+  }
+}

@@ -42,13 +42,15 @@ def main() -> None:
     ], 2.5)
     face = np.maximum(face, ellipse((1075, 194, 1095, 235), 2.0) * 0.8)
     yy = np.arange(SIZE[1], dtype=np.float32)[:, None]
-    # Bangs share the warm hue, so the upper face requires a much lighter
-    # pigment than the lower cheek and jaw shadows.
+    # Reject dark bangs only along the upper face boundary; the lower cheek
+    # and jaw stay part of the same geometric Face receive region.
     upper = 1 - ramp(yy, 220, 242)
     brightness_floor = 90 + 65 * upper
-    skin_pigment = ramp(red - green, 18, 29) * ramp(green - blue, 3, 9)
-    skin_pigment *= ramp(green - brightness_floor, 0, 28)
-    face *= skin_pigment
+    # Receive coverage is geometric, not a skin-color classifier: pale painted
+    # nose/jaw highlights must not fall through to architecture illumination.
+    # Only the upper boundary needs brightness rejection to exclude the bangs.
+    upper_skin = ramp(green - brightness_floor, 0, 28)
+    face *= (1 - upper) + upper * upper_skin
 
     # Crown only: excludes the white beret, dark rose, ribbon, face and lower
     # falls. The shader draws the curved ribbon inside this material region.

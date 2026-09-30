@@ -70,6 +70,38 @@ vec3 inverseAces(vec3 target) {
 float softEllipse(vec2 p, vec2 center, vec2 radius) {
   return 1.0 - smoothstep(0.30, 1.0, length((p - center) / radius));
 }
+// Registered receiver geometry, not illumination masks. Frozen Normal v3 has
+// almost neutral normals on these distant tower faces. Give the visible front
+// and right planes coherent orientations while retaining shallow painted relief.
+float masonryTower(vec2 p, vec4 bounds) {
+  vec2 lower = smoothstep(bounds.xy, bounds.xy + vec2(4.0), p);
+  vec2 upper = 1.0 - smoothstep(bounds.zw - vec2(4.0), bounds.zw, p);
+  return lower.x * lower.y * upper.x * upper.y;
+}
+vec3 towerReceiver(vec2 p, float corner, vec3 broad) {
+  float side = smoothstep(corner - 2.0, corner + 2.0, p.x);
+  vec3 plane = mix(vec3(-0.32, 0.0, 0.95), vec3(0.72, 0.0, 0.69), side);
+  return normalize(plane + vec3(broad.xy * 1.5, 0.0));
+}
+vec4 architectureReceiver(vec2 p, vec3 broad, vec3 pigment) {
+  vec3 receiver = normalize(vec3(broad.x * 14.0, -broad.y * 6.0, broad.z));
+  // Stone planes only: russet foliage keeps its existing broad Normal.
+  float chroma = max(abs(pigment.r - pigment.g), abs(pigment.g - pigment.b));
+  float stone = 1.0 - smoothstep(0.08, 0.16, chroma);
+  stone *= smoothstep(0.40, 0.65, max(max(pigment.r, pigment.g), pigment.b));
+  vec4 towers[4] = vec4[4](vec4(910.0, -10.0, 1056.0, 350.0),
+    vec4(1319.0, 158.0, 1394.0, 296.0), vec4(1442.0, 214.0, 1480.0, 354.0),
+    vec4(1496.0, 173.0, 1544.0, 297.0));
+  float corners[4] = float[4](997.0, 1358.0, 1461.0, 1523.0);
+  float masonry = 0.0;
+  for (int index = 0; index < 4; index++) {
+    float coverage = masonryTower(p, towers[index]) * stone;
+    masonry = max(masonry, coverage);
+    receiver = normalize(mix(receiver, towerReceiver(p, corners[index],
+      vec3(broad.x, -broad.y, broad.z)), coverage));
+  }
+  return vec4(receiver, masonry);
+}
 vec3 breathRegions(vec2 sourcePixel) {
   float core = softEllipse(sourcePixel, vec2(1152.0, 461.0), vec2(103.0, 137.0));
   float shoulder = softEllipse(sourcePixel, vec2(1151.0, 385.0), vec2(155.0, 99.0));
@@ -295,6 +327,7 @@ void main() {
   // broad spatial falloff lets the side light read across the composition.
   float paintedSide = clamp((0.5 - v_uv.x) * lightDirection.x * 0.60, -0.20, 0.20);
   vec2 characterPixel = sampleUv * vec2(1672.0, 941.0);
+  vec4 architectureField = architectureReceiver(characterPixel, broadDecoded, base.rgb);
   float whitePigment = smoothstep(0.38, 0.62, min(min(base.rgb.r, base.rgb.g), base.rgb.b))
     * (1.0 - smoothstep(0.09, 0.20, max(abs(base.rgb.r - base.rgb.g), abs(base.rgb.g - base.rgb.b))));
   float sleeves = max(softEllipse(characterPixel, vec2(971.0, 465.0), vec2(126.0, 205.0)),
@@ -324,6 +357,10 @@ void main() {
   float clothing = max(garment, skirt);
   float accessory = hairRegion.b * (1.0 - max(faceRegion, hairRegionWeight));
   float character = max(max(faceRegion, hairRegionWeight), max(clothing, accessory));
+  // Head-motion coverage intentionally includes a little background for UV
+  // continuity. It is not a material mask: registered stone inside that envelope
+  // must receive the building Moon key, not the character/accessory fill.
+  character *= 1.0 - architectureField.a * skyNight;
 
   // One broad receiving plane for both solar and lunar character shading.
   // Wider taps calm individual painted strokes without changing the Normal asset.
@@ -376,12 +413,6 @@ void main() {
   float moonHeightGain = mix(0.55, 1.0, smoothstep(0.20, 0.80, moonDirection.z));
   float moonHandoff = (1.0 - solarPresence) * directionalControl;
   float moonPresence = skyNight * directionalControl * moonHeightGain;
-  float moonFacing = broadDecoded.x * moonDirection.x * 13.0
-    + broadDecoded.y * moonDirection.y * 3.5;
-  float moonBand = smoothstep(-0.50, 0.50, moonFacing);
-  float moonSide = clamp((0.53 - v_uv.x) * moonDirection.x * 1.0
-    + (0.46 - v_uv.y) * moonDirection.y * 0.16, -0.30, 0.30);
-  float moonReceive = pow(clamp(moonBand * 0.65 + moonSide * 1.3 - 0.12, 0.0, 1.0), 1.5);
   float characterMoonFacing = dot(characterBroadNormal.xy, moonDirection.xy) * 10.0;
   float characterMoonBand = smoothstep(-1.15, 1.15, characterMoonFacing);
   // Face uses the same Moon vector, but its filtered front-facing Normal
@@ -405,10 +436,19 @@ void main() {
   vec3 nightCharacter = u_ambientColor * u_ambientIntensity
     + vec3(0.35, 0.51, 0.82) * moonMaterialGain * moonDiffuse;
   illumination = mix(illumination, nightCharacter, character * moonHandoff);
-  // Architecture retains its broad-Normal Moon response with a quieter key,
-  // so the tower beside the head stays moonlit without competing with it.
-  illumination += vec3(0.22, 0.33, 0.57) * moonPresence
-    * (0.006 + 0.24 * moonReceive) * (1.0 - character);
+  // Architecture hands its direct key over to the same independent Moon arc.
+  // Normal v3 stores shallow painted masonry slopes: expand their broad XY
+  // response, with the same top-left Y convention as the character Normal.
+  // No screen-side bias or constant additive Moon strip survives this handoff.
+  vec3 architectureNormal = architectureField.xyz;
+  float architectureMoonFacing = dot(architectureNormal, moonDirection);
+  float architectureMoonReceive = smoothstep(-0.12, 0.90, architectureMoonFacing);
+  // A broad, quiet sky fill keeps back-facing stone readable without holding
+  // the painted bright side at the same prominence throughout the night.
+  vec3 nightArchitecture = u_ambientColor * u_ambientIntensity * 0.88
+    + vec3(0.35, 0.51, 0.82) * (0.22 * moonHeightGain * architectureMoonReceive);
+  illumination = mix(illumination, nightArchitecture,
+    skyNight * moonHandoff * (1.0 - character));
   float upperSceneMask = 1.0 - smoothstep(0.28, 0.68, v_uv.y);
   float upperSceneFactor = 1.0 - upperSceneMask * clamp(u_upperSceneAttenuation, 0.0, 1.0);
   illumination *= upperSceneFactor;

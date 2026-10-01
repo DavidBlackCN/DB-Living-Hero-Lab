@@ -11,6 +11,7 @@ uniform sampler2D u_materialMask;
 uniform sampler2D u_lampSource;
 uniform sampler2D u_lampInfluence;
 uniform sampler2D u_sceneDepth;
+uniform sampler2D u_towerReceiver;
 uniform float u_atmosphereProtection;
 uniform sampler2D u_blinkLeft;
 uniform sampler2D u_blinkRight;
@@ -493,6 +494,19 @@ void main() {
     float hotIris = smoothstep(0.12, 0.50, irisBrightness);
     relitLinear *= 1.0 - duskGlintSoftening * material.b * hotIris * 0.38;
   }
+  // Registered masonry has priority over pigment/motion receive fragments.
+  // This late-night surface pass changes radiance only: character receive and
+  // Atmosphere/Bloom metadata stay frozen. Both faces share one Moon vector.
+  float towerSurface = texture(u_towerReceiver, sampleUv).r;
+  float towerLateWeight = smoothstep(0.40, 0.60, -moonDirection.x)
+    * skyNight * moonHandoff;
+  float towerCorner = smoothstep(990.0, 1004.0, characterPixel.x);
+  vec3 towerNormal = normalize(mix(vec3(-0.70, 0.0, 0.71),
+    vec3(0.71, 0.0, 0.70), towerCorner));
+  float towerReceive = smoothstep(-0.30, 1.00, dot(towerNormal, moonDirection));
+  vec3 towerMoon = u_ambientColor * u_ambientIntensity * 0.88
+    + vec3(0.35, 0.51, 0.82) * (0.48 * moonHeightGain * towerReceive);
+  relitLinear = mix(relitLinear, baseLinear * towerMoon * upperSceneFactor, towerSurface * towerLateWeight);
   vec3 lampEmissive = vec3(0.0);
   vec3 lampGlow = vec3(0.0);
   if (u_lampWeight > 0.0) {

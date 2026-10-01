@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
   <main ref="root" class="hero-stage">
     <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" alt="DB Living Hero artwork preview" />
     <HeroCanvas v-if="wantsRenderer" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-reconstruction-url="heroConfig.sky.edgeReconstructionUrl" :sky-edge-coverage-url="heroConfig.sky.edgeCoverageUrl" :hair-mask-url="heroConfig.hair.maskUrl" :material-mask-url="heroConfig.material.maskUrl" :lamp-source-url="heroConfig.lamps.sourceUrl" :lamp-influence-url="heroConfig.lamps.influenceUrl"
-      :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
+      :tower-receiver-url="heroConfig.architecture.towerReceiverUrl" :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
       :blink-amount="blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled)) ? blinkAmount : 0" :lighting-detail-enabled="lightingDetailEnabled" :directional-strength="directionalEnabled ? directionalGain : 0" :fit="fit" :dpr-cap="heroConfig.dprCap"
       :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive"

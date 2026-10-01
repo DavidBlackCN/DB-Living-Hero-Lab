@@ -204,3 +204,8 @@ The tower beside the black rose incorrectly reused background-containing Head Mo
 ### Night tower / shoulder spill follow-up ? awaiting review
 
 User review at 03:54 found an overly dark right-facing tower plane, a harsh corner transition and architecture shadow spilling onto the white shoulder. The existing foreground material/garment receive now excludes architecture ownership; corner-normal transitions scale with tower width and Moon broad receive is softer. Direction/elevation, key/ambient values, character lighting model, animation, Leaves, Lamps and Post remain unchanged. Dawn/Noon/Dusk anchors and midnight wrap are exact matches. Actual 03:54 A/B, coverage debug, Night sequence and verification are in [tower softening validation](validation/NIGHT_ARCHITECTURE_SOFTENING.md). Stop for human review.
+
+
+## Pre-Dawn Tower Lighting - awaiting human review
+
+On top of `a0e34e5`, the visible tower behind the image-left hair/beret now has one fixed masonry registration. It fills the old receiving holes without including the foreground character; a continuous late-Moon normal response establishes the broad left-facing plane and replaces the two wrong bright fragments. The correction fades with the existing Dawn handoff. Character receiving metadata, Atmosphere, animation, Leaves, Lamps, Sun/Moon/time curves and frozen artwork remain unchanged. Build/typecheck, actual-render isolation, one-minute Dawn fade, midnight wrap and lifecycle regressions pass. Requested time frames, 04:36 before/after and limits are in [pre-Dawn tower validation](validation/PRE_DAWN_TOWER_LIGHTING.md). Stop for human review; do not expand the phase.

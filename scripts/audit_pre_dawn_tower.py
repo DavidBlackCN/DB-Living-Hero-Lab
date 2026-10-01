@@ -87,7 +87,8 @@ def main():
   stats[name]['leftMeanRgb']=round(float(a[120:260,950:980][mask[120:260,950:980]>=254].mean()),3)
   stats[name]['rightMeanRgb']=round(float(a[120:260,1025:1035][mask[120:260,1025:1035]>=254].mean()),3)
   stats[name]['leftToRightRatio']=round(stats[name]['leftMeanRgb']/stats[name]['rightMeanRgb'],3)
-  if name in ('03h30','04h00','04h30','04h36','05h00'):assert stats[name]['leftToRightRatio']>1.05, 'No continuous left-facing key'
+  # Human review requested gentler separation: retain direction, not a 5% minimum contrast.
+  if name in ('03h30','04h00','04h30','04h36','05h00'):assert stats[name]['leftToRightRatio']>1.0, 'No continuous left-facing key'
   pairs.append((name+' '+stats[name]['moon'],frames[name,'after']))
  contact(pairs,OUT/'pre-dawn-full-times.jpg',width=836)
  contact([(n+' '+stats[n]['moon'],frames[n,'after'].crop(BOX)) for n,_ in TIMES[:9]],OUT/'pre-dawn-tower-times.jpg',width=420)

@@ -500,10 +500,13 @@ void main() {
   float towerSurface = texture(u_towerReceiver, sampleUv).r;
   float towerLateWeight = smoothstep(0.40, 0.60, -moonDirection.x)
     * skyNight * moonHandoff;
-  float towerCorner = smoothstep(990.0, 1004.0, characterPixel.x);
+  float towerCorner = smoothstep(986.0, 1012.0, characterPixel.x);
   vec3 towerNormal = normalize(mix(vec3(-0.70, 0.0, 0.71),
     vec3(0.71, 0.0, 0.70), towerCorner));
-  float towerReceive = smoothstep(-0.30, 1.00, dot(towerNormal, moonDirection));
+  // A small wrapped floor softens the back plane without restoring fragmentary fill.
+  float towerShadowFloor = mix(0.06, 0.10, smoothstep(0.20, 0.40, moonDirection.z));
+  float towerReceive = mix(towerShadowFloor, 1.00,
+    smoothstep(-0.30, 1.00, dot(towerNormal, moonDirection)));
   vec3 towerMoon = u_ambientColor * u_ambientIntensity * 0.88
     + vec3(0.35, 0.51, 0.82) * (0.48 * moonHeightGain * towerReceive);
   relitLinear = mix(relitLinear, baseLinear * towerMoon * upperSceneFactor, towerSurface * towerLateWeight);

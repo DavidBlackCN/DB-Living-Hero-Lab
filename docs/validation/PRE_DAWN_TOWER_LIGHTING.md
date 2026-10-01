@@ -95,3 +95,33 @@
 - 本记录、验收图与 `docs/STAGE_CHECKPOINT.md`。
 
 保留原画中的窗洞、石材明暗笔触和景深；不会把塔面抹成无细节平板。局部抗锯齿边界仍是保守注册，建议人工重点检查玫瑰边缘与发丝间隙。人物、Atmosphere、Leaves、Blink、Hair Motion、Lamp、全局时间曲线及其参数均未修改。到此停止，等待人工验收。
+## 人工反馈收口：阴影过重 → 暗面柔化
+
+2026-10-01，以上 `77406ed` 版本被用户指出 04:15 塔身阴影过于显眼。本节是当前结果；上面的参数、统计和截图保留作历史对照。
+
+本轮生产代码只改 `src/shaders/hero.frag.glsl` 的塔身接收响应：
+
+- 阴面接收不再降到零，改为 `mix(towerShadowFloor, 1.0, facingBand)`。这是整面 wrapped response，不是新增局部补光或压暗素材。
+- `towerShadowFloor` 随原有 Moon 高度在 0.06–0.10 之间平滑变化；临近 Dawn 收敛，避免把右面又抬成主亮面。主光方向、Moon key 0.48、环境光、接管时间权重均未改。
+- 塔角过渡由 x=990–1004 的 14 source px，扩大到 x=986–1012 的 26 source px。
+- 固定塔身 mask、人物、Atmosphere、Lamp、Leaves、Blink、Hair/Breath Motion 和其他光照参数均未改；没有新增纹理、pass 或 RAF。
+
+04:15 固定石材 ROI：暗面平均显示 RGB 从 53.360 提高到 60.361，约增加 13%；两面显示亮度差从 10.562 收到 3.754，约减少 64%。这是成图显示统计，不是阴影物理强度百分比。左侧仍略亮。
+
+| 时刻 | 左 / 右显示亮度比（柔化后） |
+| --- | --- |
+| 03:30 | 1.021 |
+| 04:00 | 1.067 |
+| 04:15 | 1.062 |
+| 04:30 | 1.049 |
+| 04:36 | 1.045 |
+| 05:00 | 1.038 |
+| 05:30 | 1.071 |
+
+验收：[04:15 塔身 before / after](pre-dawn-tower-softening/04h15-tower-ab.jpg)、[04:15 全图 before / after](pre-dawn-tower-softening/04h15-full-ab.jpg)、[03:30–Dawn 近景序列](pre-dawn-tower-softening/tower-times.jpg)。
+
+`pnpm typecheck`、`pnpm build`、`scripts/audit_tower_softening.py` 和现有 Atmosphere/Character 生命周期回归通过。所有固定截图的 Face 与 mask 外像素差均为 0；Dawn / Noon / Dusk / 20:00 / 22:00 / 00:00 / 02:00 全图差为 0；00:00 / 24:00 一致。06:00 残余修正只在塔身覆盖内，最大 3/255，仍随原有交接退出。五分钟采样的塔身 Dawn 最大变化 7.370 → 7.302，没有放大过渡。
+
+[本轮针对性统计](pre-dawn-tower-softening/audit-stats.json)、[关键回归统计](pre-dawn-tower-softening/regression-stats.json)。旧塔身 audit 的显示亮度比门槛从 1.05 调为 1.0，保留左侧主亮面方向检查；新增 softening audit 另要求 04:15 两面差值至少减少一半、暗面提高至少 10%，与本次人工反馈一致。
+
+保留正常窗洞与原画材质笔触，不追求把建筑磨成均匀平板。到此停止，等待人工验收。

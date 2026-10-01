@@ -495,21 +495,30 @@ void main() {
     relitLinear *= 1.0 - duskGlintSoftening * material.b * hotIris * 0.38;
   }
   // Registered masonry has priority over pigment/motion receive fragments.
-  // This late-night surface pass changes radiance only: character receive and
+  // This tower surface pass changes radiance only: character receive and
   // Atmosphere/Bloom metadata stay frozen. Both faces share one Moon vector.
   float towerSurface = texture(u_towerReceiver, sampleUv).r;
-  float towerLateWeight = smoothstep(0.40, 0.60, -moonDirection.x)
+  // Ownership settles as the Moon crosses the center, not two hours later.
+  float towerMoonWeight = smoothstep(-0.12, 0.00, -moonDirection.x)
     * skyNight * moonHandoff;
   float towerCorner = smoothstep(986.0, 1012.0, characterPixel.x);
   vec3 towerNormal = normalize(mix(vec3(-0.70, 0.0, 0.71),
     vec3(0.71, 0.0, 0.70), towerCorner));
   // A small wrapped floor softens the back plane without restoring fragmentary fill.
   float towerShadowFloor = mix(0.06, 0.10, smoothstep(0.20, 0.40, moonDirection.z));
+  float towerLateralPhase = smoothstep(0.00, 0.60, -moonDirection.x);
+  // Near the center, equal planes share a neutral painted-band response.
+  // Their Normal/Moon XY facing transfers light between them immediately;
+  // the accepted low-angle response returns continuously as the Moon moves left.
+  float towerFacing = dot(towerNormal, moonDirection)
+    - (1.0 - towerLateralPhase) * (towerNormal.z * moonDirection.z - 0.35);
   float towerReceive = mix(towerShadowFloor, 1.00,
-    smoothstep(-0.30, 1.00, dot(towerNormal, moonDirection)));
+    smoothstep(-0.30, 1.00, towerFacing));
+  // Keep the high Moon neutral; recover the accepted key only at low elevation.
+  float towerKey = mix(0.48, 0.36, smoothstep(0.56, 0.69, moonDirection.z));
   vec3 towerMoon = u_ambientColor * u_ambientIntensity * 0.88
-    + vec3(0.35, 0.51, 0.82) * (0.48 * moonHeightGain * towerReceive);
-  relitLinear = mix(relitLinear, baseLinear * towerMoon * upperSceneFactor, towerSurface * towerLateWeight);
+    + vec3(0.35, 0.51, 0.82) * (towerKey * moonHeightGain * towerReceive);
+  relitLinear = mix(relitLinear, baseLinear * towerMoon * upperSceneFactor, towerSurface * towerMoonWeight);
   vec3 lampEmissive = vec3(0.0);
   vec3 lampGlow = vec3(0.0);
   if (u_lampWeight > 0.0) {

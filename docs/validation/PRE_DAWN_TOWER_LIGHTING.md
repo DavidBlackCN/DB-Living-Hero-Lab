@@ -125,3 +125,48 @@
 [本轮针对性统计](pre-dawn-tower-softening/audit-stats.json)、[关键回归统计](pre-dawn-tower-softening/regression-stats.json)。旧塔身 audit 的显示亮度比门槛从 1.05 调为 1.0，保留左侧主亮面方向检查；新增 softening audit 另要求 04:15 两面差值至少减少一半、暗面提高至少 10%，与本次人工反馈一致。
 
 保留正常窗洞与原画材质笔触，不追求把建筑磨成均匀平板。到此停止，等待人工验收。
+## 午夜月光交接延迟修复 — 等待人工验收
+
+基线为 `efc6c32`。用户观察到 00:00 后右面减暗，而左面直到 02:30–03:30 才开始增亮。本轮只修改已注册塔身的月光接收分支；人物、Atmosphere、Lamp、Leaves、Blink、Hair Motion、全局太阳/月亮曲线均未修改。
+
+### 根因与修改
+
+- 旧 `smoothstep(0.40, 0.60, -moonDirection.x)` 直到 **02:30:26** 才启动，**03:27:24** 才完全接管；它与月亮实际越过中线的 **00:30** 相隔约两小时。
+- 改为 `smoothstep(-0.12, 0.00, -moonDirection.x)`：约 **23:51:15** 开始柔和接管，**00:30** 完成。它由原 Moon Direction 推导，不增加硬切时间节点。
+- 中线附近将两个塔面的共同 Z 朝向项平滑归到 painted band 中点 `0.35`，保留 `dot(towerNormal.xy, moonDirection.xy)` 的方向差。因此月亮越过中线后，左面立即渐亮、右面渐暗；不会再等到左向分量超过 0.4。
+- 高月角局部 key 在 `z=0.56–0.69` 范围由 `0.48` 平滑收至 `0.36`，防止提前接管时两面一起泛亮。低月角恢复原 `0.48`，03:30 以后的已接受结果逐像素保持。
+- 原有 26 source px 转角与 0.06–0.10 wrapped shadow floor 保留。没有增加局部补亮/压暗 patch、遮罩、纹理或绘制 pass。
+
+### 固定区域对照
+
+以下为最终成图固定石材区域的 RGB 均值（0–255），不是主光强度。Base 两面有固有颜色差；中线时光照接收量均衡，不要求显示亮度相等。
+
+| 时间 | 月亮方位 / 高度 | 修复后左面 | 修复后右面 | 说明 |
+| --- | --- | ---: | ---: | --- |
+| 00:30 | 90° / 55° | 55.346 | 91.586 | 中线接管完成；去 Base 颜色后的两面接收量相同 |
+| 01:00 | 99° / 54° | 58.075 | 88.351 | 左面开始明显上升，右面同步回落 |
+| 01:30 | 108° / 52° | 61.313 | 86.157 | 两面连续交接 |
+| 02:00 | 116° / 49° | 64.233 | 83.814 | 旧左面 55.838；不再等到 02:30 才亮 |
+| 02:30 | 124° / 45° | 65.764 | 79.772 | 左面继续建立，右面仍保留环境光 |
+| 03:00 | 131° / 40° | 68.352 | 75.340 | 连续恢复此前低角度响应 |
+| 03:30 | 137° / 33° | 70.840 | 69.407 | 与基线逐像素一致，左面成为显示上的主亮面 |
+| 04:15 | 143° / 23° | 64.115 | 60.361 | 与上一轮柔化后的结果一致 |
+| 05:00 | 145° / 12° | 58.334 | 56.193 | 保留已有 Dawn 退出曲线 |
+
+### 验收素材与回归
+
+- [00:30 / 01:00 / 02:00 塔身 before / after](tower-moon-handoff/center-handoff-ab.jpg)
+- [02:00 全图 before / after](tower-moon-handoff/02h-full-ab.jpg)
+- [02:00 塔身 before / after](tower-moon-handoff/02h-tower-ab.jpg)
+- [22:00–03:30 全图时间序列与月亮角度](tower-moon-handoff/night-full-times.jpg)
+- [22:00–03:30 塔身时间序列与月亮角度](tower-moon-handoff/night-tower-times.jpg)
+- [去 Base 固有颜色后的接收能量对照（debug only）](tower-moon-handoff/receiving-energy-ab.jpg)
+- [实际渲染审查数据](tower-moon-handoff/audit-stats.json) / [生命周期回归数据](tower-moon-handoff/regression-stats.json)
+
+`python scripts/audit_tower_handoff.py` 通过：23:40–00:40 每分钟采样，塔身平均 RGB 最大相邻变化 0.092/255；00:30–03:00 左面每个半小时递增、右面递减。所有固定时刻 Face、遮罩外区域、Character 元数据差为 0；22:00、23:30、03:30、04:15、05:00、Dawn、Noon、Dusk 与基线全图差为 0；00:00/24:00 差为 0。
+
+`pnpm typecheck`、`pnpm build` 及 Atmosphere 现有 regression 模式通过，包含 context restore、4K/mobile resize、reduced-motion、hidden tab、static quality、Blink、Motion、Leaves、Lamps、Post 与早晚连续性采样。本轮未重新做 GPU 性能基准；未增加 sampler、资产、draw call 或 RAF，仅现有塔身分支增加少量连续计算。
+
+旧审查脚本中“00:00/02:00 全图冻结”的断言已按本轮授权范围更新；这两个时刻现由独立 handoff 审查验证塔身内改变与塔身外隔离。之前的历史截图/统计保留，不覆盖成新结果。
+
+当前已达到可人工验收状态；停止，不扩展阶段。

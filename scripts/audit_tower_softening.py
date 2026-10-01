@@ -57,6 +57,9 @@ def main():
    assert stats[name]['after']['ratio']>1.0,'Lost the subtle left-facing main plane'
   elif name=='06h00':
    stats[name]['maxDelta']=int(d.max());assert d.max()<=3,'Dawn handoff changed too much'
+  elif name in ('00h','02h','24h'):
+   # These tower-only frames were intentionally changed by the Moon-center handoff.
+   stats[name]['maxDelta']=int(d.max())
   else:
    stats[name]['maxDelta']=int(d.max());assert d.max()<=1 and d.mean()<0.00001,(name,'Changed a frozen other phase')
  assert stats['04h15']['after']['gap']<stats['04h15']['before']['gap']*.5,'Shadow remains too heavy'

@@ -105,7 +105,8 @@ def main():
   assert stats[name]['afterReceive']<stats[name]['beforeReceive']*.85,'Residual local bright receive'
  c=np.abs(np.asarray(frames['character','after'],dtype=np.int16)-np.asarray(frames['character','before'],dtype=np.int16))
  stats['characterMetadataMaxDelta']=int(c.max());assert c.max()==0
- for name in ('dawn','20h','22h','00h','02h','noon','dusk'):
+ # Midnight receiving now has its own audit_tower_handoff baseline/guards.
+ for name in ('dawn','20h','22h','noon','dusk'):
   d=np.abs(np.asarray(frames[name,'after'],dtype=np.int16)-np.asarray(frames[name,'before'],dtype=np.int16))
   stats[name]['meanRgbDelta']=round(float(d.mean()),9);stats[name]['changedPixels']=int(np.any(d>0,axis=2).sum());stats[name]['maxRgbDelta']=int(d.max());assert d.max()<=1 and d.mean()<0.00001,(name,int(d.max()))
  stats['midnightMaxDelta']=int(np.abs(np.asarray(frames['00h','after'],dtype=np.int16)-np.asarray(frames['24h','after'],dtype=np.int16)).max());assert stats['midnightMaxDelta']==0

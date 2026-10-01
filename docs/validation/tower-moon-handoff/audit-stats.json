@@ -1,0 +1,902 @@
+{
+  "beforeMidnightContinuity": {
+    "stepMinutes": 1,
+    "maxMeanRgbStep": 0.022,
+    "steps": [
+      0.02,
+      0.018,
+      0.021,
+      0.021,
+      0.021,
+      0.019,
+      0.02,
+      0.019,
+      0.022,
+      0.021,
+      0.02,
+      0.019,
+      0.022,
+      0.02,
+      0.019,
+      0.019,
+      0.019,
+      0.019,
+      0.02,
+      0.018,
+      0.018,
+      0.019,
+      0.019,
+      0.018,
+      0.017,
+      0.016,
+      0.018,
+      0.018,
+      0.018,
+      0.018,
+      0.019,
+      0.019,
+      0.017,
+      0.018,
+      0.018,
+      0.018,
+      0.021,
+      0.018,
+      0.018,
+      0.017,
+      0.018,
+      0.018,
+      0.019,
+      0.02,
+      0.017,
+      0.018,
+      0.017,
+      0.021,
+      0.02,
+      0.021,
+      0.02,
+      0.019,
+      0.019,
+      0.018,
+      0.019,
+      0.018,
+      0.019,
+      0.019,
+      0.018,
+      0.019
+    ],
+    "planeMeans": {
+      "1420": {
+        "left": 55.294,
+        "right": 89.819
+      },
+      "1421": {
+        "left": 55.312,
+        "right": 89.783
+      },
+      "1422": {
+        "left": 55.324,
+        "right": 89.736
+      },
+      "1423": {
+        "left": 55.339,
+        "right": 89.69
+      },
+      "1424": {
+        "left": 55.359,
+        "right": 89.648
+      },
+      "1425": {
+        "left": 55.381,
+        "right": 89.607
+      },
+      "1426": {
+        "left": 55.393,
+        "right": 89.568
+      },
+      "1427": {
+        "left": 55.414,
+        "right": 89.527
+      },
+      "1428": {
+        "left": 55.425,
+        "right": 89.484
+      },
+      "1429": {
+        "left": 55.443,
+        "right": 89.438
+      },
+      "1430": {
+        "left": 55.457,
+        "right": 89.395
+      },
+      "1431": {
+        "left": 55.47,
+        "right": 89.348
+      },
+      "1432": {
+        "left": 55.485,
+        "right": 89.318
+      },
+      "1433": {
+        "left": 55.506,
+        "right": 89.263
+      },
+      "1434": {
+        "left": 55.526,
+        "right": 89.225
+      },
+      "1435": {
+        "left": 55.541,
+        "right": 89.163
+      },
+      "1436": {
+        "left": 55.55,
+        "right": 89.123
+      },
+      "1437": {
+        "left": 55.56,
+        "right": 89.072
+      },
+      "1438": {
+        "left": 55.571,
+        "right": 89.029
+      },
+      "1439": {
+        "left": 55.585,
+        "right": 88.978
+      },
+      "1440": {
+        "left": 55.595,
+        "right": 88.934
+      },
+      "1441": {
+        "left": 55.601,
+        "right": 88.88
+      },
+      "1442": {
+        "left": 55.611,
+        "right": 88.833
+      },
+      "1443": {
+        "left": 55.626,
+        "right": 88.788
+      },
+      "1444": {
+        "left": 55.637,
+        "right": 88.74
+      },
+      "1445": {
+        "left": 55.649,
+        "right": 88.69
+      },
+      "1446": {
+        "left": 55.657,
+        "right": 88.64
+      },
+      "1447": {
+        "left": 55.667,
+        "right": 88.589
+      },
+      "1448": {
+        "left": 55.675,
+        "right": 88.544
+      },
+      "1449": {
+        "left": 55.686,
+        "right": 88.505
+      },
+      "1450": {
+        "left": 55.696,
+        "right": 88.455
+      },
+      "1451": {
+        "left": 55.709,
+        "right": 88.411
+      },
+      "1452": {
+        "left": 55.718,
+        "right": 88.353
+      },
+      "1453": {
+        "left": 55.723,
+        "right": 88.304
+      },
+      "1454": {
+        "left": 55.728,
+        "right": 88.245
+      },
+      "1455": {
+        "left": 55.737,
+        "right": 88.19
+      },
+      "1456": {
+        "left": 55.743,
+        "right": 88.134
+      },
+      "1457": {
+        "left": 55.756,
+        "right": 88.079
+      },
+      "1458": {
+        "left": 55.766,
+        "right": 88.027
+      },
+      "1459": {
+        "left": 55.772,
+        "right": 87.968
+      },
+      "1460": {
+        "left": 55.778,
+        "right": 87.924
+      },
+      "1461": {
+        "left": 55.788,
+        "right": 87.86
+      },
+      "1462": {
+        "left": 55.795,
+        "right": 87.805
+      },
+      "1463": {
+        "left": 55.807,
+        "right": 87.755
+      },
+      "1464": {
+        "left": 55.82,
+        "right": 87.709
+      },
+      "1465": {
+        "left": 55.827,
+        "right": 87.661
+      },
+      "1466": {
+        "left": 55.833,
+        "right": 87.598
+      },
+      "1467": {
+        "left": 55.838,
+        "right": 87.541
+      },
+      "1468": {
+        "left": 55.852,
+        "right": 87.481
+      },
+      "1469": {
+        "left": 55.861,
+        "right": 87.43
+      },
+      "1470": {
+        "left": 55.875,
+        "right": 87.365
+      },
+      "1471": {
+        "left": 55.881,
+        "right": 87.304
+      },
+      "1472": {
+        "left": 55.885,
+        "right": 87.25
+      },
+      "1473": {
+        "left": 55.889,
+        "right": 87.187
+      },
+      "1474": {
+        "left": 55.897,
+        "right": 87.134
+      },
+      "1475": {
+        "left": 55.905,
+        "right": 87.067
+      },
+      "1476": {
+        "left": 55.911,
+        "right": 87.014
+      },
+      "1477": {
+        "left": 55.916,
+        "right": 86.959
+      },
+      "1478": {
+        "left": 55.924,
+        "right": 86.912
+      },
+      "1479": {
+        "left": 55.929,
+        "right": 86.844
+      },
+      "1480": {
+        "left": 55.932,
+        "right": 86.77
+      }
+    }
+  },
+  "22h": {
+    "minutes": 1320,
+    "moon": "Moon Direction 49\u00b0 \u00b7 Elevation 40\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 50.873,
+      "rightMeanRgb": 89.905
+    },
+    "after": {
+      "leftMeanRgb": 50.873,
+      "rightMeanRgb": 89.905
+    },
+    "maxDelta": 0
+  },
+  "23h30": {
+    "minutes": 1410,
+    "moon": "Moon Direction 72\u00b0 \u00b7 Elevation 52\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.148,
+      "rightMeanRgb": 90.226
+    },
+    "after": {
+      "leftMeanRgb": 55.148,
+      "rightMeanRgb": 90.226
+    },
+    "maxDelta": 0
+  },
+  "00h": {
+    "minutes": 0,
+    "moon": "Moon Direction 81\u00b0 \u00b7 Elevation 54\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.595,
+      "rightMeanRgb": 88.934
+    },
+    "after": {
+      "leftMeanRgb": 55.257,
+      "rightMeanRgb": 89.851
+    }
+  },
+  "00h30": {
+    "minutes": 30,
+    "moon": "Moon Direction 90\u00b0 \u00b7 Elevation 55\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.875,
+      "rightMeanRgb": 87.365
+    },
+    "after": {
+      "leftMeanRgb": 55.346,
+      "rightMeanRgb": 91.586
+    }
+  },
+  "01h": {
+    "minutes": 60,
+    "moon": "Moon Direction 99\u00b0 \u00b7 Elevation 54\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 56.005,
+      "rightMeanRgb": 85.432
+    },
+    "after": {
+      "leftMeanRgb": 58.075,
+      "rightMeanRgb": 88.351
+    }
+  },
+  "01h30": {
+    "minutes": 90,
+    "moon": "Moon Direction 108\u00b0 \u00b7 Elevation 52\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 56.035,
+      "rightMeanRgb": 82.963
+    },
+    "after": {
+      "leftMeanRgb": 61.313,
+      "rightMeanRgb": 86.157
+    }
+  },
+  "02h": {
+    "minutes": 120,
+    "moon": "Moon Direction 116\u00b0 \u00b7 Elevation 49\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.838,
+      "rightMeanRgb": 79.788
+    },
+    "after": {
+      "leftMeanRgb": 64.233,
+      "rightMeanRgb": 83.814
+    }
+  },
+  "02h30": {
+    "minutes": 150,
+    "moon": "Moon Direction 124\u00b0 \u00b7 Elevation 45\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.194,
+      "rightMeanRgb": 75.561
+    },
+    "after": {
+      "leftMeanRgb": 65.764,
+      "rightMeanRgb": 79.772
+    }
+  },
+  "03h": {
+    "minutes": 180,
+    "moon": "Moon Direction 131\u00b0 \u00b7 Elevation 40\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 65.264,
+      "rightMeanRgb": 75.598
+    },
+    "after": {
+      "leftMeanRgb": 68.352,
+      "rightMeanRgb": 75.34
+    }
+  },
+  "03h30": {
+    "minutes": 210,
+    "moon": "Moon Direction 137\u00b0 \u00b7 Elevation 33\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 70.84,
+      "rightMeanRgb": 69.407
+    },
+    "after": {
+      "leftMeanRgb": 70.84,
+      "rightMeanRgb": 69.407
+    },
+    "maxDelta": 0
+  },
+  "04h15": {
+    "minutes": 255,
+    "moon": "Moon Direction 143\u00b0 \u00b7 Elevation 23\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 64.115,
+      "rightMeanRgb": 60.361
+    },
+    "after": {
+      "leftMeanRgb": 64.115,
+      "rightMeanRgb": 60.361
+    },
+    "maxDelta": 0
+  },
+  "05h": {
+    "minutes": 300,
+    "moon": "Moon Direction 145\u00b0 \u00b7 Elevation 12\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 58.334,
+      "rightMeanRgb": 56.193
+    },
+    "after": {
+      "leftMeanRgb": 58.334,
+      "rightMeanRgb": 56.193
+    },
+    "maxDelta": 0
+  },
+  "dawn": {
+    "minutes": 390,
+    "moon": "Moon Direction 142\u00b0 \u00b7 Elevation 12\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 98.139,
+      "rightMeanRgb": 156.709
+    },
+    "after": {
+      "leftMeanRgb": 98.139,
+      "rightMeanRgb": 156.709
+    },
+    "maxDelta": 0
+  },
+  "noon": {
+    "minutes": 720,
+    "moon": "Moon Direction 95\u00b0 \u00b7 Elevation 12\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 136.495,
+      "rightMeanRgb": 180.715
+    },
+    "after": {
+      "leftMeanRgb": 136.495,
+      "rightMeanRgb": 180.715
+    },
+    "maxDelta": 0
+  },
+  "dusk": {
+    "minutes": 1050,
+    "moon": "Moon Direction 43\u00b0 \u00b7 Elevation 12\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 101.914,
+      "rightMeanRgb": 127.657
+    },
+    "after": {
+      "leftMeanRgb": 101.914,
+      "rightMeanRgb": 127.657
+    },
+    "maxDelta": 0
+  },
+  "24h": {
+    "minutes": 1440,
+    "moon": "Moon Direction 81\u00b0 \u00b7 Elevation 54\u00b0",
+    "faceMaxDelta": 0,
+    "outsideMaskMaxDelta": 0,
+    "before": {
+      "leftMeanRgb": 55.595,
+      "rightMeanRgb": 88.934
+    },
+    "after": {
+      "leftMeanRgb": 55.257,
+      "rightMeanRgb": 89.851
+    }
+  },
+  "afterMidnightContinuity": {
+    "stepMinutes": 1,
+    "maxMeanRgbStep": 0.092,
+    "steps": [
+      0.02,
+      0.018,
+      0.021,
+      0.021,
+      0.021,
+      0.019,
+      0.02,
+      0.019,
+      0.022,
+      0.021,
+      0.02,
+      0.015,
+      0.007,
+      0.015,
+      0.025,
+      0.036,
+      0.046,
+      0.052,
+      0.058,
+      0.058,
+      0.065,
+      0.065,
+      0.066,
+      0.068,
+      0.069,
+      0.068,
+      0.069,
+      0.064,
+      0.062,
+      0.055,
+      0.054,
+      0.045,
+      0.041,
+      0.035,
+      0.031,
+      0.03,
+      0.029,
+      0.029,
+      0.031,
+      0.026,
+      0.03,
+      0.03,
+      0.045,
+      0.051,
+      0.048,
+      0.063,
+      0.07,
+      0.065,
+      0.076,
+      0.081,
+      0.091,
+      0.076,
+      0.09,
+      0.09,
+      0.082,
+      0.083,
+      0.083,
+      0.092,
+      0.084,
+      0.086
+    ],
+    "planeMeans": {
+      "1420": {
+        "left": 55.294,
+        "right": 89.819
+      },
+      "1421": {
+        "left": 55.312,
+        "right": 89.783
+      },
+      "1422": {
+        "left": 55.324,
+        "right": 89.736
+      },
+      "1423": {
+        "left": 55.339,
+        "right": 89.69
+      },
+      "1424": {
+        "left": 55.359,
+        "right": 89.648
+      },
+      "1425": {
+        "left": 55.381,
+        "right": 89.607
+      },
+      "1426": {
+        "left": 55.393,
+        "right": 89.568
+      },
+      "1427": {
+        "left": 55.414,
+        "right": 89.527
+      },
+      "1428": {
+        "left": 55.425,
+        "right": 89.484
+      },
+      "1429": {
+        "left": 55.443,
+        "right": 89.438
+      },
+      "1430": {
+        "left": 55.457,
+        "right": 89.395
+      },
+      "1431": {
+        "left": 55.47,
+        "right": 89.348
+      },
+      "1432": {
+        "left": 55.482,
+        "right": 89.325
+      },
+      "1433": {
+        "left": 55.477,
+        "right": 89.319
+      },
+      "1434": {
+        "left": 55.464,
+        "right": 89.335
+      },
+      "1435": {
+        "left": 55.444,
+        "right": 89.369
+      },
+      "1436": {
+        "left": 55.42,
+        "right": 89.433
+      },
+      "1437": {
+        "left": 55.384,
+        "right": 89.52
+      },
+      "1438": {
+        "left": 55.34,
+        "right": 89.611
+      },
+      "1439": {
+        "left": 55.299,
+        "right": 89.726
+      },
+      "1440": {
+        "left": 55.257,
+        "right": 89.851
+      },
+      "1441": {
+        "left": 55.208,
+        "right": 89.977
+      },
+      "1442": {
+        "left": 55.166,
+        "right": 90.129
+      },
+      "1443": {
+        "left": 55.117,
+        "right": 90.271
+      },
+      "1444": {
+        "left": 55.069,
+        "right": 90.417
+      },
+      "1445": {
+        "left": 55.018,
+        "right": 90.568
+      },
+      "1446": {
+        "left": 54.968,
+        "right": 90.723
+      },
+      "1447": {
+        "left": 54.915,
+        "right": 90.881
+      },
+      "1448": {
+        "left": 54.87,
+        "right": 91.007
+      },
+      "1449": {
+        "left": 54.827,
+        "right": 91.14
+      },
+      "1450": {
+        "left": 54.804,
+        "right": 91.274
+      },
+      "1451": {
+        "left": 54.778,
+        "right": 91.409
+      },
+      "1452": {
+        "left": 54.763,
+        "right": 91.526
+      },
+      "1453": {
+        "left": 54.751,
+        "right": 91.664
+      },
+      "1454": {
+        "left": 54.746,
+        "right": 91.772
+      },
+      "1455": {
+        "left": 54.742,
+        "right": 91.863
+      },
+      "1456": {
+        "left": 54.742,
+        "right": 91.926
+      },
+      "1457": {
+        "left": 54.747,
+        "right": 91.975
+      },
+      "1458": {
+        "left": 54.757,
+        "right": 92.014
+      },
+      "1459": {
+        "left": 54.78,
+        "right": 92.064
+      },
+      "1460": {
+        "left": 54.796,
+        "right": 92.106
+      },
+      "1461": {
+        "left": 54.828,
+        "right": 92.12
+      },
+      "1462": {
+        "left": 54.858,
+        "right": 92.121
+      },
+      "1463": {
+        "left": 54.913,
+        "right": 92.099
+      },
+      "1464": {
+        "left": 54.972,
+        "right": 92.073
+      },
+      "1465": {
+        "left": 55.016,
+        "right": 92.01
+      },
+      "1466": {
+        "left": 55.077,
+        "right": 91.969
+      },
+      "1467": {
+        "left": 55.153,
+        "right": 91.919
+      },
+      "1468": {
+        "left": 55.213,
+        "right": 91.858
+      },
+      "1469": {
+        "left": 55.286,
+        "right": 91.78
+      },
+      "1470": {
+        "left": 55.346,
+        "right": 91.586
+      },
+      "1471": {
+        "left": 55.432,
+        "right": 91.461
+      },
+      "1472": {
+        "left": 55.493,
+        "right": 91.31
+      },
+      "1473": {
+        "left": 55.583,
+        "right": 91.177
+      },
+      "1474": {
+        "left": 55.663,
+        "right": 91.083
+      },
+      "1475": {
+        "left": 55.75,
+        "right": 91.014
+      },
+      "1476": {
+        "left": 55.831,
+        "right": 90.85
+      },
+      "1477": {
+        "left": 55.895,
+        "right": 90.709
+      },
+      "1478": {
+        "left": 55.983,
+        "right": 90.581
+      },
+      "1479": {
+        "left": 56.065,
+        "right": 90.447
+      },
+      "1480": {
+        "left": 56.151,
+        "right": 90.354
+      }
+    }
+  },
+  "midnightMaxDelta": 0,
+  "characterMetadataMaxDelta": 0,
+  "receivingEnergy": {
+    "00h30": {
+      "before": {
+        "left": 96.427,
+        "right": 87.611
+      },
+      "after": {
+        "left": 94.667,
+        "right": 94.667
+      }
+    },
+    "01h": {
+      "before": {
+        "left": 96.755,
+        "right": 84.397
+      },
+      "after": {
+        "left": 103.0,
+        "right": 89.333
+      }
+    },
+    "01h30": {
+      "before": {
+        "left": 96.734,
+        "right": 80.375
+      },
+      "after": {
+        "left": 114.0,
+        "right": 85.667
+      }
+    },
+    "02h": {
+      "before": {
+        "left": 96.285,
+        "right": 75.275
+      },
+      "after": {
+        "left": 123.333,
+        "right": 81.667
+      }
+    }
+  }
+}

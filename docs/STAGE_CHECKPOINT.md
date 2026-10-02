@@ -232,3 +232,7 @@ The scrolling homepage has been replaced at user request by a single-screen cloc
 ### Homepage profile and lamp pane refinement — awaiting review
 
 The far lantern mullion is widened in the source registration, with tighter source edge filtering. Influence and frozen visual systems remain unchanged. Homepage identity now follows local BlogHorizon profile content, with a real-time greeting, balanced typography and two upward control levels. Built-page interaction, mobile, reduced-motion, source registration, typecheck and build pass. See [review](validation/HOMEPAGE_REFINEMENT.md).
+
+### Homepage layout polish — awaiting review
+
+Reference-scale clock, green greeting status, signature and inert social SVG buttons now share a balanced type scale. Bottom-right controls are one row; closed parameter content is removed from layout to fix primary-menu scrollbars. Actual Edge desktop/mobile previews and control/build checks pass. Renderer and visual baselines are unchanged. See [layout review](validation/HOMEPAGE_LAYOUT_POLISH.md).

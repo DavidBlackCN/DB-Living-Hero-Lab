@@ -6,7 +6,7 @@ import numpy as np
 from playwright.sync_api import sync_playwright
 from validate_atmosphere import EDGE,contact
 
-OUT=Path('docs/validation/homepage-refinement')
+OUT=Path('docs/validation/homepage-polish')
 
 def scene_pixels(page):
  style=page.add_style_tag(content='.interface,.frame-line,.immersive-button{visibility:hidden!important}')
@@ -27,6 +27,7 @@ def run():
   page.locator('.dock-toggle').click();page.wait_for_timeout(300)
   # Actual controls work from a built page hosted under /dist/, without a router.
   page.locator('.playback button').nth(1).click();assert page.locator('.leaves-canvas').count()==0
+  assert page.locator('.control-dock').evaluate('e=>e.scrollHeight<=e.clientHeight+1'), 'Primary menu overflows'
   pairs=[]
   for i,name in enumerate(['dawn','noon','dusk','night']):
    page.locator('.presets button').nth(i).click();page.wait_for_timeout(150)
@@ -37,6 +38,7 @@ def run():
   identity=page.locator('.hero-canvas').element_handle()
   page.locator('.settings-launch').click();page.wait_for_timeout(200)
   page.get_by_role('slider',name='曝光补偿',exact=True).fill('0.5')
+  assert page.locator('.control-dock').evaluate('e=>e.scrollHeight<=e.clientHeight+1'), 'Expanded desktop menu overflows'
   page.screenshot(path=str(OUT/'lighting-drawer.png'))
   page.keyboard.press('Escape');page.wait_for_timeout(100)
   assert page.locator('.settings-launch').get_attribute('aria-expanded')=='false'

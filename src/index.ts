@@ -1,0 +1,7 @@
+export { default as LivingHero } from './components/LivingHero.vue'
+export { createHeroConfig } from './config/hero'
+export { qualityBudgets, resolveQuality } from './engine/quality/policy'
+export type { ResolvedQuality, DeviceHints } from './engine/quality/policy'
+export type { QualityPreset, FitMode } from './engine/types'
+export type { TimeSnapshot, TimeMode } from './engine/time/TimeController'
+export type { LivingHeroProps, LivingHeroHandle, HeroStatus } from './types'

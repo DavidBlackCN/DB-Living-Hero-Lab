@@ -8,6 +8,7 @@ const props = defineProps<{
   artwork: ArtworkSpec
   layout: ArtworkLayout
   config: BlinkConfig
+  active: boolean
   enabled: boolean
   previewToken: number
   showRegions: boolean
@@ -26,16 +27,17 @@ const eyeStyles = computed(() => props.config.eyes.map(eye => ({
 let timeline: BlinkTimeline | null = null
 
 function onVisibility(): void {
-  timeline?.setVisible(!document.hidden)
+  timeline?.setVisible(!document.hidden && props.active)
 }
 
 onMounted(() => {
   timeline = new BlinkTimeline(props.config, value => { amount.value = value; emit('amount', value) })
-  timeline.setVisible(!document.hidden)
+  timeline.setVisible(!document.hidden && props.active)
   timeline.setEnabled(props.enabled)
   document.addEventListener('visibilitychange', onVisibility)
 })
 
+watch(() => props.active, onVisibility)
 watch(() => props.enabled, value => timeline?.setEnabled(value))
 watch(() => props.previewToken, () => timeline?.preview())
 

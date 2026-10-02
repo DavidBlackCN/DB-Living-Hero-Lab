@@ -1,0 +1,72 @@
+{
+  "elapsedSeconds": 68.47,
+  "errors": [],
+  "allMotionEnabled": true,
+  "samples": [
+    {
+      "elapsed": 5.009,
+      "minute": 120.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 10.5,
+      "minute": 252.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 15.522,
+      "minute": 372.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 21.005,
+      "minute": 504.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 26.029,
+      "minute": 625.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 31.443,
+      "minute": 755.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 36.459,
+      "minute": 875.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 41.931,
+      "minute": 1006.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 46.947,
+      "minute": 1127.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 52.411,
+      "minute": 1258.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 57.423,
+      "minute": 1378.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 62.886,
+      "minute": 69.0,
+      "gl": 0
+    },
+    {
+      "elapsed": 67.904,
+      "minute": 190.0,
+      "gl": 0
+    }
+  ]
+}

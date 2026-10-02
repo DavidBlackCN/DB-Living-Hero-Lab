@@ -85,6 +85,8 @@ export class LeafField {
   private raf = 0
   private lastTime = 0
   private elapsedSeconds = 0
+  private loadController = new AbortController()
+  private visible = true
   private destroyed = false
   private randomState = 0x6d2b79fa
   private lampWeight = 0
@@ -101,7 +103,7 @@ export class LeafField {
   }
 
   async start(): Promise<void> {
-    const results = await Promise.allSettled(this.config.urls.map(loadImage))
+    const results = await Promise.allSettled(this.config.urls.map(url => loadImage(url, { signal: this.loadController.signal })))
     if (this.destroyed) return
     this.sprites = results.flatMap(result => result.status === 'fulfilled' ? [this.prepareSprite(result.value)] : [])
     if (this.sprites.length === 0) {
@@ -110,7 +112,13 @@ export class LeafField {
       return
     }
     this.reconcileCount()
-    if (!document.hidden) this.raf = requestAnimationFrame(this.tick)
+    if (!document.hidden && this.visible) this.raf = requestAnimationFrame(this.tick)
+  }
+
+  setVisible(visible: boolean): void {
+    if (this.visible === visible) return
+    this.visible = visible
+    this.onVisibility()
   }
 
   updateLayout(layout: ArtworkLayout): void {
@@ -118,7 +126,7 @@ export class LeafField {
     this.rect = this.visibleRect(layout)
     this.resizeCanvas()
     this.reconcileCount()
-    if (document.hidden) return
+    if (document.hidden || !this.visible) return
     this.draw()
   }
 
@@ -134,6 +142,7 @@ export class LeafField {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
+    this.loadController.abort()
     cancelAnimationFrame(this.raf)
     document.removeEventListener('visibilitychange', this.onVisibility)
     this.leaves = []
@@ -242,7 +251,7 @@ export class LeafField {
   }
 
   private tick = (time: number): void => {
-    if (this.destroyed || document.hidden) return
+    if (this.destroyed || document.hidden || !this.visible) return
     this.raf = requestAnimationFrame(this.tick)
     if (this.lastTime && time - this.lastTime < 1000 / this.config.fpsCap) return
     const dt = this.lastTime ? Math.min((time - this.lastTime) / 1000, 0.05) : 0
@@ -323,7 +332,7 @@ export class LeafField {
   }
 
   private onVisibility = (): void => {
-    if (document.hidden) {
+    if (document.hidden || !this.visible) {
       cancelAnimationFrame(this.raf)
       this.lastTime = 0
     } else if (!this.destroyed && this.sprites.length > 0) {

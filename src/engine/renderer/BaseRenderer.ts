@@ -87,13 +87,6 @@ export class BaseRenderer {
   private lampMaskViewLocation: WebGLUniformLocation
   private post: PostPipeline
   private disposed = false
-  // URL diagnostics are development-only; they do not add product controls.
-  private readonly secondaryHairDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSecondary') === 'off'
-  private readonly hairSheenDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('hairSheen') === 'off'
-  private readonly skyRepairDiagnosticOff = import.meta.env.DEV && new URLSearchParams(window.location.search).get('skyRepair') === 'off'
-  private readonly blinkDiagnosticAmount = import.meta.env.DEV && new URLSearchParams(window.location.search).has('blinkAmount')
-    ? Number(new URLSearchParams(window.location.search).get('blinkAmount')) : NaN
-
   constructor(private canvas: HTMLCanvasElement, image: HTMLImageElement, normalImage: HTMLImageElement, skyImages: HTMLImageElement[], skyEdgeReconstructionImage: HTMLImageElement, skyEdgeCoverageImage: HTMLImageElement, hairMaskImage: HTMLImageElement, materialMaskImage: HTMLImageElement, lampSourceImage: HTMLImageElement, lampInfluenceImage: HTMLImageElement, blinkImages: HTMLImageElement[], sceneDepthImage: HTMLImageElement, towerReceiverImage: HTMLImageElement) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
     if (!gl) throw new Error('WebGL2 unavailable')
@@ -385,22 +378,22 @@ export class BaseRenderer {
     gl.uniform1f(this.directionalStrengthLocation, directionalStrength)
     gl.uniform1f(this.upperSceneAttenuationLocation, lighting.upperSceneAttenuation)
     gl.uniform1i(this.skyEnabledLocation, lighting.skyEnabled ? 1 : 0)
-    gl.uniform1i(this.skyRepairEnabledLocation, this.skyRepairDiagnosticOff ? 0 : 1)
+    gl.uniform1i(this.skyRepairEnabledLocation, 1)
     gl.uniform1i(this.skyPhaseALocation, skyPhaseIndex(sky.first))
     gl.uniform1i(this.skyPhaseBLocation, skyPhaseIndex(sky.second))
     gl.uniform1f(this.skyMixLocation, sky.mix)
     gl.uniform1f(this.skyNightWeightLocation,
       (sky.first === 'night' ? 1 - sky.mix : 0) + (sky.second === 'night' ? sky.mix : 0))
     gl.uniform1f(this.blinkAmountLocation, Math.max(0, Math.min(1,
-      Number.isFinite(this.blinkDiagnosticAmount) ? this.blinkDiagnosticAmount : blinkAmount)))
+      blinkAmount)))
     gl.uniform1f(this.breathPhaseLocation, breathPhase)
     gl.uniform1f(this.breathStrengthLocation, breathing.enabled ? breathing.strength * breathingConfig.maxDisplacementPx : 0)
     gl.uniform1i(this.breathOverlayLocation, breathing.showRegion ? 1 : 0)
     gl.uniform1f(this.hairTimeLocation, hairSeconds)
-    gl.uniform1f(this.hairStrengthLocation, hair.enabled && !this.secondaryHairDiagnosticOff ? hair.strength * hairConfig.maxDisplacementPx : 0)
+    gl.uniform1f(this.hairStrengthLocation, hair.enabled ? hair.strength * hairConfig.maxDisplacementPx : 0)
     gl.uniform1f(this.headMassStrengthLocation, hair.enabled ? hair.strength * hairConfig.headMassDisplacementPx : 0)
-    gl.uniform1f(this.headHairStrengthLocation, hair.enabled && !this.secondaryHairDiagnosticOff ? hair.strength * hairConfig.headHairDisplacementPx : 0)
-    gl.uniform1f(this.hairSheenStrengthLocation, this.hairSheenDiagnosticOff ? 0 : 1)
+    gl.uniform1f(this.headHairStrengthLocation, hair.enabled ? hair.strength * hairConfig.headHairDisplacementPx : 0)
+    gl.uniform1f(this.hairSheenStrengthLocation, 1)
     gl.uniform1i(this.hairOverlayLocation, hair.showRegion ? 1 : 0)
     gl.uniform1i(this.detailEnabledLocation, detailEnabled ? 1 : 0)
     gl.uniform1i(this.sceneLinearLocation, usePost ? 1 : 0)

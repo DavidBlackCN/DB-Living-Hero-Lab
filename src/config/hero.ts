@@ -1,10 +1,9 @@
 import type { ArtworkSpec } from '../engine/types'
 import type { LeafConfig } from '../engine/animation/LeafField'
 import type { BlinkConfig } from '../engine/animation/BlinkTimeline'
-import { defaultLighting } from './lighting'
 import { skyAssets } from './sky'
 
-export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; atmosphere: { depthUrl: string }; sky: { urls: typeof skyAssets; edgeReconstructionUrl: string; edgeCoverageUrl: string }; hair: { maskUrl: string }; material: { maskUrl: string }; architecture: { towerReceiverUrl: string }; lamps: { sourceUrl: string; influenceUrl: string }; lighting: typeof defaultLighting; dprCap: number; leaves: LeafConfig } = {
+export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { url: string }; atmosphere: { depthUrl: string }; sky: { urls: typeof skyAssets; edgeReconstructionUrl: string; edgeCoverageUrl: string }; hair: { maskUrl: string }; material: { maskUrl: string }; architecture: { towerReceiverUrl: string }; lamps: { sourceUrl: string; influenceUrl: string }; leaves: LeafConfig } = {
   // The source is 1672×941, so use its true ratio for all registration math.
   artwork: {
     width: 1672,
@@ -30,8 +29,6 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
   material: { maskUrl: `${import.meta.env.BASE_URL}assets/hero/material/material-mask.png` },
   architecture: { towerReceiverUrl: `${import.meta.env.BASE_URL}assets/hero/lighting/tower-receiver-mask.png` },
   lamps: { sourceUrl: `${import.meta.env.BASE_URL}assets/hero/lighting/lamp-source-mask.png`, influenceUrl: `${import.meta.env.BASE_URL}assets/hero/lighting/lamp-influence-mask.png` },
-  lighting: defaultLighting,
-  dprCap: 2,
   leaves: {
     urls: [1, 2, 3, 4].map(n => `${import.meta.env.BASE_URL}assets/hero/leaves/leaf-${String(n).padStart(2, '0')}.png`),
     desktopCount: 18,
@@ -53,4 +50,25 @@ export const heroConfig: { artwork: ArtworkSpec; blink: BlinkConfig; normal: { u
     fpsCap: 30,
     dprCap: 1.5,
   },
+}
+
+
+/** Root includes assets/hero, e.g. /blog/assets/hero or a CORS-enabled CDN URL. */
+export function createHeroConfig(assetRoot = `${import.meta.env.BASE_URL}assets/hero`) {
+  const root = assetRoot.replace(/\/$/, '')
+  const asset = (url: string) => `${root}/${url.split('assets/hero/')[1]}`
+  return {
+    ...heroConfig,
+    artwork: { ...heroConfig.artwork, baseUrl: asset(heroConfig.artwork.baseUrl) },
+    blink: { ...heroConfig.blink, eyes: heroConfig.blink.eyes.map(eye => ({ ...eye, url: asset(eye.url) })) as BlinkConfig['eyes'] },
+    normal: { url: asset(heroConfig.normal.url) },
+    sky: { urls: Object.fromEntries(Object.entries(skyAssets).map(([key, url]) => [key, asset(url)])) as typeof skyAssets,
+      edgeReconstructionUrl: asset(heroConfig.sky.edgeReconstructionUrl), edgeCoverageUrl: asset(heroConfig.sky.edgeCoverageUrl) },
+    hair: { maskUrl: asset(heroConfig.hair.maskUrl) },
+    material: { maskUrl: asset(heroConfig.material.maskUrl) },
+    architecture: { towerReceiverUrl: asset(heroConfig.architecture.towerReceiverUrl) },
+    atmosphere: { depthUrl: asset(heroConfig.atmosphere.depthUrl) },
+    lamps: { sourceUrl: asset(heroConfig.lamps.sourceUrl), influenceUrl: asset(heroConfig.lamps.influenceUrl) },
+    leaves: { ...heroConfig.leaves, urls: heroConfig.leaves.urls.map(asset) },
+  }
 }

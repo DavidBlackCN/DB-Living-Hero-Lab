@@ -6,7 +6,7 @@ export interface ArtworkSpec {
 }
 
 export type FitMode = 'auto' | 'cover' | 'contain'
-export type QualityPreset = 'auto' | 'static' | 'balanced'
+export type QualityPreset = 'auto' | 'high' | 'medium' | 'low' | 'static' | 'balanced'
 export type RenderView = 'base' | 'normal' | 'lit'
 export type LightingPresetId = 'dawn' | 'noon' | 'dusk' | 'night'
 

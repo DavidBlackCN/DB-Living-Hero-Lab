@@ -131,7 +131,7 @@ function withDirection(angle: number, elevation: number): LightingState['directi
     </label>
     <label>Quality
       <select :value="quality" @change="emit('update:quality', ($event.target as HTMLSelectElement).value as QualityPreset)">
-        <option value="auto">Auto</option><option value="balanced">Balanced</option><option value="static">Static</option>
+        <option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="static">Static</option>
       </select>
     </label>
     <label>Render view

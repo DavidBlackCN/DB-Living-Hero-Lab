@@ -1,0 +1,30 @@
+{
+  "dawn": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "noon": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "dusk": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "night": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "predawn": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "transition": {
+    "max": 0,
+    "mean": 0.0
+  },
+  "midnight": {
+    "max": 0,
+    "mean": 0.0
+  }
+}

@@ -1,4 +1,5 @@
 import type { LightingPresetId, LightingState } from '../engine/types'
+import { skyFor } from './sky'
 
 export interface LightingPreset {
   id: LightingPresetId
@@ -213,7 +214,7 @@ function solarLightingFor(minutes: number): LightingState & { daylight: number; 
 }
 
 const dawnEnergy = solarLightingFor(lightingPresets.dawn.minutes)
-const predawnEnergy = solarLightingFor(330)
+const predawnEnergy = solarLightingFor(300)
 const morningEndEnergy = solarLightingFor(600)
 const afternoonStartEnergy = solarLightingFor(900)
 const duskEnergy = solarLightingFor(lightingPresets.dusk.minutes)
@@ -223,15 +224,12 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
   const state = solarLightingFor(minutes)
   const time = Math.max(0, Math.min(1440, Number.isFinite(minutes) ? minutes : 720))
 
-  // A small cool fill prevents pre-dawn twilight from dipping below the
-  // late-night hold. It vanishes by the accepted 06:30 Dawn anchor.
-  const predawnFill = smooth(300, 330, time) * (1 - smooth(330, 390, time))
-
-  // Approach the Dawn anchor with zero slope rather than letting the raw
-  // sunrise ramp stop abruptly at 06:30. The accepted anchor itself is exact.
-  // Solar direction, colors and Sky retain their continuous curves.
-  const endpoints = time > 330 && time < 390
-    ? { first: predawnEnergy, second: dawnEnergy, amount: smooth(330, 390, time) }
+  // Use the actual Sky transition progress for the morning energy and color.
+  // Previously Sky started at 05:00 but scene energy waited until 05:30.
+  const sky = skyFor(time)
+  const dawnAmount = sky.first === 'night' && sky.second === 'dawn' ? sky.mix : null
+  const endpoints = dawnAmount !== null
+    ? { first: predawnEnergy, second: dawnEnergy, amount: dawnAmount }
     : time > 390 && time < 600
       ? { first: dawnEnergy, second: morningEndEnergy, amount: smooth(390, 600, time) }
     : time > 900 && time < 1050
@@ -252,7 +250,10 @@ export function lightingFor(minutes: number): LightingState & { daylight: number
     state.color = mixChannels(duskEnergy.color, nightHoldEnergy.color, nightAmount)
     state.ambientColor = mixChannels(duskEnergy.ambientColor, nightHoldEnergy.ambientColor, nightAmount)
   }
-  state.ambientIntensity += predawnFill * 0.025
+  if (dawnAmount !== null) {
+    state.color = mixChannels(predawnEnergy.color, dawnEnergy.color, dawnAmount)
+    state.ambientColor = mixChannels(predawnEnergy.ambientColor, dawnEnergy.ambientColor, dawnAmount)
+  }
   return state
 }
 

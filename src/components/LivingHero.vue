@@ -54,7 +54,7 @@ const rendererReady = ref(false)
 const rendererError = ref('')
 const fit = ref<FitMode>(props.fit)
 const quality = ref<QualityPreset>(props.quality)
-const renderView = ref<RenderView>('lit')
+const renderView = ref<RenderView>(props.view ?? 'lit')
 const lightingMinutes = ref(clockMinutes(new Date()))
 const timeMode = ref<TimeSnapshot['mode']>('realtime')
 const lighting = ref<LightingState>(createLightingStateForTime(lightingMinutes.value))
@@ -89,7 +89,11 @@ const postView = ref<PostState['view']>('final')
 const atmosphereEnabled = ref(true)
 const hazeEnabled = ref(true)
 const finalGradeEnabled = ref(true)
-const post = computed<PostState>(() => ({ ...postFor(lightingMinutes.value), enabled: postEnabled.value,
+const post = computed<PostState>(() => ({ ...postFor(lightingMinutes.value),
+  ...(props.adjustments?.bloomStrength === undefined ? {} : { bloomStrength: props.adjustments.bloomStrength }),
+  ...(props.adjustments?.threshold === undefined ? {} : { threshold: props.adjustments.threshold }),
+  ...(props.adjustments?.saturation === undefined ? {} : { saturation: props.adjustments.saturation }),
+  enabled: postEnabled.value,
   bloomEnabled: bloomEnabled.value, view: postView.value,
   atmosphere: { ...atmosphereFor(lightingMinutes.value), enabled: atmosphereEnabled.value,
     hazeEnabled: hazeEnabled.value, gradeEnabled: finalGradeEnabled.value } }))
@@ -104,10 +108,15 @@ const leavesConfig = computed(() => ({ ...heroConfig.value.leaves, desktopCount:
 const staticPolicy = computed(() => resolvedQuality.value === 'static')
 const wantsRenderer = computed(() => rendererEnabled.value && !staticPolicy.value)
 const sceneView = computed(() => renderView.value === 'base' || renderView.value === 'lit')
-const leavesActive = computed(() => leavesEnabled.value && !reducedMotion.value && budget.value.motion && rendererReady.value && sceneView.value)
-const blinkActive = computed(() => blinkEnabled.value && !reducedMotion.value && budget.value.motion && rendererReady.value && sceneView.value)
-const breathingState = computed<BreathingState>(() => ({ ...breathing.value, enabled: breathing.value.enabled && !reducedMotion.value && budget.value.motion && wantsRenderer.value }))
-const hairState = computed<HairState>(() => ({ ...hair.value, enabled: hair.value.enabled && !reducedMotion.value && budget.value.motion && wantsRenderer.value }))
+const motionAllowed = computed(() => props.motion !== false && !reducedMotion.value && budget.value.motion)
+const receivedLighting = computed<LightingState>(() => ({ ...lighting.value,
+  exposureStops: lighting.value.exposureStops + (props.adjustments?.exposureOffset ?? 0),
+  bandSoftness: props.adjustments?.bandSoftness ?? lighting.value.bandSoftness,
+}))
+const leavesActive = computed(() => leavesEnabled.value && motionAllowed.value && rendererReady.value && sceneView.value)
+const blinkActive = computed(() => blinkEnabled.value && motionAllowed.value && rendererReady.value && sceneView.value)
+const breathingState = computed<BreathingState>(() => ({ ...breathing.value, enabled: breathing.value.enabled && motionAllowed.value && wantsRenderer.value }))
+const hairState = computed<HairState>(() => ({ ...hair.value, enabled: hair.value.enabled && motionAllowed.value && wantsRenderer.value }))
 const rendererStatus = computed(() => !wantsRenderer.value ? 'static' : rendererError.value ? 'fallback' : rendererReady.value ? 'WebGL2' : 'loading')
 const imageStyle = computed(() => ({ left: `${layout.value.x}px`, top: `${layout.value.y}px`, width: `${layout.value.width}px`, height: `${layout.value.height}px` }))
 let observer: ResizeObserver | null = null
@@ -166,6 +175,7 @@ function selectLightingTime(minutes: number): void {
 }
 
 watch(() => props.quality, value => { quality.value = value })
+watch(() => props.view, value => { renderView.value = value ?? 'lit' })
 watch(() => props.fit, value => { fit.value = value })
 watch(() => props.minutes, value => value === undefined ? timeController.backToNow() : timeController.select(value))
 watch(() => props.assetRoot, () => { rendererReady.value = false; rendererError.value = ''; posterFailed.value = false; posterShownAt.value = null })
@@ -222,8 +232,8 @@ onBeforeUnmount(() => {
   <section ref="root" class="hero-stage" :class="{ 'hero-entrance': entrance }" :data-presented="presented" :aria-busy="rendererStatus === 'loading'" :data-quality="resolvedQuality" :data-status="rendererStatus">
     <img ref="poster" class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" :alt="alt" fetchpriority="high" decoding="async" @load="onPosterLoaded" @error="posterFailed = true" />
     <HeroCanvas v-if="mounted && wantsRenderer" :key="heroConfig.artwork.baseUrl + retryToken" :active="active" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-reconstruction-url="heroConfig.sky.edgeReconstructionUrl" :sky-edge-coverage-url="heroConfig.sky.edgeCoverageUrl" :hair-mask-url="heroConfig.hair.maskUrl" :material-mask-url="heroConfig.material.maskUrl" :lamp-source-url="heroConfig.lamps.sourceUrl" :lamp-influence-url="heroConfig.lamps.influenceUrl"
-      :tower-receiver-url="heroConfig.architecture.towerReceiverUrl" :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
-      :blink-amount="blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled)) ? blinkAmount : 0" :lighting-detail-enabled="lightingDetailEnabled" :directional-strength="directionalEnabled ? directionalGain : 0" :fit="fit" :dpr-cap="budget.dpr" :max-pixels="budget.pixels"
+      :tower-receiver-url="heroConfig.architecture.towerReceiverUrl" :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="receivedLighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
+      :blink-amount="blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled)) ? blinkAmount : 0" :lighting-detail-enabled="lightingDetailEnabled" :directional-strength="directionalEnabled ? (adjustments?.directionalStrength ?? directionalGain) : 0" :fit="fit" :dpr-cap="budget.dpr" :max-pixels="budget.pixels"
       :class="{ 'canvas-ready': rendererReady && (!entrance || presented) }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" @slow="onSlow" @progress="loaded = $event.loaded; total = $event.total" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive" :active="active"
       :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base' && !hairState.enabled" @amount="blinkAmount = $event" />

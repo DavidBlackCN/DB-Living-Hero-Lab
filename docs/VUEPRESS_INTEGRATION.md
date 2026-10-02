@@ -49,6 +49,9 @@ SSR 已实测：服务端只输出注册底图、slot 和加载状态，不读�
 | adaptive | true | Auto 下持续帧间隔压力可逐级降至 Low；显式 quality 不自动降档 |
 | debug | false | 提供调试抽屉入口；抽屉默认关闭，生产默认不加载 |
 | entrance | false | 可选底图→Lit 入场：底图至少 550ms，Lit 就绪后 650ms 淡入；reduced-motion 取消过渡 |
+| motion | true | 动效总开关，仍服从 reduced-motion 与质量预算；不改变时间预览 |
+| view | lit | lit / base / normal |
+| adjustments | undefined | 可选 HeroAdjustments：exposureOffset、bloomStrength、threshold、saturation、directionalStrength、bandSoftness；清空即恢复时段默认值 |
 | alt | 场景描述 | 静态底图替代文本；纯装饰场景可传空字符串 |
 
 事件：`ready`（每次 renderer 成功初始化）、`error(reason)`、`status({ mode, loaded, total, quality })`、`time-change({ mode, minutes })`。mode 为 loading / WebGL2 / fallback / static；资源进度统计 16 个关键注册纹理，不包含稍后加载的可选叶片。

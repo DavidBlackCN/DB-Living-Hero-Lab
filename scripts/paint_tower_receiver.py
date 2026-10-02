@@ -7,7 +7,11 @@ ROOT=Path(__file__).resolve().parents[1]
 SIZE=(1672,941)
 # Full masonry silhouette, including the hat-adjacent section missed by the old
 # x=1056 box and negative spaces between foreground strands. Not a light patch.
-OUTLINE=[(924,0),(1075,0),(1075,62),(1071,83),(1063,98),(1062,195),
+# Trace the exposed stone above the hat before following the hat/rose edge.
+# The former x=1075 straight cut left a bright masonry wedge at dawn.
+OUTLINE=[(924,0),(1075,0),(1075,40),(1079,44),(1079,53),
+ (1078,67),(1077,72),(1073,77),(1069,82),(1067,87),(1065,94),
+ (1063,98),(1062,195),
  (1050,233),(1039,265),(1026,303),(1022,323),(1000,332),(979,340),
  (954,350),(915,350),(916,309),(922,289),(926,270),(925,241),
  (922,215),(920,185),(923,145),(923,96),(918,78),(917,58),
@@ -37,7 +41,7 @@ def main():
  out=ROOT/'public/assets/hero/lighting/tower-receiver-mask.png';mask.save(out)
  alpha=np.asarray(mask,dtype=float)/255
  overlay=base*(1-alpha[:,:,None]*.45)+np.array([40,255,140])*alpha[:,:,None]*.45
- dest=ROOT/'docs/validation/pre-dawn-tower';dest.mkdir(exist_ok=True)
+ dest=ROOT/'docs/validation/tower-final';dest.mkdir(exist_ok=True)
  Image.fromarray(np.uint8(overlay)).crop((910,0,1110,370)).resize((600,1110)).save(dest/'receiver-overlay.png')
  print(out,mask.size,'registered pixels',int((alpha>.99).sum()))
 if __name__=='__main__':main()

@@ -27,7 +27,7 @@ for channel, row, left, right in ((0, 150, 30, 68), (1, 260, 142, 172)):
     assert np.count_nonzero(runs == 1) == 3, "Each lamp needs three distinct glass panes"
 assert source[150, 63, 0] > 200 and source[150, 64, 0] > 128, "Near right pane still misses its outer edge"
 assert source[260, 147, 1] < 32 and source[260, 149, 1] > 200, "Far left pane spills into its metal rim"
-assert source[260, 150, 1] > 200 and source[260, 151, 1] < 128 and source[260, 152, 1] < 32, "Far left/front mullion disappeared"
+assert source[260, 150, 1] > 128 and max(source[260, 151:154, 1]) < 32, "Far left/front mullion disappeared"
 
 
 def frame(page) -> Image.Image:

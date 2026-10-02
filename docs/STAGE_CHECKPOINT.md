@@ -229,3 +229,6 @@ R7.3A/B and all visual systems are frozen at `ad18ee5`. LivingHero now exposes a
 ### Standalone scene page — awaiting acceptance
 
 The scrolling homepage has been replaced at user request by a single-screen clock/scene layout with no navigation. A product lighting drawer exposes existing render parameters; time, motion, fullscreen, immersive and view controls stay local. Default four-phase rendering remains identical. Relative build assets were tested under /dist/ with all controls, auto reset, mobile and reduced-motion checks passing. No Plume integration or visual-engine changes. See [standalone validation](validation/STANDALONE_SCENE_PAGE.md).
+### Homepage profile and lamp pane refinement — awaiting review
+
+The far lantern mullion is widened in the source registration, with tighter source edge filtering. Influence and frozen visual systems remain unchanged. Homepage identity now follows local BlogHorizon profile content, with a real-time greeting, balanced typography and two upward control levels. Built-page interaction, mobile, reduced-motion, source registration, typecheck and build pass. See [review](validation/HOMEPAGE_REFINEMENT.md).

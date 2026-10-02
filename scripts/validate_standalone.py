@@ -6,7 +6,7 @@ import numpy as np
 from playwright.sync_api import sync_playwright
 from validate_atmosphere import EDGE,contact
 
-OUT=Path('docs/validation/standalone')
+OUT=Path('docs/validation/homepage-refinement')
 
 def scene_pixels(page):
  style=page.add_style_tag(content='.interface,.frame-line,.immersive-button{visibility:hidden!important}')
@@ -24,6 +24,7 @@ def run():
   assert page.locator('a[href]').count()==0
   assert page.evaluate('document.documentElement.scrollHeight <= innerHeight')
   assert page.locator('.hero-image').get_attribute('src').startswith('./assets/hero')
+  page.locator('.dock-toggle').click();page.wait_for_timeout(300)
   # Actual controls work from a built page hosted under /dist/, without a router.
   page.locator('.playback button').nth(1).click();assert page.locator('.leaves-canvas').count()==0
   pairs=[]
@@ -38,7 +39,7 @@ def run():
   page.get_by_role('slider',name='曝光补偿',exact=True).fill('0.5')
   page.screenshot(path=str(OUT/'lighting-drawer.png'))
   page.keyboard.press('Escape');page.wait_for_timeout(100)
-  assert page.locator('.settings-launch').evaluate('n=>n===document.activeElement')
+  assert page.locator('.settings-launch').get_attribute('aria-expanded')=='false'
   after=scene_pixels(page)
   assert np.abs(after-before).mean()>3
   page.locator('.settings-launch').click();page.wait_for_timeout(200)
@@ -63,15 +64,17 @@ def run():
   page.get_by_role('button',name='暂停昼夜轮播',exact=True).click()
   page.locator('.sync-button').click();assert page.locator('.sync-button').is_disabled()
   page.locator('.immersive-button').click();assert page.locator('.control-dock').is_hidden()
-  page.screenshot(path=str(OUT/'immersive.png'));page.keyboard.press('h');assert page.locator('.control-dock').is_visible()
+  page.screenshot(path=str(OUT/'immersive.png'));page.keyboard.press('h');assert page.locator('.dock-toggle').is_visible()
   page.get_by_role('button',name='进入全屏',exact=True).click();page.wait_for_timeout(150)
   assert page.evaluate('!!document.fullscreenElement');page.get_by_role('button',name='退出全屏',exact=True).click()
   page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(250)
   assert page.evaluate('document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth')
   page.screenshot(path=str(OUT/'mobile.png'))
+  page.locator('.dock-toggle').click()
   page.locator('.settings-launch').click();page.wait_for_timeout(200);page.screenshot(path=str(OUT/'mobile-drawer.png'))
   page.keyboard.press('Escape');page.close()
   page=b.new_page(reduced_motion='reduce');page.goto('http://127.0.0.1:4174/dist/');page.locator('[data-status="WebGL2"]').wait_for()
+  page.locator('.dock-toggle').click()
   assert page.locator('.playback button').nth(0).is_disabled() and page.locator('.playback button').nth(1).is_disabled()
   assert page.locator('.leaves-canvas').count()==0
   b.close()

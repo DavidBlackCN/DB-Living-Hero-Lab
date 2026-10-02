@@ -17,7 +17,7 @@ def source_channel(panes: list[list[tuple[int, int]]]) -> Image.Image:
     pen = ImageDraw.Draw(image)
     for pane in panes:
         pen.polygon([(x * scale, y * scale) for x, y in pane], fill=255)
-    return image.resize(SIZE, Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(0.45))
+    return image.resize(SIZE, Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(0.28))
 
 
 def main() -> None:
@@ -33,8 +33,8 @@ def main() -> None:
         [(56, 131), (65, 133), (64, 169), (56, 169)],  # right: reach the outer and lower glass edges
     ])
     far = source_channel([
-        [(148, 248), (151, 247), (151, 274), (149, 274)],  # left: preserve the dark mullion to the front pane
-        [(153, 247), (160, 247), (160, 275), (153, 275)],  # front
+        [(148, 248), (150.5, 247.5), (150.5, 273.5), (149, 274)],  # left: preserve the dark mullion to the front pane
+        [(154, 247.5), (160, 248), (160, 274.5), (154, 274.5)],  # front
         [(164, 248), (168, 249), (168, 274), (165, 275)],  # right
     ])
     zero = Image.new("L", SIZE)

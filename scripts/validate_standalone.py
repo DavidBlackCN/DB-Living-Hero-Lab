@@ -6,7 +6,7 @@ import numpy as np
 from playwright.sync_api import sync_playwright
 from validate_atmosphere import EDGE,contact
 
-OUT=Path('docs/validation/homepage-polish')
+OUT=Path('docs/validation/homepage-followup')
 
 def scene_pixels(page):
  style=page.add_style_tag(content='.interface,.frame-line,.immersive-button{visibility:hidden!important}')
@@ -58,14 +58,15 @@ def run():
   restored=scene_pixels(page)
   assert np.array_equal(before,restored)
   assert page.locator('.hero-canvas').evaluate('(n,old)=>n===old',identity)
-  page.get_by_label('画面模式').select_option('normal');page.locator('.settings-launch').click()
+  page.locator('.themed-select > button').click();page.get_by_role('menuitemradio').nth(2).click();page.locator('.dock-toggle').click();page.locator('.settings-launch').click()
   assert page.get_by_role('slider',name='曝光补偿',exact=True).is_disabled()
-  page.keyboard.press('Escape');page.get_by_label('画面模式').select_option('lit')
+  page.keyboard.press('Escape');page.locator('.themed-select > button').click();page.get_by_role('menuitemradio').nth(0).click();page.locator('.dock-toggle').click()
   page.get_by_role('button',name='播放昼夜轮播',exact=True).click();t=page.locator('.dock-heading > output').inner_text();page.wait_for_timeout(200)
   assert t!=page.locator('.dock-heading > output').inner_text()
   page.get_by_role('button',name='暂停昼夜轮播',exact=True).click()
   page.locator('.sync-button').click();assert page.locator('.sync-button').is_disabled()
   page.locator('.immersive-button').click();assert page.locator('.control-dock').is_hidden()
+  assert page.locator('.clock-block').is_visible()
   page.screenshot(path=str(OUT/'immersive.png'));page.keyboard.press('h');assert page.locator('.dock-toggle').is_visible()
   page.get_by_role('button',name='进入全屏',exact=True).click();page.wait_for_timeout(150)
   assert page.evaluate('!!document.fullscreenElement');page.get_by_role('button',name='退出全屏',exact=True).click()

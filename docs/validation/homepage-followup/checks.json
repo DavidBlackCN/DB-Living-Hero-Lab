@@ -1,0 +1,17 @@
+{
+  "builtSubpathDeployment": true,
+  "noNavigationOrScroll": true,
+  "slidersMeanPixelChange": {
+    "泛光强度": 0.01055898489339957,
+    "高亮阈值": 0.009819375024364118,
+    "方向明暗": 11.971184663910767,
+    "边缘柔和": 0.004465413122217194,
+    "色彩饱和": 1.7843796768512916
+  },
+  "autoRestoreExact": true,
+  "canvasNotReinitialized": true,
+  "timePlayRealtime": true,
+  "fullscreenImmersive": true,
+  "mobileReducedMotion": true,
+  "errors": []
+}

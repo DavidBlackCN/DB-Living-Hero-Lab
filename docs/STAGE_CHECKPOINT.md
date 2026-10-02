@@ -236,3 +236,7 @@ The far lantern mullion is widened in the source registration, with tighter sour
 ### Homepage layout polish — awaiting review
 
 Reference-scale clock, green greeting status, signature and inert social SVG buttons now share a balanced type scale. Bottom-right controls are one row; closed parameter content is removed from layout to fix primary-menu scrollbars. Actual Edge desktop/mobile previews and control/build checks pass. Renderer and visual baselines are unchanged. See [layout review](validation/HOMEPAGE_LAYOUT_POLISH.md).
+
+### Homepage compact controls follow-up
+
+Inline signature, left-content-preserving immersive mode, themed view menu and smaller light controls are ready for review. Frozen rendering unchanged; build, typecheck and desktop/mobile browser checks pass. See [validation](validation/HOMEPAGE_COMPACT_FOLLOWUP.md).

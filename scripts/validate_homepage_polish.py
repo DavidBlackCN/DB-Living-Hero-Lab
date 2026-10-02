@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 from playwright.sync_api import sync_playwright
 from validate_atmosphere import EDGE
-OUT=Path('docs/validation/homepage-polish')
+OUT=Path('docs/validation/homepage-followup')
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=EDGE,headless=False)
  page=b.new_page(viewport={'width':3828,'height':1931},device_scale_factor=1)
@@ -19,6 +19,9 @@ with sync_playwright() as p:
  for button in page.locator('.social-links button').all():
   before=page.url;button.click();assert page.url==before
  page.screenshot(path=str(OUT/'desktop-home.png'))
+ page.locator('.themed-select > button').click();page.wait_for_timeout(200);page.screenshot(path=str(OUT/'view-menu.png'));page.keyboard.press('ArrowDown');page.keyboard.press('Enter')
+ page.locator('.themed-select > button').click();page.keyboard.press('Home');page.keyboard.press('Enter')
+ page.locator('.immersive-button').click();assert page.locator('.clock-block').is_visible();assert page.locator('.dream-header').is_hidden();page.screenshot(path=str(OUT/'desktop-immersive.png'));page.locator('.immersive-button').click()
  stats={'clockPx':page.locator('.clock').evaluate('e=>getComputedStyle(e).fontSize'),'desktopPrimaryNoScroll':True,'desktopExpandedNoScroll':True,'socialButtonsNoNavigation':True}
  for width,height in [(1280,720),(390,844),(360,640),(844,390)]:
   page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(200)

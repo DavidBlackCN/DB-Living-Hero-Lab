@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import ThemedSelect from './ThemedSelect.vue'
 import UiIcon from './UiIcon.vue'
 import LivingHero from '../components/LivingHero.vue'
 import type { HeroAdjustments, LivingHeroHandle, TimeSnapshot } from '../index'
@@ -100,7 +101,7 @@ onBeforeUnmount(() => {
       <p class="eyebrow greeting"><i aria-hidden="true" />{{ greeting }}</p>
       <time class="clock" :datetime="now?.toISOString()">{{ clock }}</time>
       <div class="date-line"><span>{{ date }}</span><span class="date-rule" /><span>{{ now?.getFullYear() ?? '—' }}</span></div>
-      <div class="profile"><h1>黑姐姐 <small>DavidBlackCN</small></h1><p class="profile-role">Developer · Blogger · INFJ-T</p><p class="profile-intro">欢迎来到黑姐姐の驿站。<br />这里记录代码、文字与折腾过程，<br />也收藏那些值得慢下来观察的事物。</p><figure class="profile-motto"><span class="quote-mark" aria-hidden="true">“</span><blockquote>有些事你不要太当真。</blockquote><figcaption><span />《售梦者》<span class="signature">David Black</span></figcaption></figure><nav class="social-links" aria-label="社交平台（展示占位，无跳转）"><button v-for="social in [{name:'github',label:'GitHub'},{name:'bilibili',label:'BiliBili'},{name:'mail',label:'Email'},{name:'qq',label:'QQ'}]" :key="social.name" :aria-label="social.label + '（暂无链接）'" :title="social.label + ' · 暂无链接'"><UiIcon :name="social.name" /></button></nav></div>
+      <div class="profile"><h1>黑姐姐 <small>DavidBlackCN</small></h1><p class="profile-role">Developer · Blogger · INFJ-T</p><p class="profile-intro">欢迎来到黑姐姐の驿站。<br />这里记录代码、文字与折腾过程，<br />也收藏那些值得慢下来观察的事物。</p><figure class="profile-motto"><span class="quote-mark" aria-hidden="true">“</span><blockquote>有些事你不要太当真。</blockquote><figcaption><span />《售梦者》</figcaption></figure><nav class="social-links" aria-label="社交平台（展示占位，无跳转）"><button v-for="social in [{name:'github',label:'GitHub'},{name:'bilibili',label:'BiliBili'},{name:'mail',label:'Email'},{name:'qq',label:'QQ'}]" :key="social.name" :aria-label="social.label + '（暂无链接）'" :title="social.label + ' · 暂无链接'"><UiIcon :name="social.name" /></button></nav></div>
     </section>
     <aside class="scene-caption interface"><span />秋日回廊<small>让时光，慢慢经过。</small></aside>
     <Transition name="panel"><section v-if="menuOpen" id="scene-controls" class="control-dock interface" aria-label="场景控制">
@@ -108,7 +109,7 @@ onBeforeUnmount(() => {
       <input class="timeline" type="range" aria-label="24 小时光照预览" :aria-valuetext="formatTime(sceneTime.minutes)" min="0" max="1440" step="1" :value="sceneTime.minutes" @input="hero?.setTime(Number(($event.target as HTMLInputElement).value))" />
       <div class="time-ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
       <div class="dock-bottom"><div class="presets"><button v-for="preset in presets" :key="preset.name" :aria-pressed="Math.abs(sceneTime.minutes - preset.minutes) < 1" @click="hero?.setTime(preset.minutes)">{{ preset.name }}</button></div><div class="playback"><button :disabled="reduced" :aria-label="sceneTime.mode === 'playing' ? '暂停昼夜轮播' : '播放昼夜轮播'" @click="sceneTime.mode === 'playing' ? hero?.pause() : hero?.play()"><UiIcon :name="sceneTime.mode === 'playing' ? 'pause' : 'play'" /></button><span /><button :disabled="reduced" :aria-pressed="motion && !reduced" @click="motion = !motion"><UiIcon name="sparkle" /> {{ reduced ? '静态' : motion ? '动效开' : '动效关' }}</button></div></div>
-      <button ref="detailsButton" class="settings-launch" :aria-expanded="detailsOpen" aria-controls="light-details" @click="detailsOpen = !detailsOpen"><span>光影调节</span><small>{{ manual ? '手动' : '自动' }} · EV {{ values.exposureOffset.toFixed(2) }}</small><span>{{ detailsOpen ? '−' : '＋' }}</span></button>
+      <div class="settings-heading"><span>光影调节</span><small>{{ manual ? '手动' : '自动' }} · EV {{ values.exposureOffset.toFixed(2) }}</small><button ref="detailsButton" class="settings-launch" :aria-expanded="detailsOpen" aria-controls="light-details" :aria-label="detailsOpen ? '收起光影参数' : '展开光影参数'" @click="detailsOpen = !detailsOpen">{{ detailsOpen ? '−' : '＋' }}</button></div>
       <Transition name="details"><div v-if="detailsOpen" id="light-details" class="light-details">
         <div class="settings-mode"><span>拖动参数进入手动模式</span><button @click="manual = manual ? undefined : { ...values }">{{ manual ? '恢复昼夜自动' : '固定当前值' }}</button></div>
         <fieldset :disabled="view !== 'lit'"><legend class="sr-only">光影参数</legend><label v-for="control in controls" :key="control.key" class="light-control"><span>{{ control.label }}<output>{{ values[control.key].toFixed(2) }}{{ control.unit }}</output></span><input type="range" :aria-label="control.label" :min="control.min" :max="control.max" :step="control.step" :value="values[control.key]" @input="adjust(control.key, $event)" /></label></fieldset>
@@ -117,7 +118,7 @@ onBeforeUnmount(() => {
     </section></Transition>
     <footer class="bottom-meta interface"><span>LIVING HERO <b>·</b> 02</span></footer>
     <div class="utility-bar" :class="{ 'immersive-only': immersive }">
-      <label v-if="!immersive" class="view-picker">画面 <select v-model="view" aria-label="画面模式"><option value="lit">实时光照</option><option value="base">原始底图</option><option value="normal">法线贴图</option></select></label>
+      <div v-if="!immersive" class="view-picker"><span>画面</span><ThemedSelect :model-value="view" label="画面模式" :options="[{value:'lit',label:'实时光照'},{value:'base',label:'原始底图'},{value:'normal',label:'法线贴图'}]" @update:model-value="view = $event as RenderView" /></div>
       <span v-if="!immersive" class="utility-divider" />
       <button v-show="!immersive" ref="settingsButton" class="dock-toggle" :aria-expanded="menuOpen" aria-controls="scene-controls" @click="menuOpen = !menuOpen"><UiIcon name="settings" /><span>光影</span><UiIcon name="chevron" :class="{ rotated: menuOpen }" /></button>
       <span v-if="!immersive" class="utility-divider" />

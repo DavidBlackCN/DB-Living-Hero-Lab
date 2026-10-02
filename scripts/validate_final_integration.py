@@ -2,8 +2,8 @@
 import json,re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from validate_atmosphere import EDGE
-ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'docs/validation/r7-4'
+from browser_support import EDGE
+ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'artifacts/integration'
 HOST='''import {h,ref} from '/node_modules/.vite/deps/vue.js';
 import Hero from '/src/components/LivingHero.vue';
 export default {setup(){const options=ref({quality:'high',minutes:1320,style:{height:'600px'}}),alive=ref(true),spacer=ref(0);window.host={options,alive,spacer,status:[],errors:[]};return()=>h('div',{},[h('div',{style:{height:spacer.value+'px'}}),alive.value?h(Hero,{...options.value,onStatus:s=>window.host.status.push(s),onError:e=>window.host.errors.push(e)}, {default:()=>h('h1',{id:'host-title'},'Hero slot')}):null]);}};'''
@@ -25,7 +25,7 @@ def idle(page):
  page.wait_for_timeout(300);a=page.evaluate('window.counts');page.wait_for_timeout(400);b=page.evaluate('window.counts');assert a==b,(a,b)
 
 def main():
- OUT.mkdir(exist_ok=True);stats={}
+ OUT.mkdir(parents=True,exist_ok=True);stats={}
  with sync_playwright() as p:
   b=p.chromium.launch(executable_path=EDGE,headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=d3d11'])
   page=mount(b,dpr=2);page.goto('http://127.0.0.1:5173');ready(page)
@@ -78,25 +78,4 @@ def main():
   assert page.locator('.hero-stage').get_attribute('data-quality')!=initial
   stats['adaptiveBudgetEvent']=True;page.close();b.close()
  (OUT/'integration-stats.json').write_text(json.dumps(stats,indent=2),encoding='utf-8');print(json.dumps(stats,indent=2))
-def visual():
- import numpy as np
- from PIL import Image
- from validate_atmosphere import setup,capture,contact
- from audit_pre_dawn_tower import time
- stats={};pairs=[]
- with sync_playwright() as p:
-  b=p.chromium.launch(executable_path=EDGE,headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=d3d11'])
-  page=b.new_page(viewport={'width':1672,'height':941},device_scale_factor=1);setup(page)
-  for label,t in [('dawn',390),('noon',720),('dusk',1050),('night',1320),('predawn',283),('transition',345),('midnight',0)]:
-   time(page,t);f=capture(page);old=Image.open(OUT/f'{label}-baseline.png').convert('RGB')
-   delta=np.abs(np.asarray(f,dtype=np.int16)-np.asarray(old,dtype=np.int16))
-   stats[label]={'max':int(delta.max()),'mean':float(delta.mean())};assert delta.max()==0,(label,stats[label])
-   pairs.append((label,f))
-  time(page,1440);end=capture(page);assert np.array_equal(np.asarray(end),np.asarray(pairs[-1][1]))
-  contact(pairs[:4],OUT/'four-phases.jpg',width=836);b.close()
- (OUT/'baseline-stats.json').write_text(json.dumps(stats,indent=2));print(json.dumps(stats,indent=2))
-
-if __name__=='__main__':
- import sys
- if '--visual' in sys.argv:visual()
- else:main()
+if __name__ == "__main__": main()

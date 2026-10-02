@@ -11,7 +11,7 @@ from scipy.ndimage import distance_transform_edt
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "public/assets/hero/base/base-albedo.png"
 OUT = ROOT / "public/assets/hero/sky"
-QA = ROOT / "docs/validation/sky-assets"
+QA = ROOT / "artifacts/sky-assets"
 EDGE_OVERRIDE = OUT / "sky-edge-override.png"
 
 
@@ -133,7 +133,7 @@ def main() -> None:
     mask = rematte_edges(rgb, make_mask(rgb))
     OUT.mkdir(parents=True, exist_ok=True)
     QA.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(mask).save(OUT / "sky-mask.png")
+    Image.fromarray(mask).save(ROOT / "sources/hero/sky-mask.png")
     tint = rgb.copy().astype(np.float32)
     tint[:, :, 0] = tint[:, :, 0] * (1 - mask / 255 * .65) + 255 * (mask / 255 * .65)
     tint[:, :, 1] *= 1 - mask / 255 * .65

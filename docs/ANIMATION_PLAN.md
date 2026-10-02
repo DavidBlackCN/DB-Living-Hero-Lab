@@ -1,43 +1,26 @@
-# Animation plan
+﻿# 动画与渲染维护地图
 
-| Module | Asset / input | Next validation |
+这些系统均已完成视觉验收；当前数值以 `src/config/` 为准，文档不复制整套参数。
+
+| 系统 | 当前行为 | 入口 |
 | --- | --- | --- |
-| Blink | v1 闭眼候选提取的左、右眼透明局部图；Base 始终常驻 | 最小 Open → Closed → Open 已接入并通过局部像素检查与桌面页面检查。后续继续实机调节眼睑造型、节奏，Half 可独立补充。 |
-| Breathing | R3 v1：Artwork Space 上躯干软区域、5.2 秒周期、4.8 source px 最大位移 | 身体运动已通过人工验收；R3.1 Lit + Blink + Leaves + Sky 同屏检查通过，**正式冻结**。见 [`validation/R3_1_FINAL_COMPOSITION.md`](validation/R3_1_FINAL_COMPOSITION.md)。 |
-| Hair Motion | 独立发束区域或 Mask 待定 | 核对发梢、背景和遮挡关系。 |
-| Leaves | 四张透明 master 已接入第一版 Canvas 2D 粒子覆层 | 已有缓慢下落、共享微风、个体轻摆／旋转、resize、后台暂停和 reduced motion 关闭；后续继续实机调密度与遮挡。 |
+| Blink | 320ms 连续 0..1 权重，随机 4.2–7.6s 间隔；局部双眼参与 Lit | `BlinkTimeline`、`BlinkLayer.vue`、hero config |
+| Breathing / Head / Hair | 统一角色坐标链与克制的相位差，闭眼贴片随同一变形 | engine animation、breathing/hair config、fragment shader |
+| Leaves v2 | Canvas2D 三层、独立轨迹/确定性随机、柔性脸部保护；桌面18/移动10上限 | `LeafField`、`LeavesLayer.vue`、hero config |
+| Time | 实时/手动/播放共用连续日循环，午夜闭合 | `TimeController`、lighting/sky config |
+| Lamps | 局部 emissive + surface + glow，共用连续权重；不随机闪烁 | lamps config、lamp source/influence masks |
+| Atmosphere / Post | 场景深度和现有 HDR/Post 链收口；与角色动画分离 | atmosphere/post config、post shader |
 
-Artwork 显示区域由 `engine/coordinates/artwork.ts` 提供。Blink 的双眼区域在 `config/hero.ts` 用 Source Pixel 定义，随 Artwork 布局缩放；时间线位于 `engine/animation/BlinkTimeline.ts`，不依赖 Vue。自动间隔随机 4.2–7.6 秒，闭眼 115 ms，贴图淡入淡出 35 ms。Debug 可开关自动 Blink、触发一次 Preview Blink、显示双眼区域。后台暂停并恢复睁眼；reduced motion 和 Static quality 关闭自动 Blink。参数是首版可调值。
+## 生命周期约束
 
-整图 Blink 路线已终止。v1 全图仅作离线提取来源，v2 失败候选继续归档；运行时不加载两张整图。局部静态验证见 [`validation/BLINK_LOCAL_V1.md`](validation/BLINK_LOCAL_V1.md)。Half 是后续可选状态。当前加载已冻结的 Normal v3；Debug 的 Base / Normal / Lit 用于基准、法线和光照对照。Runtime Lighting Foundation v1、R2A 四时段视觉基线、R2B 时间控制均已冻结。R3.1 Lit 合成使 Blink 和 Leaves 可以与 Breathing、Lighting、Sky 同时运行，见 [`validation/R3_1_FINAL_COMPOSITION.md`](validation/R3_1_FINAL_COMPOSITION.md)。
+不增加第二套高频 RAF。hidden、离屏、paused、卸载和 reduced-motion 由现有组件生命周期处理。Low/Static 降低动态成本；静止画面按需绘制。公开 props 与质量档位详见 [接入文档](VUEPRESS_INTEGRATION.md)。
 
-Leaves 第一版用独立的 `engine/animation/LeafField.ts` 在 Canvas 2D 中逐片绘制，按可见 Artwork 区域裁剪；竖屏 contain 留边不会出现叶子。桌面 18 片、移动端（≤640 CSS px）10 片；主体约 14–32 CSS px，8% 概率为 38 px 前景叶。下落 10–22 CSS px/s；共同风向 2.5 CSS px/s，9 秒周期的 ±5 CSS px/s 微风，另有最多 2.5 CSS px/s 的个体轻摆。帧率上限 30、覆层 DPR 上限 1.5、透明度 0.58–0.84。以上均由 `src/config/hero.ts` 管理，属于可调的首版值，未视为最终视觉参数。
+## 验收重点
 
-Debug Panel 已可开关 Leaves 并查看粒子数量。`prefers-reduced-motion` 或 Static quality 时默认关闭；页面后台停止 RAF，恢复时清零时间差以免跳帧；resize 更新画布和桌面／移动端数量。后续可按实际观感优化局部发射区、层次、遮挡与配色；若需要 atlas 再从四张 master 派生并保留透明 padding。
+- Blink 时 lighting 不跳，头部运动下眼片不漂移。
+- Breath → Head → Hair 协同，人物与天空边缘不出现新 seam。
+- Leaves 不连续挡眼，夜间不发光；灯区暖响应克制。
+- 时间播放跨午夜、晨昏均连续，隐藏页面不继续高频绘制。
+- 页面菜单不重初始化 renderer，也不改已选时间/动效参数。
 
-参考 [KumengScreen 的透明花瓣纹理粒子方案](https://github.com/buger404/KumengScreen#%E5%8A%A8%E6%95%88%E4%B8%8E%E8%8A%B1%E7%93%A3)：后续可用 Alpha Blend 绘制独立秋叶，并借鉴共同阵风与个体旋转、翻转、起落的分层思路；本项目的轨迹、密度和画面遮挡须按 Base 单独设计。
-
-## R4 Hair Motion v1 update
-
-The earlier Hair Motion TBD row is superseded. A registered two-channel 1672x941 lower-hair mask drives independent left/right sway (6.4 s primary, 9.1 s secondary, 5.2 source-pixel configured maximum). Albedo and Normal share one UV displacement; Breathing uses the existing capped WebGL motion driver. Blink, Leaves, reduced motion, Static quality, and hidden-tab behavior were checked. R3 is formally frozen; its small Sky edge residual is accepted and deferred to R5/R7. See [R4 validation](validation/R4_HAIR_MOTION.md). R4 awaits human visual acceptance before Character Motion Core freeze.
-
-## R4.1 head-motion refinement
-
-The accepted R4 lower-hair masks remain unchanged. The same registered RGBA asset now also carries a whole-head mass channel and a protected nearby-hair channel. Whole-head translation is capped at 0.9 source px; bangs and side locks at 2.1 source px; lower hair remains 5.2 source px. All share the Albedo/Normal UV path and existing WebGL motion driver. Base Blink moves into the same shader path whenever Hair is active, avoiding a stationary DOM eye patch. See [R4.1 validation](validation/R4_1_HEAD_MOTION.md). Human visual acceptance is pending before Character Motion Core freeze.
-
-## R5 material detail
-
-Human review subsequently accepted and froze R4/R4.1b Character Motion Core, including the final 1.8 px head and 3.0 px nearby-hair gains. R5 changes no animation paths or parameters. Its face, crown-hair, and iris mask is sampled at the same deformed UV as Base and Normal, so the material response follows Breathing and Hair; iris reflection is suppressed while the integrated Blink is closed. See [R5 validation](validation/R5_LIGHTING_DETAIL.md).
-
-## R7.2 Leaves v2
-
-The earlier Leaves v1 numbers above are historical. The Canvas2D implementation still draws 18 desktop / 10 mobile leaves from the same four masters, now allocated to background, midground, and foreground layers. Independent deterministic phases, turbulence, lift, rotation, and respawn variation reduce mechanical repetition. An artwork-space soft ellipse steers and attenuates leaves near the face; the left corridor gives Night leaves a faint response to the existing R7.1 lamp weight. Precomputed 256px sprites avoid per-frame Canvas filters. Reduced motion, Static quality, hidden-tab pause, resize, and the existing 30 FPS / 1.5 DPR caps remain. See [R7.2 validation](validation/R7_2_LEAVES_V2.md).
-
-Size follow-up: the main midground is now 26–46 CSS px (mean 36), with smaller background 18–27 and rare foreground 52–60. This brings the typical leaf closer to a clear single leaf painted in the original artwork; density and motion rates are unchanged.
-
-## R7.3A Character Motion Coherence
-
-The 5.2-second Breathing phase is now the primary clock for whole-head rise and slight lateral sway, with a small phase lag. The 6.4/9.1-second head drift is much weaker. Nearby hair inherits the head UV motion before its existing secondary sway; the accepted lower-hair amplitude, masks and rhythm are unchanged. Body/head motion remains readable with secondary hair disabled in the development-only `?hairSecondary=off` comparison. Motion region, 20-second Noon/Night before/after clips and lifecycle regressions are recorded in [R7.3A validation](validation/R7_3A_CHARACTER_COHERENCE.md). Await human review before freezing the character motion system.
-## R7.3A.1 Final Character Calibration
-
-The accepted 5.2s breathing phase, head lag, 6.4/9.1s secondary hair rhythms and existing masks remain intact. Source-pixel amplitude caps are now 5.2 torso, 2.5 whole head, 3.6 nearby hair and 5.8 lower hair. The shoulder participation ellipse expands from 145×93 to 155×99 without changing protected hand, head or sleeve regions. At the 2560×1440 viewport, the shoulder silhouette and head rise read together while lower hair remains the most mobile layer. See the [20s Noon/Night A/B and head-torso previews](validation/R7_3A_CHARACTER_COHERENCE.md#r73a1-final-calibration). Await human review before formal freeze; no R7.3B work starts here.
+[精选动效记录与回归命令](validation/README.md)。旧动态视频只证明冻结的运动方式，不作为最新页面/色彩截图。

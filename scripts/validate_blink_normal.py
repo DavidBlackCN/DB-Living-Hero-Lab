@@ -6,8 +6,8 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "public/assets/hero"
 base = Image.open(ROOT / "base/base-albedo.png").convert("RGB")
-normal_v1 = Image.open(ROOT / "normal/base-normal-v1.png")
-normal_v2 = Image.open(ROOT / "normal/base-normal-v2.png")
+normal_v1 = Image.open(ROOT.parents[2] / "sources/hero/base-normal-v1.png")
+normal_v2 = Image.open(ROOT.parents[2] / "sources/hero/base-normal-v2.png")
 normal = Image.open(ROOT / "normal/base-normal-v3.png")
 assert base.size == normal.size == (1672, 941)
 assert normal.mode == "RGB"

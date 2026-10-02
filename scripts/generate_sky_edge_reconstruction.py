@@ -40,7 +40,7 @@ SKY_GAPS = [
 
 def main() -> None:
     base = np.asarray(Image.open(ASSETS / "base/base-albedo.png").convert("RGB"), dtype=np.float32) / 255
-    sky = np.asarray(Image.open(SKY / "sky-mask.png").convert("L"), dtype=np.float32) / 255
+    sky = np.asarray(Image.open(ROOT / "sources/hero/sky-mask.png").convert("L"), dtype=np.float32) / 255
     if base.shape[:2] != (SIZE[1], SIZE[0]) or sky.shape != base.shape[:2]:
         raise ValueError("Artwork registration mismatch")
 

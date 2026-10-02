@@ -8,8 +8,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "public/assets/hero/blink/blink-closed-eyes-v1.png"
-OUTPUT = SOURCE.parent
+SOURCE = ROOT / "sources/hero/blink-closed-eyes-v1.png"
+OUTPUT = ROOT / "public/assets/hero/blink"
 ARTWORK_SIZE = (1672, 941)
 
 # Pixel rectangles are half-open. Keep these in sync with src/config/hero.ts.

@@ -41,7 +41,7 @@ def main():
  out=ROOT/'public/assets/hero/lighting/tower-receiver-mask.png';mask.save(out)
  alpha=np.asarray(mask,dtype=float)/255
  overlay=base*(1-alpha[:,:,None]*.45)+np.array([40,255,140])*alpha[:,:,None]*.45
- dest=ROOT/'docs/validation/tower-final';dest.mkdir(exist_ok=True)
+ dest=ROOT/'artifacts/tower-receiver';dest.mkdir(parents=True,exist_ok=True)
  Image.fromarray(np.uint8(overlay)).crop((910,0,1110,370)).resize((600,1110)).save(dest/'receiver-overlay.png')
  print(out,mask.size,'registered pixels',int((alpha>.99).sum()))
 if __name__=='__main__':main()

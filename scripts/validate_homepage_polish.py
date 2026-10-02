@@ -2,8 +2,8 @@
 from pathlib import Path
 import json
 from playwright.sync_api import sync_playwright
-from validate_atmosphere import EDGE
-OUT=Path('docs/validation/homepage-followup')
+from browser_support import EDGE
+OUT=Path('artifacts/homepage');OUT.mkdir(parents=True,exist_ok=True)
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=EDGE,headless=False)
  page=b.new_page(viewport={'width':3828,'height':1931},device_scale_factor=1)

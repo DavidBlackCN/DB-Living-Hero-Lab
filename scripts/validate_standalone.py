@@ -4,9 +4,9 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 from playwright.sync_api import sync_playwright
-from validate_atmosphere import EDGE,contact
+from browser_support import EDGE,contact
 
-OUT=Path('docs/validation/homepage-followup')
+OUT=Path('artifacts/homepage')
 
 def scene_pixels(page):
  style=page.add_style_tag(content='.interface,.frame-line,.immersive-button{visibility:hidden!important}')
@@ -15,7 +15,7 @@ def scene_pixels(page):
  return result
 
 def run():
- OUT.mkdir(exist_ok=True)
+ OUT.mkdir(parents=True,exist_ok=True)
  with sync_playwright() as p:
   b=p.chromium.launch(executable_path=EDGE,headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=d3d11'])
   page=b.new_page(viewport={'width':1672,'height':941},device_scale_factor=1)

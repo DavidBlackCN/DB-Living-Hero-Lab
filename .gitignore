@@ -5,3 +5,8 @@ dist/
 .DS_Store
 .pnpm-store/
 .agents/
+
+# Local QA output; curate only final evidence into docs/validation.
+artifacts/
+__pycache__/
+*.pyc

@@ -11,8 +11,8 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "public/assets/hero/base/base-albedo.png"
-V1 = ROOT / "public/assets/hero/normal/base-normal-v1.png"
-OUTPUT = ROOT / "public/assets/hero/normal/base-normal-v2.png"
+V1 = ROOT / "sources/hero/base-normal-v1.png"
+OUTPUT = ROOT / "sources/hero/base-normal-v2.png"
 SIZE = (1672, 941)
 
 

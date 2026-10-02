@@ -1,0 +1,22 @@
+{
+  "public/assets/hero/atmosphere/scene-depth.png": "3c59c2829b8632a7648d76cf8178cd784718a82d4322cb4fac356b305375e962",
+  "public/assets/hero/base/base-albedo.png": "fc40b7e69ea0eb1a6f53570b3a4cae8f6a9c4b5e5b7b3970ff1f4bd485e3982a",
+  "public/assets/hero/blink/left-closed-v1.png": "9cd68b94878ce4e4e53e4e6ee9ad789bfbd508a010a1658ce7f77db4d3348de6",
+  "public/assets/hero/blink/right-closed-v1.png": "eb28d7831cc7ac2a1249ca30553d30cfbcc554635f97db53fedcc2d2b5c9f857",
+  "public/assets/hero/leaves/leaf-01.png": "d618a6a73996a291977dcb1c6fa1f5f3168cf2dd08fb47ea96fa91a98bbe5bef",
+  "public/assets/hero/leaves/leaf-02.png": "71a63782b4a4c4c7cc2509951c035058152ea89f3cfc320ac51e4924718452f9",
+  "public/assets/hero/leaves/leaf-03.png": "a8d31f5b3515f22217186ec1a6f3d9621f12d1fc14ce9b56bf43d06ca7bca99d",
+  "public/assets/hero/leaves/leaf-04.png": "632821e7e76d4c9c42f70e41d0e7b4cc8c175a1575200dc428f88df399fce489",
+  "public/assets/hero/lighting/lamp-influence-mask.png": "c8a8a3a3107ca0fbbf7a4471f39a51c41d9cd20513148e2799e4691eca029b40",
+  "public/assets/hero/lighting/lamp-source-mask.png": "35c0bfb73f59c39cfc5a29d6818ab8a0b5fcbb66aceb7f5fbc283aac5e7846b4",
+  "public/assets/hero/lighting/tower-receiver-mask.png": "b8512fbe471fd09260ff69a7d511caf004cf643921ef230f966dd268817eb283",
+  "public/assets/hero/material/material-mask.png": "8825391838baa5761833846140b8c6f4bc7480697929e05448c998d953260e7d",
+  "public/assets/hero/motion/hair-motion-mask.png": "8cdf4b2a493ee4019018a3899f8d81a4e1d0ea5016f561b5fa500c9c18f7566c",
+  "public/assets/hero/normal/base-normal-v3.png": "a9c5beeb64e1d327456ff564765835f0d98aa80ba588502f0aebb043a7461f61",
+  "public/assets/hero/sky/sky-dawn.png": "5bfc9c64cf8e322f3f5959e1b393587c449b30a7c5f1521efaaf383c50920ecd",
+  "public/assets/hero/sky/sky-dusk.png": "9007ab84aa1688e119428fb864e0e2243946e5a008187b6944fb21355e185ee2",
+  "public/assets/hero/sky/sky-edge-reconstruction.png": "4b4a4ea026046d8a6063271b90795b2e514a75ba93dccdaa2853e0d5c7bc9db6",
+  "public/assets/hero/sky/sky-edge-skyfill.png": "ade83a369487a13d6c3676e1eed22cfb1e7e132acf9a889f071868b0cf493848",
+  "public/assets/hero/sky/sky-night.png": "df5518ea46417356ad9ddfab779aa3216d67e2b891fc01af1b6e03608cd49411",
+  "public/assets/hero/sky/sky-noon.png": "c87a077e53870ff3d2965e9fd03b5c34dc29bce08a525e30e00364fb11393859"
+}

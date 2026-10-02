@@ -45,3 +45,14 @@
 .hero-content { position: relative; z-index: 1; pointer-events: none; }
 .hero-content > * { pointer-events: auto; }
 .hero-loading { position: absolute; left: 16px; bottom: 16px; z-index: 1; color: #eee; font: 12px/1.5 system-ui, sans-serif; }
+
+/* Native modal keeps focus contained without touching any renderer state. */
+dialog.debug-panel { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(360px, 92vw); height: 100dvh; max-height: none; max-width: none; box-sizing: border-box; border-radius: 0; padding: 24px; overscroll-behavior: contain; }
+dialog.debug-panel:not([open]) { display: none; }
+dialog.debug-panel[open] { animation: debug-arrive 180ms ease-out; }
+dialog.debug-panel::backdrop { background: #05070b26; }
+.debug-reopen { top: auto; left: auto; right: 20px; bottom: 78px; padding: 9px 12px; font-size: 11px; }
+@keyframes debug-arrive { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.hero-entrance .hero-canvas, .hero-entrance .leaves-canvas { transition: opacity 650ms ease-out; }
+.hero-entrance[data-presented="false"] .leaves-canvas { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { dialog.debug-panel[open] { animation: none; }.hero-entrance .hero-canvas, .hero-entrance .leaves-canvas { transition: none; } }

@@ -47,7 +47,8 @@ SSR 已实测：服务端只输出注册底图、slot 和加载状态，不读�
 | minutes | undefined | undefined 使用实时本地时间；传数值切换 Manual（0–1440），后续变化继续选择时间 |
 | paused | false | 暂停时间推进与动态驱动，保留当前成图 |
 | adaptive | true | Auto 下持续帧间隔压力可逐级降至 Low；显式 quality 不自动降档 |
-| debug | false | 可选调试面板；Demo 显式打开，生产默认隐藏且按需加载代码 |
+| debug | false | 提供调试抽屉入口；抽屉默认关闭，生产默认不加载 |
+| entrance | false | 可选底图→Lit 入场：底图至少 550ms，Lit 就绪后 650ms 淡入；reduced-motion 取消过渡 |
 | alt | 场景描述 | 静态底图替代文本；纯装饰场景可传空字符串 |
 
 事件：`ready`（每次 renderer 成功初始化）、`error(reason)`、`status({ mode, loaded, total, quality })`、`time-change({ mode, minutes })`。mode 为 loading / WebGL2 / fallback / static；资源进度统计 16 个关键注册纹理，不包含稍后加载的可选叶片。

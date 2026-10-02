@@ -7,6 +7,7 @@ export interface LivingHeroProps {
   fit?: FitMode
   minutes?: number
   debug?: boolean
+  entrance?: boolean
   paused?: boolean
   adaptive?: boolean
   alt?: string

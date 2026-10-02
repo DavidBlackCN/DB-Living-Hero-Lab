@@ -1,0 +1,18 @@
+{
+  "dawn": {
+    "maxOutsideOldDebugButton": 0,
+    "mean": 0.0
+  },
+  "noon": {
+    "maxOutsideOldDebugButton": 0,
+    "mean": 0.0
+  },
+  "dusk": {
+    "maxOutsideOldDebugButton": 0,
+    "mean": 0.0
+  },
+  "night": {
+    "maxOutsideOldDebugButton": 0,
+    "mean": 0.0
+  }
+}

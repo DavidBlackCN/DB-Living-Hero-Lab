@@ -33,6 +33,13 @@ const emit = defineEmits<{
 }>()
 const heroConfig = computed(() => createHeroConfig(props.assetRoot))
 const loaded = ref(0)
+const poster = ref<HTMLImageElement | null>(null)
+const posterShownAt = ref<number | null>(null)
+const presented = ref(false)
+let entranceTimer: ReturnType<typeof setTimeout> | undefined
+function onPosterLoaded(): void {
+  if (posterShownAt.value === null) posterShownAt.value = performance.now()
+}
 const total = ref(16)
 const posterFailed = ref(false)
 const mounted = ref(false)
@@ -142,6 +149,18 @@ function selectLightingPreset(preset: LightingPresetId): void {
   selectLightingTime(minutes)
 }
 
+// Presentation only; no framebuffer, lighting or animation changes.
+watch([rendererReady, posterShownAt, reducedMotion, () => props.entrance], () => {
+  clearTimeout(entranceTimer)
+  presented.value = false
+  if (!rendererReady.value) return
+  if (!props.entrance || reducedMotion.value) { presented.value = true; return }
+  if (posterShownAt.value === null && !posterFailed.value) return
+  const remaining = Math.max(0, 550 - (performance.now() - (posterShownAt.value ?? 0)))
+  entranceTimer = setTimeout(() => { presented.value = true }, remaining)
+})
+watch(posterFailed, failed => { if (failed) posterShownAt.value = 0 })
+
 function selectLightingTime(minutes: number): void {
   timeController.select(minutes)
 }
@@ -149,7 +168,7 @@ function selectLightingTime(minutes: number): void {
 watch(() => props.quality, value => { quality.value = value })
 watch(() => props.fit, value => { fit.value = value })
 watch(() => props.minutes, value => value === undefined ? timeController.backToNow() : timeController.select(value))
-watch(() => props.assetRoot, () => { rendererReady.value = false; rendererError.value = ''; posterFailed.value = false })
+watch(() => props.assetRoot, () => { rendererReady.value = false; rendererError.value = ''; posterFailed.value = false; posterShownAt.value = null })
 watch(quality, () => { autoBudget.value = resolveQuality('auto', hints.value) })
 watch([rendererStatus, loaded, resolvedQuality], () => emit('status', {
   mode: rendererStatus.value, loaded: loaded.value, total: total.value, quality: resolvedQuality.value,
@@ -164,6 +183,7 @@ defineExpose({ setTime: selectLightingTime, backToNow: () => timeController.back
 
 onMounted(() => {
   mounted.value = true
+  if (poster.value?.complete && poster.value.naturalWidth) onPosterLoaded()
   const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
   hints.value = { cores: nav.hardwareConcurrency, memory: nav.deviceMemory, saveData: nav.connection?.saveData }
   autoBudget.value = resolveQuality('auto', hints.value)
@@ -188,6 +208,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  clearTimeout(entranceTimer)
   mounted.value = false
   timeController.destroy()
   document.removeEventListener('visibilitychange', onVisibility)
@@ -198,12 +219,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section ref="root" class="hero-stage" :aria-busy="rendererStatus === 'loading'" :data-quality="resolvedQuality" :data-status="rendererStatus">
-    <img class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" :alt="alt" fetchpriority="high" decoding="async" @error="posterFailed = true" />
+  <section ref="root" class="hero-stage" :class="{ 'hero-entrance': entrance }" :data-presented="presented" :aria-busy="rendererStatus === 'loading'" :data-quality="resolvedQuality" :data-status="rendererStatus">
+    <img ref="poster" class="hero-image" :style="imageStyle" :src="heroConfig.artwork.baseUrl" :alt="alt" fetchpriority="high" decoding="async" @load="onPosterLoaded" @error="posterFailed = true" />
     <HeroCanvas v-if="mounted && wantsRenderer" :key="heroConfig.artwork.baseUrl + retryToken" :active="active" :artwork="heroConfig.artwork" :normal-url="heroConfig.normal.url" :sky-urls="heroConfig.sky.urls" :sky-edge-reconstruction-url="heroConfig.sky.edgeReconstructionUrl" :sky-edge-coverage-url="heroConfig.sky.edgeCoverageUrl" :hair-mask-url="heroConfig.hair.maskUrl" :material-mask-url="heroConfig.material.maskUrl" :lamp-source-url="heroConfig.lamps.sourceUrl" :lamp-influence-url="heroConfig.lamps.influenceUrl"
       :tower-receiver-url="heroConfig.architecture.towerReceiverUrl" :scene-depth-url="heroConfig.atmosphere.depthUrl" :sky="sky" :moon-direction="moonDirection" :lamps="lamps" :render-view="renderView" :lighting="lighting" :post="post" :breathing="breathingState" :hair="hairState" :blink-eyes="heroConfig.blink.eyes"
       :blink-amount="blinkActive && (renderView === 'lit' || (renderView === 'base' && hairState.enabled)) ? blinkAmount : 0" :lighting-detail-enabled="lightingDetailEnabled" :directional-strength="directionalEnabled ? directionalGain : 0" :fit="fit" :dpr-cap="budget.dpr" :max-pixels="budget.pixels"
-      :class="{ 'canvas-ready': rendererReady }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" @slow="onSlow" @progress="loaded = $event.loaded; total = $event.total" />
+      :class="{ 'canvas-ready': rendererReady && (!entrance || presented) }" @ready="onRendererReady" @failed="onRendererFailed" @frame="frameTime = $event" @slow="onSlow" @progress="loaded = $event.loaded; total = $event.total" />
     <BlinkLayer v-if="sceneView" :artwork="heroConfig.artwork" :layout="layout" :config="heroConfig.blink" :enabled="blinkActive" :active="active"
       :preview-token="blinkPreviewToken" :show-regions="showBlinkRegions" :show-patch="renderView === 'base' && !hairState.enabled" @amount="blinkAmount = $event" />
     <LeavesLayer v-if="leavesActive" :layout="layout" :key="resolvedQuality + heroConfig.artwork.baseUrl" :active="active" :config="leavesConfig" :lamp-weight="lampsEnabled ? lamps.weight * lampStrength : 0" :debug-view="leafDebugView" :style="leafStyle" @count="leavesCount = $event" />

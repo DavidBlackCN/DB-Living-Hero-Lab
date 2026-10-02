@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { formatLightingTime, lightingPresets } from '../config/lighting'
 import type { TimeMode } from '../engine/time/TimeController'
 import { breathingConfig, type BreathingState } from '../engine/animation/breathing'
@@ -47,7 +47,17 @@ const props = defineProps<{
   hair: HairState
 }>()
 
-const panelHidden = ref(false)
+const panelHidden = ref(true)
+const drawer = ref<HTMLDialogElement | null>(null)
+const trigger = ref<HTMLButtonElement | null>(null)
+async function onClosed(): Promise<void> { panelHidden.value = true; await nextTick(); trigger.value?.focus() }
+function openPanel(): void { drawer.value?.showModal(); panelHidden.value = false }
+function closePanel(): void { drawer.value?.close(); panelHidden.value = true }
+function onBackdrop(event: MouseEvent): void {
+  if (!drawer.value || event.target !== drawer.value) return
+  const bounds = drawer.value.getBoundingClientRect()
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closePanel()
+}
 
 const emit = defineEmits<{
   (e: 'update:rendererEnabled', value: boolean): void
@@ -120,9 +130,9 @@ function withDirection(angle: number, elevation: number): LightingState['directi
 </script>
 
 <template>
-  <button v-if="panelHidden" class="debug-reopen" type="button" @click="panelHidden = false">Debug</button>
-  <aside v-show="!panelHidden" class="debug-panel" aria-label="Living Hero debug controls">
-    <header><div><strong>DB Living Hero 2.0</strong><small>Base + Blink + Leaves + Runtime Lighting</small></div><button type="button" @click="panelHidden = true">Hide</button></header>
+  <button ref="trigger" v-show="panelHidden" class="debug-reopen" type="button" aria-haspopup="dialog" @click="openPanel">调试 / Debug</button>
+  <dialog ref="drawer" class="debug-panel" aria-label="Living Hero debug controls" @close="onClosed" @click="onBackdrop">
+    <header><div><strong>场景调试</strong><small>DB Living Hero 2.0</small></div><button type="button" autofocus aria-label="关闭调试抽屉" @click="closePanel">关闭 ×</button></header>
     <label><input type="checkbox" :checked="rendererEnabled" @change="emit('update:rendererEnabled', ($event.target as HTMLInputElement).checked)" /> Renderer</label>
     <label>Fit
       <select :value="fit" @change="emit('update:fit', ($event.target as HTMLSelectElement).value as FitMode)">
@@ -279,5 +289,5 @@ function withDirection(angle: number, elevation: number): LightingState['directi
       <div>Base frame: {{ frameTime === null ? 'idle' : `${frameTime.toFixed(1)} ms (${(breathing.enabled || hair.enabled) && !reducedMotion && quality !== 'static' ? 'Motion ≤30 FPS' : 'on demand'})` }}</div>
       <div>Leaves: {{ leavesCount ? `≤ ${leavesFpsCap} FPS` : 'off' }}</div>
     </footer>
-  </aside>
+  </dialog>
 </template>
